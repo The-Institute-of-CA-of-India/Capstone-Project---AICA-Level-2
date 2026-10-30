@@ -1,0 +1,79 @@
+=== PROMPT SENT TO GEMINI ===
+
+You are a senior internal auditor in India reviewing a company's vendor master.
+An automated tool has run data checks on the vendor master. The results are below.
+
+Write an audit observation for the Audit Committee using exactly these headings:
+Observation
+Risk and Impact
+Likely Root Cause
+Recommendations
+Priority Actions for Management
+
+Rules:
+- Use only the facts given below. Do not invent figures, vendor codes or names.
+- Mention the vendor codes that need urgent attention.
+- Keep it under 350 words, in plain text (no markdown symbols such as * or #).
+- Write in a professional tone suitable for an internal audit report.
+
+REVIEW RESULTS
+Vendors reviewed: 30
+Vendors with at least one exception: 16
+Total exceptions: 22 (High: 11, Medium: 9, Low: 2)
+Employee master compared: Yes
+
+Exceptions by check:
+- Duplicate PAN (High risk): 2
+- Duplicate GSTIN (High risk): 2
+- Duplicate bank account (High risk): 4
+- Duplicate vendor name (Medium risk): 4
+- GSTIN does not match PAN (High risk): 1
+- Invalid PAN format (Medium risk): 1
+- Invalid GSTIN format (Medium risk): 1
+- Invalid IFSC format (Low risk): 1
+- Missing PAN (Medium risk): 1
+- Missing bank details (Medium risk): 1
+- Missing address (Low risk): 1
+- Bank account matches employee (High risk): 1
+- PAN matches employee (High risk): 1
+- Address matches employee (Medium risk): 1
+
+Sample exceptions (vendor code | check | detail):
+V015 | Bank account matches employee | Same bank account as employee E004
+V004 | Duplicate GSTIN | Same GSTIN as V013
+V013 | Duplicate GSTIN | Same GSTIN as V004
+V004 | Duplicate PAN | Same PAN as V013
+V013 | Duplicate PAN | Same PAN as V004
+V001 | Duplicate bank account | Same bank account as V014
+V004 | Duplicate bank account | Same bank account as V013
+V013 | Duplicate bank account | Same bank account as V004
+V014 | Duplicate bank account | Same bank account as V001
+V018 | GSTIN does not match PAN | Characters 3 to 12 of the GSTIN differ from the vendor PAN
+V022 | PAN matches employee | Same PAN as employee E007
+V026 | Address matches employee | Same address as employee E004
+V002 | Duplicate vendor name | Same name as V024
+V004 | Duplicate vendor name | Same name as V013
+V013 | Duplicate vendor name | Same name as V004
+V024 | Duplicate vendor name | Same name as V002
+V017 | Invalid GSTIN format | GSTIN is not a valid 15-character GST number
+V016 | Invalid PAN format | PAN is not in the format AAAAA9999A
+V019 | Missing PAN | PAN is blank
+V020 | Missing bank details | Blank: bank account, IFSC
+
+
+=== RESPONSE ===
+
+Observation
+A review of 30 vendor master records identified 16 vendors with 22 total exceptions, comprising 11 High, 9 Medium, and 2 Low risk findings. Key high-risk findings involve direct matches between vendor and employee masters: vendor V015 shares a bank account with employee E004, and V022 shares a PAN with employee E007. Furthermore, duplicate entities were identified across PAN, GSTIN, bank accounts, and names involving vendor codes V001, V004, V013, V014, V002, and V024. Additional data integrity issues include a GSTIN to PAN mismatch for V018, invalid GSTIN format for V017, invalid PAN format for V016, missing PAN for V019, missing bank details for V020, and an address match with employee E004 for V026.
+
+Risk and Impact
+Overlaps between employee and vendor master data pose severe risks of conflict of interest, unauthorized disbursements, and potential fraud. Duplicate vendor profiles create exposure to duplicate payments and inaccurate financial reporting. Incomplete or mismatched statutory details (PAN and GSTIN) expose the organization to tax compliance failures, penalties, and disallowance of input tax credits.
+
+Likely Root Cause
+Weak input controls and missing automated validation rules in the ERP system during vendor onboarding, lack of automated cross-verification between vendor and employee master records, and the absence of periodic database maintenance and de-duplication exercises.
+
+Recommendations
+Implement mandatory automated system validations for field formats (PAN, GSTIN, IFSC) and cross-module checks against the employee master during vendor creation. Require strict maker-checker controls and independent verification of statutory tax documents. Perform regular data scrubbing of the vendor database.
+
+Priority Actions for Management
+Immediate attention is required for critical vendor codes V015, V022, V004, V013, V001, V014, V018, and V026. Management must immediately freeze disbursements and investigate potential conflicts of interest for vendors V015, V022, and V026. Consolidate or deactivate duplicate records for V001, V004, V013, V014, V002, and V024 after reviewing historical payments. Correct invalid or missing statutory and banking details for V016, V017, V018, V019, and V020 prior to future processing.
