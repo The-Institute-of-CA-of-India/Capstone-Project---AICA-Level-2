@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Businesses collection
+    match /businesses/{businessId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // CRM Leads collection
+    match /leads/{leadId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Daily runs collection
+    match /daily_runs/{runId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Suppression list collection
+    match /suppressions/{suppressionId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Test connection doc
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
