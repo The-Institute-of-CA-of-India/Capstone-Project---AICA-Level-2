@@ -1,0 +1,5 @@
+# Optional: the app runs without these, but Read from Token needs PyKCS11 and Excel import/export needs openpyxl.
+PyKCS11
+openpyxl
+# Only for building the .exe (build_exe.py).
+pyinstaller
