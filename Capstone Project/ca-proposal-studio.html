@@ -1,0 +1,1346 @@
+<title>CA Proposal Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config = { corePlugins: { preflight: false } };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+/* Layout: navy command bar over a split workbench — builder panel on the left, an A4 sheet lying on a slate desk on the right. */
+:root{
+  --bg:#E8EBF0; --panel:#FFFFFF; --sunk:#F3F5F8; --ink:#0F172A; --muted:#556275; --line:#D7DCE4; --line2:#E7EAEF;
+  --bar:#0F172A; --bar-ink:#E9ECF2; --bar-muted:#94A0B4; --bar-line:#24304A;
+  --gold:#A87B25; --gold-ink:#7A5714; --gold-soft:#F7EED9; --desk:#C7CED9; --danger:#B42318; --ok:#1F7A4D;
+  --f-display:'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  --f-ui:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono:'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0A0F1C; --panel:#111827; --sunk:#0C1322; --ink:#E6E9EF; --muted:#9AA6B8; --line:#273249; --line2:#1B2437;
+  --bar:#060A14; --bar-ink:#E9ECF2; --bar-muted:#8390A6; --bar-line:#1E2840;
+  --gold:#D6A445; --gold-ink:#E8BE6A; --gold-soft:#2C2312; --desk:#05080F; --danger:#F97066; --ok:#4ADE80; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0A0F1C; --panel:#111827; --sunk:#0C1322; --ink:#E6E9EF; --muted:#9AA6B8; --line:#273249; --line2:#1B2437;
+  --bar:#060A14; --bar-ink:#E9ECF2; --bar-muted:#8390A6; --bar-line:#1E2840;
+  --gold:#D6A445; --gold-ink:#E8BE6A; --gold-soft:#2C2312; --desk:#05080F; --danger:#F97066; --ok:#4ADE80; color-scheme:dark }
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--bar)}
+#root{height:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.app{display:flex;flex-direction:column;height:100%}
+.topbar{background:var(--bar);color:var(--bar-ink);border-bottom:1px solid var(--bar-line);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{font-family:var(--f-display);font-size:19px;letter-spacing:.2px;white-space:nowrap}
+.brand em{color:var(--gold);font-style:italic}
+.bar-sub{color:var(--bar-muted);font-size:12px}
+.bbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:6px;border:1px solid var(--bar-line);background:transparent;color:var(--bar-ink);font-size:13px;white-space:nowrap}
+.bbtn:hover{background:rgba(255,255,255,.06)}
+.bbtn.gold{background:var(--gold);border-color:var(--gold);color:#140E02;font-weight:600}
+.bbtn.gold:hover{filter:brightness(1.07)}
+.bbtn .lbl-t{display:inline}
+@media (max-width:640px){ .bbtn .lbl-t{display:none} .bbtn{padding:7px 9px} }
+
+.main{flex:1;display:grid;grid-template-columns:minmax(380px,470px) minmax(0,1fr);min-height:0}
+.left{overflow:auto;background:var(--panel);border-right:1px solid var(--line);
+  padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px}
+.right{overflow:auto;background:var(--desk);padding-block:28px 48px;padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px))}
+.viewtabs{display:none}
+@media (max-width:1023px){
+  .main{grid-template-columns:minmax(0,1fr)}
+  .main[data-view="build"] .right{display:none}
+  .main[data-view="preview"] .left{display:none}
+  .left{padding-right:max(16px,env(safe-area-inset-right,0px));border-right:0}
+  .right{padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .viewtabs{display:flex}
+}
+.vt{flex:1;padding:9px;border:0;background:var(--sunk);color:var(--muted);font-weight:500;border-bottom:2px solid transparent}
+.vt[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold);background:var(--panel)}
+
+/* steps */
+.step{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+.step+.step{margin-top:10px}
+.step-h{width:100%;display:flex;align-items:center;gap:12px;padding:13px 14px;background:transparent;border:0;text-align:left}
+.step-n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);color:var(--muted);flex:none}
+.step.open .step-n,.step.done .step-n{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.step-t{font-weight:600;font-size:14.5px}
+.step-s{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step-b{padding:4px 14px 16px;border-top:1px solid var(--line2)}
+.chev{transition:transform .18s;color:var(--muted);flex:none}
+.open .chev{transform:rotate(180deg)}
+
+.lbl{display:block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 5px}
+.inp{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);font-size:13.5px;min-width:0}
+.inp:focus{outline:none;border-color:var(--gold);background:var(--panel);box-shadow:0 0 0 3px var(--gold-soft)}
+textarea.inp{resize:vertical;line-height:1.45}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+.hint{font-size:12px;color:var(--muted);margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:6px;border:1px solid var(--line);background:var(--panel);font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.sm{padding:4px 8px;font-size:12px}
+.btn.pri{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.btn.danger{color:var(--danger)}
+.btn.danger.armed{background:var(--danger);color:#fff;border-color:var(--danger)}
+.ibtn{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--muted);flex:none}
+.ibtn:hover{border-color:var(--line);color:var(--ink)}
+.ibtn.del:hover{color:var(--danger)}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{flex:1;padding:8px 10px;border:0;background:var(--sunk);color:var(--muted);font-size:13px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11.5px;background:var(--gold-soft);color:var(--gold-ink);font-weight:500}
+.pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;border:1px solid var(--line);color:var(--muted)}
+
+/* catalog list */
+.cat-h{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 2px;border:0;background:transparent;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.svc-row{display:flex;gap:10px;align-items:flex-start;padding:7px 9px;border-radius:7px;cursor:pointer;border:1px solid transparent}
+.svc-row:hover{background:var(--sunk)}
+.svc-row.on{background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 35%,transparent)}
+.svc-row input{margin-top:3px;accent-color:var(--gold)}
+.svc-name{font-size:13.5px}
+.svc-meta{font-size:11.5px;color:var(--muted)}
+
+.card{border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.card+.card{margin-top:8px}
+.card-h{display:flex;align-items:center;gap:8px;padding:9px 10px}
+.item{display:flex;gap:6px;align-items:flex-start;margin-top:5px}
+.item input[type=checkbox]{margin-top:9px;accent-color:var(--gold);flex:none}
+.item textarea{flex:1;min-width:0}
+.item textarea.off{opacity:.5;text-decoration:line-through}
+.add{border:1px dashed var(--line);background:transparent;color:var(--muted);border-radius:6px;padding:5px 9px;font-size:12px;margin-top:6px}
+.add:hover{color:var(--ink);border-color:var(--muted)}
+
+.switch{position:relative;width:36px;height:20px;border-radius:999px;border:0;background:var(--line);flex:none;transition:background .15s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.switch[aria-checked="true"]{background:var(--gold)}
+.switch[aria-checked="true"]::after{transform:translateX(16px)}
+.trow{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line2)}
+.trow:last-child{border-bottom:0}
+
+.totals{border:1px solid var(--line);border-radius:9px;background:var(--sunk);padding:10px 12px;margin-top:12px}
+.num{font-variant-numeric:tabular-nums}
+
+/* paper */
+.desk-inner{display:flex;justify-content:center}
+.paper{background:#fff;color:#0F172A;width:794px;flex:none;padding:58px 60px 64px;box-shadow:0 1px 2px rgba(15,23,42,.18),0 18px 40px -18px rgba(15,23,42,.45)}
+.pb{position:relative;height:0;margin:40px -60px 36px;border-top:2px dashed #C3CAD5}
+.pb::before{content:"A4 page break";position:absolute;right:16px;top:-10px;background:#fff;padding:0 6px;font:500 10px var(--f-mono);color:#8A94A6;letter-spacing:.05em}
+
+/* modal & toast */
+.modal-back{position:fixed;inset:0;background:rgba(5,9,18,.55);z-index:80;display:flex;align-items:flex-start;justify-content:center;overflow:auto;
+  padding-block:max(24px,env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;width:100%;max-width:980px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+.modal.narrow{max-width:560px}
+.modal-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+.modal-t{font-family:var(--f-display);font-size:19px}
+.tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--line2);overflow-x:auto}
+.tab{padding:10px 12px;border:0;background:transparent;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;font-weight:500}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--gold)}
+.mgrid{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:420px}
+@media (max-width:760px){ .mgrid{grid-template-columns:minmax(0,1fr)} .mlist{max-height:260px;border-right:0!important;border-bottom:1px solid var(--line2)} }
+.mlist{border-right:1px solid var(--line2);overflow:auto;max-height:68vh;padding:10px}
+.mitem{display:block;width:100%;text-align:left;padding:7px 9px;border-radius:6px;border:0;background:transparent;font-size:13px}
+.mitem:hover{background:var(--sunk)}
+.mitem[aria-current="true"]{background:var(--gold-soft);color:var(--gold-ink);font-weight:500}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:90;background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);max-width:calc(100vw - 32px)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+
+/* print: only the A4 sheet */
+@media print{
+  @page{size:A4;margin:16mm 15mm 18mm}
+  :root{padding:0!important}
+  html,body,#root,.app,.main,.right{height:auto!important;overflow:visible!important;background:#fff!important;display:block!important;padding:0!important;border:0!important}
+  body::before{display:none}
+  .topbar,.left,.viewtabs,.toast,.modal-back,.no-print{display:none!important}
+  .desk-inner{display:block!important}
+  .paper{box-shadow:none!important;width:auto!important;padding:0!important;zoom:1!important}
+  .pb{break-before:page;page-break-before:always;margin:0!important;border:0!important;height:0}
+  .pb::before{display:none}
+  .avoid{break-inside:avoid;page-break-inside:avoid}
+  tr{break-inside:avoid;page-break-inside:avoid}
+  thead{display:table-header-group}
+  h2,h3{break-after:avoid;page-break-after:avoid}
+}
+</style>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+
+/* ---------- storage ---------- */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+function usePersisted(key, init){
+  const [v, setV] = useState(() => LS.get(key, typeof init === 'function' ? init() : init));
+  useEffect(() => { LS.set(key, v); }, [key, v]);
+  return [v, setV];
+}
+const uid = () => Math.random().toString(36).slice(2, 10);
+const FRAMED = (() => { try { return window.self !== window.top; } catch(e){ return true; } })();
+
+/* ---------- icons (Lucide geometry) ---------- */
+const ICONS = {
+  check:[['p','M20 6 9 17l-5-5']],
+  chev:[['p','m6 9 6 6 6-6']],
+  up:[['p','m18 15-6-6-6 6']],
+  down:[['p','m6 9 6 6 6-6']],
+  search:[['c',11,11,8],['p','m21 21-4.3-4.3']],
+  plus:[['p','M5 12h14'],['p','M12 5v14']],
+  x:[['p','M18 6 6 18'],['p','m6 6 12 12']],
+  trash:[['p','M3 6h18'],['p','M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6'],['p','M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2']],
+  copy:[['r',8,8,14,14,2],['p','M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2']],
+  printer:[['p','M6 9V2h12v7'],['p','M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'],['r',6,14,12,8,0]],
+  save:[['p','M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'],['p','M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'],['p','M7 3v4a1 1 0 0 0 1 1h7']],
+  folder:[['p','M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z']],
+  book:[['p','M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20']],
+  filePlus:[['p','M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'],['p','M14 2v4a2 2 0 0 0 2 2h4'],['p','M9 15h6'],['p','M12 18v-6']],
+  upload:[['p','M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'],['p','m17 8-5-5-5 5'],['p','M12 3v12']],
+  download:[['p','M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'],['p','m7 10 5 5 5-5'],['p','M12 15V3']],
+  rotate:[['p','M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'],['p','M3 3v5h5']],
+  pencil:[['p','M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z']],
+  info:[['c',12,12,10],['p','M12 16v-4'],['p','M12 8h.01']],
+};
+function Icon({ n, s = 16 }){
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {ICONS[n].map((e, i) => e[0] === 'p' ? <path key={i} d={e[1]} /> : e[0] === 'c' ? <circle key={i} cx={e[1]} cy={e[2]} r={e[3]} /> : <rect key={i} x={e[1]} y={e[2]} width={e[3]} height={e[4]} rx={e[5]} />)}
+    </svg>
+  );
+}
+
+/* ---------- reference data ---------- */
+const BILLING = ['Fixed Fee', 'Monthly Retainer', 'Quarterly', 'Per Filing/Instance', 'Milestone-Based'];
+const CURRENCIES = ['INR', 'USD', 'GBP', 'EUR'];
+const ENTITY_TYPES = ['Private Limited Company', 'LLP', 'Partnership Firm', 'Proprietorship', 'Listed Entity', 'Trust / Section 8 Company', 'Foreign Subsidiary / Individual'];
+const CATS = ['Audit & Assurance', 'Direct Taxation & Litigation', 'Indirect Taxation (GST)', 'Virtual CFO, MIS & Data Automation', 'Corporate Law & Secretarial', 'Global & Outsourced Accounting'];
+const defUnits = b => b === 'Monthly Retainer' ? 12 : b === 'Quarterly' ? 4 : 1;
+const S = (id, category, name, frequency, scope, deliverables, exclusions, billing, fee, schedule, currency = 'INR', units) =>
+  ({ id, category, name, frequency, scope, deliverables, exclusions, billing, fee, schedule, currency, units: units ?? defUnits(billing) });
+
+const SEED = [
+  S('statutory-audit', CATS[0], 'Statutory Audit under the Companies Act, 2013',
+    'Annual — fieldwork after year-end close; report ahead of the Board meeting approving the accounts',
+    ['Audit of the standalone financial statements in accordance with the Standards on Auditing (SAs) issued by ICAI and section 143 of the Companies Act, 2013',
+     'Evaluation of compliance with applicable accounting standards (AS / Ind AS) and Schedule III presentation requirements',
+     'Reporting on matters specified in the Companies (Auditor\'s Report) Order, 2020 (CARO), where applicable',
+     'Reporting on internal financial controls with reference to financial statements under section 143(3)(i), where applicable',
+     'Review of audit trail (edit log) compliance of the accounting software under Rule 11(g) of the Companies (Audit and Auditors) Rules, 2014',
+     'Observation of physical verification of inventory and external confirmation procedures on a test basis',
+     'Communication of significant observations to management and those charged with governance'],
+    ['Independent Auditor\'s Report with CARO annexure', 'Report on internal financial controls (where applicable)', 'Management letter with observations and recommendations'],
+    ['Preparation of books of account or financial statements', 'Consolidated financial statements (quoted separately)', 'Tax audit and other certifications'],
+    'Milestone-Based', 85000, '40% on acceptance, 40% on completion of fieldwork, 20% on signing of the audit report'),
+  S('tax-audit', CATS[0], 'Tax Audit under Section 44AB of the Income-tax Act',
+    'Annual — report uploaded before the statutory due date',
+    ['Audit of books of account under section 44AB of the Income-tax Act, 1961, or the corresponding provision of the Income-tax Act, 2025 for the relevant year',
+     'Verification and reporting of particulars in Form 3CD, including disallowances under sections 40(a), 40A(3), 43B and 43B(h) (payments to MSMEs)',
+     'Review of TDS / TCS compliance, deductions claimed and ICDS adjustments',
+     'Reconciliation of turnover with GST returns and with Form 26AS / AIS',
+     'Uploading of the report on the income-tax e-filing portal'],
+    ['Tax audit report in Form 3CA / 3CB with Form 3CD (or the form prescribed under the new Act)', 'Working papers and reconciliations supporting key clauses'],
+    ['Statutory audit and bookkeeping', 'Filing of the income tax return (quoted separately)', 'Representation in assessment proceedings'],
+    'Fixed Fee', 40000, '100% on uploading of the tax audit report'),
+  S('internal-audit', CATS[0], 'Internal & Management Audit',
+    'Quarterly — report within 30 days of each quarter end',
+    ['Risk assessment and annual internal audit plan approved by management / audit committee',
+     'Process reviews covering procure-to-pay, order-to-cash, inventory, payroll, treasury and fixed assets',
+     'Testing of design and operating effectiveness of internal controls',
+     'Review of compliance with company policies, delegation of authority and key statutory requirements',
+     'Follow-up of action taken on earlier audit observations',
+     'Internal audit under section 138 of the Companies Act, 2013, where applicable'],
+    ['Quarterly internal audit report with risk-rated observations', 'Executive summary for the Board / audit committee', 'Action-taken tracker'],
+    ['Forensic or fraud investigation', 'Implementation of recommended controls'],
+    'Quarterly', 35000, 'Billed at the end of each quarter, payable within 15 days'),
+  S('stock-audit', CATS[0], 'Concurrent / Stock Audit',
+    'Monthly — report by the 15th of the following month',
+    ['Concurrent audit of transactions, vouchers and approvals each month',
+     'Physical verification of inventory on a sample basis and comparison with book stock',
+     'Review of stock statements and drawing power computation submitted to the bank',
+     'Review of ageing, slow-moving and non-moving inventory and the valuation method',
+     'Reporting in the lender\'s prescribed stock audit format, where applicable'],
+    ['Monthly concurrent audit report', 'Stock audit report in the lender\'s format', 'Drawing power reconciliation'],
+    ['Valuation by an approved valuer', 'Visits to locations outside Pune (travel billed at actuals)'],
+    'Monthly Retainer', 20000, 'Billed monthly in arrears'),
+
+  S('itr', CATS[1], 'Income Tax Return Filing (Corporate / Individual)',
+    'Annual — return filed by the applicable due date',
+    ['Computation of total income and tax liability, including evaluation of the tax regime and MAT / AMT where relevant',
+     'Reconciliation of TDS / TCS credits and advance tax with Form 26AS, AIS and TIS',
+     'Preparation and e-filing of the return of income in the applicable ITR form',
+     'Advance tax estimates and reminders ahead of each instalment date',
+     'Handling of intimations under section 143(1) and rectification requests'],
+    ['Statement of computation of income', 'Filed return with e-filing acknowledgement', 'Advance tax workings'],
+    ['Tax audit', 'Scrutiny assessments and appeals'],
+    'Per Filing/Instance', 15000, '100% on filing of the return'),
+  S('tax-planning', CATS[1], 'Tax Planning & Advisory',
+    'Annual retainer with on-call queries',
+    ['Review of the current tax position and the structure of income streams',
+     'Evaluation of available deductions, exemptions and regime choices',
+     'Advice on the tax impact of proposed transactions (capital gains, restructuring, ESOPs, dividends)',
+     'Transition advisory on positions affected by the Income-tax Act, 2025',
+     'Written opinions on specific queries raised during the engagement year'],
+    ['Tax planning memorandum', 'Written responses to specific queries', 'Year-end tax estimate'],
+    ['Implementation of corporate restructuring', 'Opinions requiring senior counsel'],
+    'Fixed Fee', 50000, '50% on acceptance, 50% on delivery of the planning memorandum'),
+  S('appeals', CATS[1], 'Representation & Appeals (CIT(A) / ITAT)',
+    'Per appeal — as per the hearing schedule',
+    ['Study of the assessment order, notices and records of the case',
+     'Drafting grounds of appeal and statement of facts; filing Form 35 before CIT(A) or Form 36 before ITAT',
+     'Drafting written submissions and paper book with supporting case law',
+     'Representation in faceless or physical hearings',
+     'Application for stay of demand, where required'],
+    ['Appeal memorandum and grounds', 'Written submissions and paper book', 'Hearing notes and status updates'],
+    ['Proceedings before the High Court / Supreme Court', 'Fees of senior counsel'],
+    'Per Filing/Instance', 50000, '50% on filing of the appeal, 50% on conclusion of hearings'),
+  S('tp', CATS[1], 'Transfer Pricing Study & Certification (Form 3CEB)',
+    'Annual — before the due date for Form 3CEB',
+    ['Identification and characterisation of international and specified domestic transactions',
+     'Functional, asset and risk (FAR) analysis through management discussions',
+     'Selection of the most appropriate method and benchmarking using database searches',
+     'Preparation of transfer pricing documentation under Rule 10D',
+     'Accountant\'s report in Form 3CEB; Master File in Form 3CEAA, where applicable'],
+    ['Transfer pricing study report', 'Accountant\'s report in Form 3CEB', 'Benchmarking workings'],
+    ['Transfer pricing assessments and DRP representation', 'Advance pricing agreements'],
+    'Fixed Fee', 75000, '50% on acceptance, 50% on filing of Form 3CEB'),
+  S('ldc', CATS[1], 'Lower Deduction Certificate (Sec. 197) & Form 15CA / 15CB',
+    'Per application / per remittance',
+    ['Application for lower or nil deduction certificate in Form 13 with estimated income computation',
+     'Follow-up with the jurisdictional assessing officer until the certificate is issued',
+     'Examination of foreign remittances for taxability under the Act and the applicable DTAA',
+     'Certificate in Form 15CB and assistance with filing Form 15CA'],
+    ['Filed Form 13 and issued certificate', 'Form 15CB for each remittance', 'Form 15CA acknowledgement'],
+    ['Procurement of tax residency certificates abroad', 'Refund claims arising from excess deduction'],
+    'Per Filing/Instance', 3500, 'Billed monthly for certificates issued', 'INR', 10),
+
+  S('gst-monthly', CATS[2], 'Monthly / Quarterly GST Compliance (GSTR-1, GSTR-3B)',
+    'Monthly (or quarterly under QRMP) — by the statutory due dates',
+    ['Preparation and filing of GSTR-1 / IFF with HSN and document summaries',
+     'Computation of tax liability and filing of GSTR-3B',
+     'Monthly reconciliation of input tax credit with GSTR-2B and the purchase register',
+     'Reverse charge liability and ITC reversals under Rules 37, 42 and 43',
+     'Follow-up with vendors on ITC mismatches',
+     'Monitoring of e-invoice and e-way bill compliance'],
+    ['Filed GSTR-1 and GSTR-3B with acknowledgements', 'Monthly ITC reconciliation statement', 'Tax payment workings'],
+    ['Annual return GSTR-9 / 9C', 'Notices, departmental audits and refunds'],
+    'Monthly Retainer', 6000, 'Billed monthly; payable within 10 days of invoice'),
+  S('gst-annual', CATS[2], 'GST Annual Return & Reconciliation (GSTR-9 & GSTR-9C)',
+    'Annual — by 31 December following the financial year',
+    ['Reconciliation of turnover, tax and ITC as per books with GSTR-1, GSTR-3B and GSTR-2B',
+     'Identification of short-paid tax or excess ITC, with recommended corrective action (DRC-03)',
+     'Preparation and filing of GSTR-9',
+     'Preparation of the self-certified reconciliation statement in GSTR-9C where turnover exceeds ₹5 crore'],
+    ['Filed GSTR-9 and GSTR-9C', 'Reconciliation workbook', 'Summary of differences and liabilities'],
+    ['Correction of returns of earlier periods', 'Payment of tax and interest'],
+    'Fixed Fee', 30000, '100% on filing of the annual return'),
+  S('gst-health', CATS[2], 'GST Advisory & Health Check',
+    'One-time — report within 4 weeks of receiving data',
+    ['Review of registrations, place of supply, classification (HSN / SAC) and rates applied',
+     'Review of ITC eligibility, blocked credits and documentation',
+     'Sample review of invoices, credit notes and e-invoices',
+     'Review of related-party supplies and cross-charges between GSTINs',
+     'Quantification of exposure with a remediation plan'],
+    ['GST health check report with risk ratings', 'Exposure quantification and action plan', 'Presentation to management'],
+    ['Filing of corrective returns', 'Representation before authorities'],
+    'Fixed Fee', 45000, '50% on acceptance, 50% on delivery of the report'),
+  S('gst-scn', CATS[2], 'GST Departmental Audit & Show Cause Notice Representation',
+    'Per notice / proceeding',
+    ['Coordination and data compilation for departmental audit under section 65 of the CGST Act, 2017',
+     'Analysis of audit observations, ASMT-10 scrutiny notices and show cause notices (DRC-01)',
+     'Drafting replies and written submissions with supporting legal precedents',
+     'Representation at personal hearings before the proper officer',
+     'Advice on payment under protest or appeal strategy'],
+    ['Replies and written submissions', 'Hearing representation', 'Case summary with recommended course of action'],
+    ['Appeals before the GST Appellate Tribunal and courts', 'Tax, interest and penalty payable'],
+    'Per Filing/Instance', 40000, '50% on acceptance, 50% on filing of the final reply'),
+  S('gst-refund', CATS[2], 'GST Refund Claims',
+    'Per claim (monthly / quarterly)',
+    ['Eligibility review for refunds on exports, inverted duty structure and excess cash balance',
+     'Computation of refund under Rule 89 of the CGST Rules, 2017',
+     'Preparation of statements and filing of RFD-01',
+     'Replies to deficiency memos and RFD-08 notices',
+     'Follow-up until the sanction order (RFD-06)'],
+    ['Filed refund application with annexures', 'Replies to departmental queries', 'Refund status tracker'],
+    ['Appeals against rejection of refund'],
+    'Per Filing/Instance', 25000, 'Billed per claim on filing', 'INR', 4),
+
+  S('mis', CATS[3], 'Monthly MIS Reporting',
+    'Monthly — within 10 working days of month-end',
+    ['Month-end closing checklist and review of provisions, accruals and cut-offs',
+     'Monthly profit and loss, balance sheet and cash flow summary',
+     'Budget vs actual and prior-period variance analysis with commentary',
+     'KPIs on margins, working capital days and receivable ageing',
+     'Monthly review call with promoters / management'],
+    ['Monthly MIS pack (PDF and Excel)', 'Variance commentary', 'KPI summary'],
+    ['Bookkeeping', 'Statutory compliance filings'],
+    'Monthly Retainer', 25000, 'Billed monthly in advance'),
+  S('powerbi', CATS[3], 'Automated Power BI Financial Dashboards',
+    'Project — 6 to 8 weeks',
+    ['Requirement workshop to define dashboards, KPIs and drill-downs',
+     'Data connections to Tally / Zoho / Excel sources with scheduled refresh',
+     'Data model for sales, purchases, receivables, payables, cash and profitability',
+     'Interactive dashboards with role-based views',
+     'Handover, user training and 30 days of post go-live support'],
+    ['Published Power BI dashboards', 'Data model documentation', 'User training session'],
+    ['Power BI licences and cloud costs', 'Changes to the source ERP'],
+    'Milestone-Based', 90000, '40% on acceptance, 40% on dashboard demo, 20% on go-live'),
+  S('cashflow', CATS[3], 'Cash Flow Forecasting & Budgeting Models',
+    'Annual budget with quarterly reforecast',
+    ['Annual operating budget by business unit / cost centre',
+     '13-week rolling cash flow forecast with scenario analysis',
+     'Working capital and funding requirement assessment',
+     'Driver-based financial model linked to sales and cost assumptions',
+     'Quarterly reforecast and review meeting'],
+    ['Budget and cash flow model (Excel)', 'Assumptions note', 'Quarterly reforecast'],
+    ['Project reports for bank finance (quoted separately)'],
+    'Fixed Fee', 60000, '50% on acceptance, 50% on delivery of the budget'),
+  S('bookkeeping', CATS[3], 'Bookkeeping & Accounting Supervision (Tally / Zoho / QuickBooks)',
+    'Monthly',
+    ['Supervision of day-to-day accounting by the client\'s team or outsourced staff',
+     'Monthly review of ledgers, bank reconciliations and journal entries',
+     'Reconciliation of key vendor and customer ledgers',
+     'Review of TDS computation, payments and quarterly TDS returns',
+     'Year-end closing and finalisation of the trial balance for audit'],
+    ['Monthly review checklist', 'Reconciled trial balance', 'Quarterly TDS return review'],
+    ['Data entry of transactions', 'Payroll processing'],
+    'Monthly Retainer', 15000, 'Billed monthly in arrears'),
+
+  S('incorporation', CATS[4], 'Company / LLP Incorporation',
+    'One-time — typically 2 to 4 weeks',
+    ['Advice on choice of entity, capital structure and proposed name',
+     'Digital signature certificates and DIN / DPIN for directors or designated partners',
+     'Name reservation (SPICe+ Part A / RUN-LLP) and drafting of MOA and AOA or the LLP agreement',
+     'Filing of SPICe+ / FiLLiP with PAN, TAN, EPFO, ESIC and GSTIN where opted',
+     'Filing of the LLP agreement in Form 3 within 30 days of incorporation, for LLPs'],
+    ['Certificate of incorporation', 'PAN and TAN allotment', 'Statutory registers and first board meeting documents'],
+    ['Government fees and stamp duty (billed at actuals)', 'Trademark registration'],
+    'Per Filing/Instance', 25000, '100% on acceptance'),
+  S('roc-annual', CATS[4], 'Annual ROC Filings (AOC-4, MGT-7)',
+    'Annual — within 30 / 60 days of the AGM',
+    ['Preparation of the Board\'s report and notice of AGM',
+     'Filing of financial statements in AOC-4 (XBRL where applicable)',
+     'Filing of the annual return in MGT-7 / MGT-7A',
+     'ADT-1 for auditor appointment, DIR-3 KYC and DPT-3',
+     'Half-yearly MSME-1 returns; LLP Form 8 and Form 11 for LLPs',
+     'Maintenance of minutes and statutory registers'],
+    ['Filed forms with SRNs', 'Board report and AGM documents', 'Annual compliance calendar'],
+    ['Event-based filings such as share allotment or charge creation (quoted separately)', 'Secretarial audit'],
+    'Fixed Fee', 18000, '100% on filing of AOC-4 and MGT-7'),
+  S('fema', CATS[4], 'FEMA / RBI Compliances',
+    'Event-based, plus annual FLA return by 15 July',
+    ['Advisory on FDI pricing guidelines and sectoral conditions',
+     'Filing of FC-GPR and FC-TRS on the FIRMS portal',
+     'Annual Return on Foreign Liabilities and Assets (FLA)',
+     'ODI reporting and annual performance reports, where applicable',
+     'ECB reporting (ECB-2) and loan registration filings'],
+    ['Filed forms and RBI acknowledgements', 'FEMA compliance tracker'],
+    ['Compounding applications before RBI', 'Valuation reports'],
+    'Fixed Fee', 30000, '100% on completion of filings'),
+  S('valuation', CATS[4], 'Startup Valuation & Due Diligence',
+    'Project — 3 to 5 weeks',
+    ['Valuation of equity shares for fund-raising under Rule 11UA and FEMA pricing guidelines, within the scope permitted to a Chartered Accountant',
+     'Application of valuation approaches: discounted cash flow, comparable companies and recent transactions',
+     'Financial and tax due diligence covering quality of earnings, working capital and contingent liabilities',
+     'Review of compliance status under the Companies Act, GST, income tax and labour laws',
+     'Red-flag summary for investors and promoters'],
+    ['Valuation report', 'Due diligence report with red-flag summary', 'Data room checklist'],
+    ['Valuations requiring a Registered Valuer under section 247 of the Companies Act, 2013', 'Legal due diligence'],
+    'Milestone-Based', 75000, '50% on acceptance, 50% on issue of final reports'),
+
+  S('us-tax', CATS[5], 'US / Foreign Tax Preparation Support',
+    'Per return — 3 to 5 business days turnaround',
+    ['Preparation of workpapers for US federal and state returns (Forms 1040, 1120, 1065) under the CPA\'s review',
+     'Data intake from client portals and organisers',
+     'Return preparation in the CPA firm\'s tax software as per its instructions',
+     'First-level review checklist and open-items list for the CPA'],
+    ['Draft returns and workpapers', 'Review notes and open-items list'],
+    ['Signing or e-filing of returns', 'Representation before the IRS'],
+    'Per Filing/Instance', 150, 'Billed monthly for returns completed', 'USD', 20),
+  S('cross-border-bk', CATS[5], 'Cross-Border Bookkeeping',
+    'Monthly — close within 10 business days',
+    ['Bookkeeping in QuickBooks Online / Xero for overseas entities',
+     'Bank and credit card reconciliations',
+     'Accounts payable and receivable management',
+     'Month-end close with accruals and prepaid schedules',
+     'Monthly financial statements in the client\'s reporting format'],
+    ['Monthly close package', 'Reconciliations', 'Monthly financial statements'],
+    ['Payroll and sales tax filings', 'Audit or review engagements'],
+    'Monthly Retainer', 600, 'Billed monthly in advance', 'USD'),
+  S('cpa-automation', CATS[5], 'CPA Firm Workflow Automation',
+    'Project — 4 to 6 weeks',
+    ['Mapping of current engagement workflows (tax, bookkeeping, advisory)',
+     'Design of automated client intake, document requests and status tracking',
+     'Configuration of practice management tools and integrations',
+     'Templates for recurring client communication',
+     'Team training and process documentation'],
+    ['Workflow design document', 'Configured automations', 'Training sessions and SOPs'],
+    ['Software subscription costs', 'Custom software development'],
+    'Milestone-Based', 2500, '50% on acceptance, 50% on go-live', 'USD'),
+];
+
+const ABOUT_DEFAULT = "{name} is a firm of Chartered Accountants registered with the Institute of Chartered Accountants of India (Firm Registration No. {frn}), with its office in {place}. The firm serves companies, LLPs, partnership firms, family businesses and individuals across audit and assurance, direct and indirect taxation, corporate law, and finance function support.\nEngagements are led by {partner}, {designation} (ICAI Membership No. {mno}), who remains the single point of accountability for quality, timelines and sign-off.\nTechnology sits at the centre of how we work: secure cloud document exchange, data analytics on complete ledgers where practicable, and automated MIS and dashboards, so that compliance data also serves as management information.";
+const COMMON = { tagline:'Chartered Accountants', address:'404, Decision Tower, Next to City Pride Multiplex, Pune Satara Road, Pune – 411 037', phone:'+91 97626 12439', website:'', partner:'CA Nikhilesh Bora', designation:'Partner', mno:'168182', place:'Pune', about: ABOUT_DEFAULT };
+const FIRMS = [
+  { id:'abc', name:'ABC & Co.', initials:'ABC', frn:'100842W', email:'mail@abc.in', ...COMMON },
+  { id:'xyz', name:'XYZ & Associates', initials:'XYZ', frn:'148087W', email:'mail@xyz.in', ...COMMON },
+];
+
+const CLAUSES = {
+  resp: { title:'Client Responsibilities & Data Requirements', text:
+"{client} is responsible for maintaining proper books of account and for the completeness and accuracy of the financial information and records provided to us.\n{client} will provide books of account, trial balance, ledgers, bank statements, statutory registers and supporting documents in the agreed format and within agreed timelines. Delays in information may extend delivery timelines, including statutory due dates.\nManagement will provide written representations on matters material to our work and will give access to personnel and premises as required.\nFor statutory filings, {client} will review and approve returns and forms before submission and remains responsible for timely payment of taxes, interest and fees." },
+  conf: { title:'Confidentiality & Data Security', text:
+"{firm} will keep all information received from {client} confidential and will not disclose it to any third party except as required by law, regulation or professional standards, including the Code of Ethics issued by the Institute of Chartered Accountants of India.\nClient data is stored on access-controlled systems and shared only with team members working on the engagement. Personal data is processed in line with the Digital Personal Data Protection Act, 2023.\nWorking papers are retained for the period required by professional standards and remain the property of {firm}." },
+  liab: { title:'Limitation of Liability', text:
+"Our services will be performed with due professional care in accordance with the standards issued by the Institute of Chartered Accountants of India.\nThe aggregate liability of {firm} for any claim arising from this engagement, whether in contract, tort or otherwise, shall not exceed the professional fees paid for the specific service giving rise to the claim during the twelve months preceding the claim, except where caused by fraud or wilful misconduct.\n{firm} shall not be liable for losses arising from information withheld, misrepresented or provided late by {client}, or for any indirect or consequential loss." },
+  general: { title:'General Terms', text:
+"Either party may terminate this engagement by giving 30 days' written notice. Fees for work performed up to the date of termination shall be payable.\nWork outside the scope described in this proposal will be undertaken on mutually agreed terms.\nThis proposal and any engagement arising from it are governed by the laws of India, and courts at {place} shall have exclusive jurisdiction.\nAppointment as statutory auditor is subject to the provisions of the Companies Act, 2013; a separate engagement letter in accordance with SA 210 will be issued for audit engagements." },
+};
+const GST_TEXT = 'Goods and Services Tax (GST) @ 18% shall be charged extra as applicable.';
+const OPE_TEXT = 'Out-of-pocket expenses (travel, statutory portal fees, stamp duty) will be billed at actuals.';
+
+/* ---------- helpers ---------- */
+const pad = n => String(n).padStart(2, '0');
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const parseISO = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], +m[2]-1, +m[3]) : new Date(); };
+const fmtDate = d => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + (+n || 0)); return d; };
+const fyOf = s => { const d = parseISO(s); const y = d.getFullYear(); const st = d.getMonth() >= 3 ? y : y - 1; return `${st}-${String(st+1).slice(2)}`; };
+const fyOptions = s => { const st = +fyOf(s).slice(0,4); return [st, st-1].map(y => `FY ${y}-${String(y+1).slice(2)} (AY ${y+1}-${String(y+2).slice(2)})`); };
+const makeRef = (ini, fy, n) => `${ini}/PROP/${fy}/${String(n).padStart(3,'0')}`;
+const money = (n, cur) => {
+  const v = Number(n) || 0;
+  try { return new Intl.NumberFormat(cur === 'INR' ? 'en-IN' : 'en-US', { style:'currency', currency:cur, minimumFractionDigits: Number.isInteger(v) ? 0 : 2, maximumFractionDigits: 2 }).format(v); }
+  catch(e){ return cur + ' ' + v; }
+};
+const isRecurring = b => b === 'Monthly Retainer' || b === 'Quarterly' || b === 'Per Filing/Instance';
+const annualOf = s => isRecurring(s.billing) ? (Number(s.fee)||0) * (Number(s.units)||0) : (Number(s.fee)||0);
+const basisOf = s => {
+  const u = Number(s.units) || 0;
+  switch (s.billing){
+    case 'Monthly Retainer': return `Per month × ${u} month${u===1?'':'s'}`;
+    case 'Quarterly': return `Per quarter × ${u} quarter${u===1?'':'s'}`;
+    case 'Per Filing/Instance': return u > 1 ? `Per filing × ${u} (estimated)` : 'Per filing / instance';
+    case 'Milestone-Based': return 'Milestone-based (total)';
+    default: return 'Fixed fee';
+  }
+};
+const unitsLabel = b => b === 'Monthly Retainer' ? 'Months' : b === 'Quarterly' ? 'Quarters' : 'Est. filings / yr';
+const totalsOf = svcs => svcs.reduce((acc, s) => { acc[s.currency] = (acc[s.currency] || 0) + annualOf(s); return acc; }, {});
+
+function inWords(num){
+  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const two = x => x < 20 ? a[x] : b[Math.floor(x/10)] + (x % 10 ? ' ' + a[x % 10] : '');
+  const three = x => { const h = Math.floor(x/100), r = x % 100; return (h ? a[h] + ' Hundred' + (r ? ' ' : '') : '') + (r ? two(r) : ''); };
+  let n = Math.round(Math.abs(num)); if (n === 0) return 'Zero';
+  const crore = Math.floor(n / 1e7); n %= 1e7;
+  const lakh = Math.floor(n / 1e5); n %= 1e5;
+  const th = Math.floor(n / 1000); n %= 1000;
+  const parts = [];
+  if (crore) parts.push((crore > 99 ? inWords(crore) : two(crore)) + ' Crore');
+  if (lakh) parts.push(two(lakh) + ' Lakh');
+  if (th) parts.push(two(th) + ' Thousand');
+  if (n) parts.push(three(n));
+  return parts.join(' ');
+}
+
+const instantiate = svc => ({
+  uid: uid(), sid: svc.id, category: svc.category, name: svc.name, frequency: svc.frequency,
+  scope: svc.scope.map(t => ({ t, on: true })), deliverables: svc.deliverables.map(t => ({ t, on: true })), exclusions: svc.exclusions.map(t => ({ t, on: true })),
+  billing: svc.billing, fee: svc.fee, currency: svc.currency, units: svc.units, schedule: svc.schedule,
+});
+const baseClauses = () => Object.fromEntries(Object.entries(CLAUSES).map(([k, v]) => [k, { on: true, title: v.title, text: v.text }]));
+function blankProposal(firm, n){
+  const date = todayISO();
+  return {
+    id: uid(), firmId: firm.id, ref: makeRef(firm.initials, fyOf(date), n), date, validity: 30,
+    client: { name:'', entity: ENTITY_TYPES[0], contact:'', designation:'', address:'', period: fyOptions(date)[0], summary:'' },
+    services: [], gst: true, ope: true, paymentTerms: 'Invoices are payable within 15 days of the invoice date.',
+    clauses: baseClauses(), accept: true, sample: false,
+  };
+}
+function sampleProposal(){
+  const p = blankProposal(FIRMS[0], 1);
+  p.sample = true;
+  p.client = { name:'Sahyadri Precision Components Pvt Ltd', entity:'Private Limited Company', contact:'Mr. Rohan Kulkarni', designation:'Director – Finance',
+    address:'Plot No. 18, MIDC Bhosari, Pune – 411 026', period: p.client.period,
+    summary:'During our meeting you mentioned that GST input tax credit mismatches and a compressed audit timeline last year delayed the AGM. This proposal sets a single calendar for audit, tax audit and GST compliance so that books close once and every filing draws on the same reconciled numbers.' };
+  p.services = ['statutory-audit','tax-audit','itr','gst-monthly'].map(id => instantiate(SEED.find(s => s.id === id)));
+  return p;
+}
+const fillTokens = (text, firm, clientName) => (text || '')
+  .replace(/\{firm\}/g, firm.name).replace(/\{name\}/g, firm.name).replace(/\{client\}/g, clientName)
+  .replace(/\{frn\}/g, firm.frn).replace(/\{partner\}/g, firm.partner).replace(/\{designation\}/g, firm.designation)
+  .replace(/\{mno\}/g, firm.mno).replace(/\{place\}/g, firm.place || 'Pune');
+const paras = t => (t || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+const rowsFor = t => Math.max(1, Math.ceil((t || '').length / 46));
+
+/* ---------- small UI pieces ---------- */
+function Switch({ on, onChange, label, id }){
+  return <button id={id} type="button" role="switch" aria-checked={on} aria-label={label} className="switch" onClick={() => onChange(!on)} />;
+}
+function Field({ label, htmlFor, children, hint }){
+  return <div><label className="lbl" htmlFor={htmlFor}>{label}</label>{children}{hint && <div className="hint">{hint}</div>}</div>;
+}
+function ConfirmButton({ children, onConfirm, className = 'btn sm danger', armedText = 'Click again to confirm' }){
+  const [armed, setArmed] = useState(false);
+  useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t); }, [armed]);
+  return <button type="button" className={className + (armed ? ' armed' : '')} onClick={() => { if (armed){ setArmed(false); onConfirm(); } else setArmed(true); }}>{armed ? armedText : children}</button>;
+}
+
+function ItemList({ idBase, label, items, onChange, placeholder }){
+  const set = (i, patch) => onChange(items.map((it, j) => j === i ? { ...it, ...patch } : it));
+  return (
+    <div>
+      <div className="lbl">{label} <span style={{textTransform:'none',letterSpacing:0,fontWeight:400}}>· {items.filter(i => i.on).length}/{items.length} included</span></div>
+      {items.map((it, i) => (
+        <div className="item" key={i}>
+          <input type="checkbox" id={`${idBase}-c${i}`} checked={it.on} onChange={e => set(i, { on: e.target.checked })} aria-label="Include this item" />
+          <textarea id={`${idBase}-t${i}`} className={'inp' + (it.on ? '' : ' off')} rows={rowsFor(it.t)} value={it.t} onChange={e => set(i, { t: e.target.value })} />
+          <button type="button" className="ibtn del" aria-label="Remove item" onClick={() => onChange(items.filter((_, j) => j !== i))}><Icon n="trash" s={14} /></button>
+        </div>
+      ))}
+      <button type="button" className="add" onClick={() => onChange([...items, { t: '', on: true }])}>+ Add {placeholder}</button>
+    </div>
+  );
+}
+
+/* ---------- Step 1 ---------- */
+function StepClient({ p, firms, firm, setP, switchFirm, nextRef, setFirms }){
+  const c = p.client;
+  const upC = (k, v) => setP(prev => ({ ...prev, client: { ...prev.client, [k]: v }, sample: false }));
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const validUntil = fmtDate(addDays(p.date, p.validity));
+  return (
+    <div>
+      {p.sample && <div className="chip" style={{marginTop:12}}><Icon n="info" s={13} /> Sample client — replace with your own details</div>}
+      <Field label="Issuing firm">
+        <div className="seg" role="group" aria-label="Issuing firm">
+          {firms.map(f => <button key={f.id} type="button" aria-pressed={f.id === p.firmId} onClick={() => switchFirm(f.id)}>{f.name}</button>)}
+        </div>
+      </Field>
+      <Field label="Client / company name" htmlFor="c-name"><input id="c-name" className="inp" value={c.name} onChange={e => upC('name', e.target.value)} placeholder="e.g. Deccan Agro Foods Pvt Ltd" /></Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+        <Field label="Entity type" htmlFor="c-entity">
+          <select id="c-entity" className="inp" value={c.entity} onChange={e => upC('entity', e.target.value)}>{ENTITY_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+        </Field>
+        <Field label="Engagement period" htmlFor="c-period">
+          <input id="c-period" className="inp" list="period-opts" value={c.period} onChange={e => upC('period', e.target.value)} />
+          <datalist id="period-opts">{fyOptions(p.date).map(o => <option key={o} value={o} />)}</datalist>
+        </Field>
+        <Field label="Contact person" htmlFor="c-contact"><input id="c-contact" className="inp" value={c.contact} onChange={e => upC('contact', e.target.value)} placeholder="Mr. / Ms. …" /></Field>
+        <Field label="Designation" htmlFor="c-desig"><input id="c-desig" className="inp" value={c.designation} onChange={e => upC('designation', e.target.value)} placeholder="Director, CFO…" /></Field>
+      </div>
+      <Field label="Client address" htmlFor="c-addr"><textarea id="c-addr" className="inp" rows={2} value={c.address} onChange={e => upC('address', e.target.value)} /></Field>
+      <div className="grid grid-cols-2 gap-x-3">
+        <Field label="Proposal date" htmlFor="p-date"><input id="p-date" type="date" className="inp" value={p.date} onChange={e => setP(prev => ({ ...prev, date: e.target.value }))} /></Field>
+        <Field label="Validity (days)" htmlFor="p-valid" hint={`Valid until ${validUntil}`}><input id="p-valid" type="number" min="1" className="inp num" value={p.validity} onChange={e => setP(prev => ({ ...prev, validity: Math.max(1, +e.target.value || 1) }))} /></Field>
+      </div>
+      <Field label="Reference number" htmlFor="p-ref" hint="Format: FIRM/PROP/FY/sequence. Edit freely, or take the next number in the series.">
+        <div className="flex gap-2">
+          <input id="p-ref" className="inp mono" value={p.ref} onChange={e => setP(prev => ({ ...prev, ref: e.target.value }))} />
+          <button type="button" className="btn" onClick={nextRef}>Next no.</button>
+        </div>
+      </Field>
+      <Field label="Executive summary note (optional)" htmlFor="c-sum" hint="Appears in the cover letter. Name the client's specific concerns.">
+        <textarea id="c-sum" className="inp" rows={4} value={c.summary} onChange={e => upC('summary', e.target.value)} />
+      </Field>
+      <div style={{marginTop:14}}>
+        <button type="button" className="btn sm" onClick={() => setAboutOpen(o => !o)}><Icon n="pencil" s={13} /> {aboutOpen ? 'Hide' : 'Edit'} “About the firm” text</button>
+        {aboutOpen && (
+          <Field label={`About ${firm.name}`} htmlFor="f-about" hint="Saved to this firm's profile. Tokens {name}, {frn}, {partner}, {designation}, {mno}, {place} fill in automatically.">
+            <textarea id="f-about" className="inp" rows={8} value={firm.about} onChange={e => setFirms(fs => fs.map(f => f.id === firm.id ? { ...f, about: e.target.value } : f))} />
+          </Field>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Step 2 ---------- */
+function StepScope({ p, catalog, setP }){
+  const [q, setQ] = useState('');
+  const [closed, setClosed] = useState({});
+  const [openCard, setOpenCard] = useState(null);
+  const selectedIds = new Set(p.services.map(s => s.sid));
+  const ql = q.trim().toLowerCase();
+  const cats = useMemo(() => { const seen = [...CATS]; catalog.forEach(s => { if (!seen.includes(s.category)) seen.push(s.category); }); return seen; }, [catalog]);
+  const toggle = svc => setP(prev => selectedIds.has(svc.id)
+    ? { ...prev, services: prev.services.filter(s => s.sid !== svc.id) }
+    : { ...prev, services: [...prev.services, instantiate(svc)] });
+  const upS = (u, patch) => setP(prev => ({ ...prev, services: prev.services.map(s => s.uid === u ? { ...s, ...patch } : s) }));
+  const move = (i, d) => setP(prev => { const a = [...prev.services]; const j = i + d; if (j < 0 || j >= a.length) return prev; [a[i], a[j]] = [a[j], a[i]]; return { ...prev, services: a }; });
+
+  return (
+    <div>
+      <div style={{position:'relative',marginTop:12}}>
+        <span style={{position:'absolute',left:10,top:9,color:'var(--muted)'}}><Icon n="search" s={15} /></span>
+        <input id="svc-search" className="inp" style={{paddingLeft:32}} placeholder="Search services, forms, sections…" value={q} onChange={e => setQ(e.target.value)} aria-label="Search services" />
+      </div>
+      <div style={{marginTop:6}}>
+        {cats.map(cat => {
+          const items = catalog.filter(s => s.category === cat && (!ql || (s.name + ' ' + s.scope.join(' ')).toLowerCase().includes(ql)));
+          if (!items.length) return null;
+          const isClosed = closed[cat] && !ql;
+          const count = items.filter(s => selectedIds.has(s.id)).length;
+          return (
+            <div key={cat}>
+              <button type="button" className="cat-h" onClick={() => setClosed(c => ({ ...c, [cat]: !c[cat] }))} aria-expanded={!isClosed}>
+                <span>{cat}</span>
+                <span className="flex items-center gap-2">{count > 0 && <span className="chip">{count} selected</span>}<span style={{transform: isClosed ? 'rotate(-90deg)' : 'none', display:'inline-flex'}}><Icon n="chev" s={14} /></span></span>
+              </button>
+              {!isClosed && items.map(s => (
+                <label key={s.id} className={'svc-row' + (selectedIds.has(s.id) ? ' on' : '')}>
+                  <input type="checkbox" checked={selectedIds.has(s.id)} onChange={() => toggle(s)} />
+                  <span style={{minWidth:0}}>
+                    <span className="svc-name block">{s.name}</span>
+                    <span className="svc-meta block">{s.billing} · {money(s.fee, s.currency)}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="lbl" style={{marginTop:20}}>Selected services — edit scope for this client</div>
+      {!p.services.length && <div className="hint">Tick services above. Each one brings its standard scope, deliverables, timeline and exclusions into the proposal.</div>}
+      {p.services.map((s, i) => {
+        const isOpen = openCard === s.uid;
+        return (
+          <div className="card" key={s.uid}>
+            <div className="card-h">
+              <span className="mono" style={{color:'var(--gold-ink)',fontSize:12,minWidth:28}}>2.{i+1}</span>
+              <button type="button" onClick={() => setOpenCard(isOpen ? null : s.uid)} style={{flex:1,minWidth:0,textAlign:'left',border:0,background:'transparent',padding:0}} aria-expanded={isOpen}>
+                <div style={{fontWeight:500,fontSize:13.5}}>{s.name}</div>
+                <div className="svc-meta">{s.scope.filter(x => x.on).length} scope items · {s.deliverables.filter(x => x.on).length} deliverables</div>
+              </button>
+              <button type="button" className="ibtn" aria-label="Move up" onClick={() => move(i, -1)} disabled={i === 0}><Icon n="up" s={14} /></button>
+              <button type="button" className="ibtn" aria-label="Move down" onClick={() => move(i, 1)} disabled={i === p.services.length - 1}><Icon n="down" s={14} /></button>
+              <button type="button" className="ibtn del" aria-label="Remove service" onClick={() => setP(prev => ({ ...prev, services: prev.services.filter(x => x.uid !== s.uid) }))}><Icon n="x" s={14} /></button>
+            </div>
+            {isOpen && (
+              <div style={{padding:'0 10px 12px',borderTop:'1px solid var(--line2)'}}>
+                <Field label="Service title" htmlFor={`${s.uid}-name`}><input id={`${s.uid}-name`} className="inp" value={s.name} onChange={e => upS(s.uid, { name: e.target.value })} /></Field>
+                <Field label="Frequency / timeline" htmlFor={`${s.uid}-freq`}><input id={`${s.uid}-freq`} className="inp" value={s.frequency} onChange={e => upS(s.uid, { frequency: e.target.value })} /></Field>
+                <ItemList idBase={`${s.uid}-sc`} label="Scope of work" placeholder="scope item" items={s.scope} onChange={v => upS(s.uid, { scope: v })} />
+                <ItemList idBase={`${s.uid}-dl`} label="Deliverables" placeholder="deliverable" items={s.deliverables} onChange={v => upS(s.uid, { deliverables: v })} />
+                <ItemList idBase={`${s.uid}-ex`} label="Exclusions" placeholder="exclusion" items={s.exclusions} onChange={v => upS(s.uid, { exclusions: v })} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- Step 3 ---------- */
+function StepFees({ p, setP }){
+  const upS = (u, patch) => setP(prev => ({ ...prev, services: prev.services.map(s => s.uid === u ? { ...s, ...patch } : s) }));
+  const totals = totalsOf(p.services);
+  return (
+    <div>
+      {!p.services.length && <div className="hint" style={{marginTop:12}}>Select services in Step 2 first.</div>}
+      {p.services.map((s, i) => (
+        <div className="card" key={s.uid} style={{marginTop: i ? 8 : 12, padding:'4px 10px 12px'}}>
+          <div style={{fontWeight:500,fontSize:13.5,marginTop:8}}><span className="mono" style={{color:'var(--gold-ink)',fontSize:12,marginRight:6}}>{i+1}.</span>{s.name}</div>
+          <div className="grid grid-cols-2 gap-x-3">
+            <Field label="Billing model" htmlFor={`${s.uid}-bill`}>
+              <select id={`${s.uid}-bill`} className="inp" value={s.billing} onChange={e => { const b = e.target.value; upS(s.uid, { billing: b, units: b === 'Per Filing/Instance' ? (s.billing === b ? s.units : 1) : defUnits(b) }); }}>
+                {BILLING.map(b => <option key={b}>{b}</option>)}
+              </select>
+            </Field>
+            <Field label="Currency" htmlFor={`${s.uid}-cur`}>
+              <select id={`${s.uid}-cur`} className="inp" value={s.currency} onChange={e => upS(s.uid, { currency: e.target.value })}>
+                {CURRENCIES.map(c => <option key={c} value={c}>{c} {({INR:'₹',USD:'$',GBP:'£',EUR:'€'})[c]}</option>)}
+              </select>
+            </Field>
+            <Field label={isRecurring(s.billing) ? (s.billing === 'Monthly Retainer' ? 'Fee per month' : s.billing === 'Quarterly' ? 'Fee per quarter' : 'Fee per filing') : 'Total fee'} htmlFor={`${s.uid}-fee`}>
+              <input id={`${s.uid}-fee`} type="number" min="0" step="any" className="inp num" value={s.fee} onChange={e => upS(s.uid, { fee: e.target.value === '' ? '' : +e.target.value })} />
+            </Field>
+            {isRecurring(s.billing)
+              ? <Field label={unitsLabel(s.billing)} htmlFor={`${s.uid}-units`}><input id={`${s.uid}-units`} type="number" min="0" className="inp num" value={s.units} onChange={e => upS(s.uid, { units: e.target.value === '' ? '' : +e.target.value })} /></Field>
+              : <div />}
+          </div>
+          <Field label="Billing schedule / milestones" htmlFor={`${s.uid}-sched`}>
+            <textarea id={`${s.uid}-sched`} className="inp" rows={rowsFor(s.schedule)} value={s.schedule} onChange={e => upS(s.uid, { schedule: e.target.value })} />
+          </Field>
+          <div className="hint num" style={{marginTop:8}}>Estimated annual fee: <b style={{color:'var(--ink)'}}>{money(annualOf(s), s.currency)}</b> <span className="pill" style={{marginLeft:4}}>{basisOf(s)}</span></div>
+        </div>
+      ))}
+      {p.services.length > 0 && (
+        <div className="totals num">
+          <div className="lbl" style={{marginTop:0}}>Estimated annual fees</div>
+          {Object.entries(totals).map(([cur, v]) => <div key={cur} className="flex justify-between" style={{fontSize:15}}><span>{cur}</span><b>{money(v, cur)}</b></div>)}
+          <div className="hint">Excluding GST and out-of-pocket expenses.</div>
+        </div>
+      )}
+      <div style={{marginTop:14}}>
+        <div className="trow"><Switch id="t-gst" on={p.gst} onChange={v => setP(prev => ({ ...prev, gst: v }))} label="Add GST clause" /><label htmlFor="t-gst" style={{fontSize:13}}><b style={{fontWeight:600}}>GST clause</b><div className="hint" style={{marginTop:2}}>{GST_TEXT}</div></label></div>
+        <div className="trow"><Switch id="t-ope" on={p.ope} onChange={v => setP(prev => ({ ...prev, ope: v }))} label="Add out-of-pocket expense clause" /><label htmlFor="t-ope" style={{fontSize:13}}><b style={{fontWeight:600}}>Out-of-pocket expenses</b><div className="hint" style={{marginTop:2}}>{OPE_TEXT}</div></label></div>
+      </div>
+      <Field label="Payment terms" htmlFor="p-terms"><textarea id="p-terms" className="inp" rows={2} value={p.paymentTerms} onChange={e => setP(prev => ({ ...prev, paymentTerms: e.target.value }))} /></Field>
+    </div>
+  );
+}
+
+/* ---------- Step 4 ---------- */
+function StepTerms({ p, setP }){
+  const [edit, setEdit] = useState(null);
+  const upCl = (k, patch) => setP(prev => ({ ...prev, clauses: { ...prev.clauses, [k]: { ...prev.clauses[k], ...patch } } }));
+  return (
+    <div style={{marginTop:6}}>
+      {Object.entries(p.clauses).map(([k, cl]) => (
+        <div className="trow" key={k} style={{flexDirection:'column',alignItems:'stretch'}}>
+          <div className="flex items-center gap-3">
+            <Switch id={`cl-${k}`} on={cl.on} onChange={v => upCl(k, { on: v })} label={cl.title} />
+            <label htmlFor={`cl-${k}`} style={{flex:1,fontWeight:500,fontSize:13.5}}>{cl.title}</label>
+            <button type="button" className="btn sm" onClick={() => setEdit(edit === k ? null : k)}><Icon n="pencil" s={12} /> {edit === k ? 'Done' : 'Edit'}</button>
+          </div>
+          {edit === k && (
+            <div>
+              <Field label="Heading" htmlFor={`cl-${k}-t`}><input id={`cl-${k}-t`} className="inp" value={cl.title} onChange={e => upCl(k, { title: e.target.value })} /></Field>
+              <Field label="Text (one paragraph per line)" htmlFor={`cl-${k}-x`} hint="{firm}, {client} and {place} fill in automatically.">
+                <textarea id={`cl-${k}-x`} className="inp" rows={8} value={cl.text} onChange={e => upCl(k, { text: e.target.value })} />
+              </Field>
+              <button type="button" className="btn sm" style={{marginTop:8}} onClick={() => upCl(k, { title: CLAUSES[k].title, text: CLAUSES[k].text })}><Icon n="rotate" s={12} /> Restore standard text</button>
+            </div>
+          )}
+        </div>
+      ))}
+      <div className="trow">
+        <Switch id="cl-accept" on={p.accept} onChange={v => setP(prev => ({ ...prev, accept: v }))} label="Validity and acceptance block" />
+        <label htmlFor="cl-accept" style={{fontSize:13.5}}><b style={{fontWeight:500}}>Validity & Acceptance block</b><div className="hint" style={{marginTop:2}}>Dual signature block: firm partner and client's authorised signatory with date and stamp.</div></label>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- The document ---------- */
+const F = { serif:"'Libre Caslon Text', Georgia, 'Times New Roman', serif", sans:"'IBM Plex Sans', Calibri, Arial, sans-serif" };
+const C = { navy:'#0F172A', slate:'#475569', gold:'#A67C2E', rule:'#D6DCE5', soft:'#F3F5F8', faint:'#64748B' };
+const sp = { margin:'0 0 9px', fontSize:'10.5pt', lineHeight:1.55, color:C.navy, fontFamily:F.sans };
+const sh2 = { fontFamily:F.serif, fontSize:'15pt', fontWeight:700, color:C.navy, margin:'0 0 12px', paddingBottom:5, borderBottom:`1px solid ${C.gold}` };
+const sh3 = { fontFamily:F.serif, fontSize:'11.5pt', fontWeight:700, color:C.navy, margin:'0 0 6px' };
+const sul = { margin:'0 0 0 0', paddingLeft:18, listStyleType:'disc' };
+const sli = { fontSize:'9.5pt', lineHeight:1.5, color:C.navy, margin:'0 0 3px', fontFamily:F.sans };
+const tbl = { width:'100%', borderCollapse:'collapse', fontFamily:F.sans, fontSize:'9.5pt', color:C.navy };
+const tdL = { width:'24%', verticalAlign:'top', padding:'7px 10px', background:C.soft, border:`1px solid ${C.rule}`, fontWeight:600, color:C.slate, fontSize:'8.5pt', textTransform:'uppercase', letterSpacing:'0.5px' };
+const tdR = { verticalAlign:'top', padding:'7px 10px', border:`1px solid ${C.rule}` };
+const th = { background:C.navy, color:'#FFFFFF', padding:'7px 8px', textAlign:'left', fontWeight:600, fontSize:'8.5pt', border:`1px solid ${C.navy}` };
+const td = { padding:'7px 8px', border:`1px solid ${C.rule}`, verticalAlign:'top' };
+
+function Bullets({ items }){
+  const on = items.filter(i => i.on && i.t.trim());
+  if (!on.length) return <span style={{color:C.faint}}>—</span>;
+  return <ul style={sul}>{on.map((it, i) => <li key={i} style={sli}>{it.t}</li>)}</ul>;
+}
+
+function Proposal({ p, firm }){
+  const client = p.client.name.trim() || '[Client Name]';
+  const date = fmtDate(parseISO(p.date));
+  const validUntil = fmtDate(addDays(p.date, p.validity));
+  const f = t => fillTokens(t, firm, client);
+  const totals = totalsOf(p.services);
+  const clauses = Object.values(p.clauses).filter(c => c.on);
+  let sec = 0;
+  const nAbout = ++sec;
+  const nScope = ++sec;
+  const nFees = p.services.length ? ++sec : null;
+  const nTerms = clauses.length ? ++sec : null;
+  const nAccept = p.accept ? ++sec : null;
+  const contactLine = [p.client.contact, p.client.designation].filter(Boolean);
+  const sectionTitle = (n, t) => <h2 style={sh2}><span style={{color:C.gold,marginRight:8}}>{n}.</span>{t}</h2>;
+
+  return (
+    <div style={{fontFamily:F.sans, color:C.navy}}>
+      {/* Letterhead */}
+      <div style={{textAlign:'center', paddingBottom:12, borderBottom:`3px double ${C.gold}`, marginBottom:20}}>
+        <div style={{fontFamily:F.serif, fontSize:'25pt', fontWeight:700, color:C.navy, letterSpacing:'0.3px', lineHeight:1.15}}>{firm.name}</div>
+        <div style={{fontSize:'8.5pt', letterSpacing:'3.5px', textTransform:'uppercase', color:C.gold, marginTop:4, fontWeight:600}}>{firm.tagline}</div>
+        <div style={{fontSize:'8.5pt', color:C.slate, marginTop:8}}>{firm.address}</div>
+        <div style={{fontSize:'8.5pt', color:C.slate, marginTop:2}}>{[firm.email, firm.phone, firm.website, firm.frn && `FRN ${firm.frn}`].filter(Boolean).join('   ·   ')}</div>
+      </div>
+
+      {/* Cover letter */}
+      <table style={{...tbl, fontSize:'9.5pt', marginBottom:18}}><tbody><tr>
+        <td style={{padding:0}}><span style={{color:C.slate}}>Ref: </span><b style={{fontFamily:"'IBM Plex Mono', Consolas, monospace", fontWeight:500}}>{p.ref}</b></td>
+        <td style={{padding:0, textAlign:'right'}}><span style={{color:C.slate}}>Date: </span><b style={{fontWeight:600}}>{date}</b></td>
+      </tr></tbody></table>
+
+      <div style={{...sp, marginBottom:16}}>
+        <div style={{color:C.slate}}>To,</div>
+        {contactLine.length > 0 && <div>{contactLine.join(', ')}</div>}
+        <div style={{fontWeight:600}}>{client}</div>
+        {p.client.address && paras(p.client.address).map((l, i) => <div key={i}>{l}</div>)}
+      </div>
+
+      <p style={{...sp, fontWeight:600, marginBottom:14}}>
+        Subject: Proposal for professional services{p.client.period ? ` — ${p.client.period}` : ''}
+      </p>
+      <p style={sp}>Dear {p.client.contact.trim() || 'Sir / Madam'},</p>
+      <p style={sp}>Thank you for the opportunity to submit this proposal. We are pleased to set out the scope of work, deliverables and professional fees for the services that {firm.name} proposes to render to {client}{p.client.entity ? ` (${p.client.entity})` : ''}{p.client.period ? ` for ${p.client.period}` : ''}.</p>
+      {paras(p.client.summary).map((t, i) => <p key={i} style={sp}>{t}</p>)}
+      {p.services.length > 0 && <>
+        <p style={sp}>Our proposal covers the following services:</p>
+        <ul style={{...sul, marginBottom:10}}>{p.services.map(s => <li key={s.uid} style={{...sli, fontSize:'10pt'}}>{s.name}</li>)}</ul>
+      </>}
+      <p style={sp}>The engagement will be led by {firm.partner}, {firm.designation}, supported by a dedicated engagement team. The scope, deliverables, fees and terms are set out in the pages that follow.</p>
+      <p style={sp}>This proposal is valid for {p.validity} days from the date above, that is, up to {validUntil}. We look forward to working with you.</p>
+      <div className="avoid" style={{...sp, marginTop:22}}>
+        <div>Yours faithfully,</div>
+        <div style={{fontWeight:600, marginTop:4}}>For {firm.name}</div>
+        <div style={{color:C.slate}}>{firm.tagline}{firm.frn ? ` · FRN ${firm.frn}` : ''}</div>
+        <div style={{height:44}} />
+        <div style={{fontWeight:600}}>{firm.partner}</div>
+        <div style={{color:C.slate}}>{firm.designation}{firm.mno ? ` · M. No. ${firm.mno}` : ''}</div>
+      </div>
+
+      <div className="pb" style={{pageBreakBefore:'always'}} />
+
+      {/* About */}
+      {sectionTitle(nAbout, `About ${firm.name}`)}
+      {paras(f(firm.about)).map((t, i) => <p key={i} style={sp}>{t}</p>)}
+
+      {/* Scope */}
+      <div style={{height:14}} />
+      {sectionTitle(nScope, 'Detailed Scope of Services')}
+      {!p.services.length && <p style={{...sp, color:C.faint, fontStyle:'italic'}}>No services selected yet.</p>}
+      {p.services.map((s, i) => (
+        <div key={s.uid} className="avoid" style={{marginBottom:16}}>
+          <h3 style={sh3}><span style={{color:C.gold}}>{nScope}.{i+1}</span>&nbsp; {s.name}</h3>
+          <table style={tbl}><tbody>
+            <tr><td style={tdL}>Scope of work</td><td style={tdR}><Bullets items={s.scope} /></td></tr>
+            <tr><td style={tdL}>Deliverables</td><td style={tdR}><Bullets items={s.deliverables} /></td></tr>
+            <tr><td style={tdL}>Frequency / timeline</td><td style={tdR}>{s.frequency || '—'}</td></tr>
+            {s.exclusions.some(x => x.on && x.t.trim()) && <tr><td style={tdL}>Exclusions</td><td style={tdR}><Bullets items={s.exclusions} /></td></tr>}
+          </tbody></table>
+        </div>
+      ))}
+
+      {/* Commercials */}
+      {nFees && <>
+        <div className="pb" style={{pageBreakBefore:'always'}} />
+        {sectionTitle(nFees, 'Commercial Proposal')}
+        <p style={sp}>Our professional fees for the services described above are as follows:</p>
+        <table style={{...tbl, fontSize:'9pt', marginBottom:10}}>
+          <thead><tr>
+            <th style={{...th, width:'5%'}}>No.</th>
+            <th style={{...th, width:'29%'}}>Service</th>
+            <th style={{...th, width:'17%'}}>Billing basis</th>
+            <th style={{...th, width:'12%', textAlign:'right'}}>Fee</th>
+            <th style={{...th, width:'13%', textAlign:'right'}}>Est. annual</th>
+            <th style={{...th, width:'24%'}}>Payment schedule</th>
+          </tr></thead>
+          <tbody>
+            {p.services.map((s, i) => (
+              <tr key={s.uid}>
+                <td style={{...td, color:C.slate}}>{i+1}</td>
+                <td style={{...td, fontWeight:500}}>{s.name}</td>
+                <td style={td}>{basisOf(s)}</td>
+                <td style={{...td, textAlign:'right', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums'}}>{money(s.fee, s.currency)}</td>
+                <td style={{...td, textAlign:'right', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums', fontWeight:600}}>{money(annualOf(s), s.currency)}</td>
+                <td style={{...td, fontSize:'8.5pt', color:C.slate}}>{s.schedule}</td>
+              </tr>
+            ))}
+            {Object.entries(totals).map(([cur, v]) => (
+              <tr key={cur}>
+                <td colSpan={4} style={{...td, background:C.soft, fontWeight:700, textAlign:'right'}}>Total estimated annual fees ({cur})</td>
+                <td style={{...td, background:C.soft, fontWeight:700, textAlign:'right', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums'}}>{money(v, cur)}</td>
+                <td style={{...td, background:C.soft, fontSize:'8.5pt', color:C.slate}}>{p.gst ? 'Plus GST' : ''}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {totals.INR > 0 && <p style={{...sp, fontSize:'9.5pt', fontStyle:'italic', color:C.slate}}>Total estimated annual fees (INR) in words: Rupees {inWords(totals.INR)} only.</p>}
+        <div className="avoid">
+          <h3 style={{...sh3, marginTop:12}}>Notes to the commercials</h3>
+          <ul style={sul}>
+            {p.gst && <li style={sli}>{GST_TEXT}</li>}
+            {p.ope && <li style={sli}>{OPE_TEXT}</li>}
+            {p.services.some(s => isRecurring(s.billing)) && <li style={sli}>Annual amounts for retainer and per-filing services are estimates based on the number of periods or filings shown; billing is on actual periods or filings.</li>}
+            {paras(p.paymentTerms).map((t, i) => <li key={i} style={sli}>{t}</li>)}
+          </ul>
+        </div>
+      </>}
+
+      {/* Terms */}
+      {nTerms && <>
+        <div style={{height:18}} />
+        {sectionTitle(nTerms, 'Terms & Conditions')}
+        {clauses.map((cl, i) => (
+          <div key={i} style={{marginBottom:12}}>
+            <h3 style={sh3}><span style={{color:C.gold}}>{nTerms}.{i+1}</span>&nbsp; {cl.title}</h3>
+            <ol style={{margin:0, paddingLeft:20, listStyleType:'lower-alpha'}}>{paras(f(cl.text)).map((t, j) => <li key={j} style={sli}>{t}</li>)}</ol>
+          </div>
+        ))}
+      </>}
+
+      {/* Acceptance */}
+      {nAccept && (
+        <div className="avoid" style={{marginTop:20}}>
+          {sectionTitle(nAccept, 'Validity & Acceptance')}
+          <p style={sp}>This proposal is valid up to {validUntil}. If the terms are acceptable, please sign and return a copy of this proposal, which will then serve as our mutual agreement for the services described.</p>
+          <table style={{...tbl, marginTop:14}}><tbody><tr>
+            <td style={{width:'50%', verticalAlign:'top', padding:'12px 14px', border:`1px solid ${C.rule}`}}>
+              <div style={{fontSize:'8.5pt', color:C.gold, fontWeight:700, letterSpacing:'1px', textTransform:'uppercase'}}>For the firm</div>
+              <div style={{fontWeight:600, marginTop:4}}>For {firm.name}</div>
+              <div style={{color:C.slate, fontSize:'9pt'}}>{firm.tagline}{firm.frn ? ` · FRN ${firm.frn}` : ''}</div>
+              <div style={{height:52}} />
+              <div style={{borderTop:`1px solid ${C.navy}`, paddingTop:4, fontWeight:600}}>{firm.partner}</div>
+              <div style={{fontSize:'9pt', color:C.slate}}>{firm.designation}{firm.mno ? ` · M. No. ${firm.mno}` : ''}</div>
+              <div style={{fontSize:'9pt', color:C.slate, marginTop:6}}>Place: {firm.place || 'Pune'}</div>
+              <div style={{fontSize:'9pt', color:C.slate}}>Date: {date}</div>
+            </td>
+            <td style={{width:'50%', verticalAlign:'top', padding:'12px 14px', border:`1px solid ${C.rule}`}}>
+              <div style={{fontSize:'8.5pt', color:C.gold, fontWeight:700, letterSpacing:'1px', textTransform:'uppercase'}}>Client acceptance</div>
+              <div style={{fontWeight:600, marginTop:4}}>Accepted for and on behalf of {client}</div>
+              <div style={{height:52}} />
+              <div style={{borderTop:`1px solid ${C.navy}`, paddingTop:4, fontWeight:600}}>Authorised Signatory</div>
+              <div style={{fontSize:'9pt', color:C.slate, marginTop:6}}>Name: ______________________________</div>
+              <div style={{fontSize:'9pt', color:C.slate, marginTop:6}}>Designation: _________________________</div>
+              <div style={{fontSize:'9pt', color:C.slate, marginTop:6}}>Date: ______________________________</div>
+              <div style={{marginTop:10, border:`1px dashed ${C.rule}`, height:64, display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', fontSize:'8.5pt', textAlign:'center'}}>Company seal / stamp</div>
+            </td>
+          </tr></tbody></table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Modals ---------- */
+function Modal({ title, onClose, narrow, children }){
+  useEffect(() => { const k = e => { if (e.key === 'Escape') onClose(); }; window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [onClose]);
+  return (
+    <div className="modal-back" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className={'modal' + (narrow ? ' narrow' : '')} role="dialog" aria-modal="true" aria-label={title}>
+        <div className="modal-h"><div className="modal-t" style={{flex:1}}>{title}</div><button type="button" className="ibtn" aria-label="Close" onClick={onClose}><Icon n="x" /></button></div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const linesToText = a => (a || []).join('\n');
+const textToLines = t => t.split('\n').map(x => x.trim()).filter(Boolean);
+
+function ServiceForm({ svc, cats, onSave, onDelete, isNew }){
+  const [d, setD] = useState(() => ({ ...svc, scopeT: linesToText(svc.scope), delT: linesToText(svc.deliverables), excT: linesToText(svc.exclusions) }));
+  useEffect(() => { setD({ ...svc, scopeT: linesToText(svc.scope), delT: linesToText(svc.deliverables), excT: linesToText(svc.exclusions) }); }, [svc.id]);
+  const u = (k, v) => setD(x => ({ ...x, [k]: v }));
+  const save = () => {
+    const { scopeT, delT, excT, ...rest } = d;
+    onSave({ ...rest, name: rest.name.trim() || 'Untitled service', category: rest.category.trim() || 'Other Services', scope: textToLines(scopeT), deliverables: textToLines(delT), exclusions: textToLines(excT), fee: Number(rest.fee) || 0, units: Number(rest.units) || 1 });
+  };
+  return (
+    <div style={{padding:'4px 16px 18px'}}>
+      <Field label="Service name" htmlFor="sf-name"><input id="sf-name" className="inp" value={d.name} onChange={e => u('name', e.target.value)} /></Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+        <Field label="Category" htmlFor="sf-cat"><input id="sf-cat" className="inp" list="sf-cats" value={d.category} onChange={e => u('category', e.target.value)} /><datalist id="sf-cats">{cats.map(c => <option key={c} value={c} />)}</datalist></Field>
+        <Field label="Frequency / timeline" htmlFor="sf-freq"><input id="sf-freq" className="inp" value={d.frequency} onChange={e => u('frequency', e.target.value)} /></Field>
+      </div>
+      <Field label="Scope of work (one per line)" htmlFor="sf-scope"><textarea id="sf-scope" className="inp" rows={7} value={d.scopeT} onChange={e => u('scopeT', e.target.value)} /></Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3">
+        <Field label="Deliverables (one per line)" htmlFor="sf-del"><textarea id="sf-del" className="inp" rows={4} value={d.delT} onChange={e => u('delT', e.target.value)} /></Field>
+        <Field label="Exclusions (one per line)" htmlFor="sf-exc"><textarea id="sf-exc" className="inp" rows={4} value={d.excT} onChange={e => u('excT', e.target.value)} /></Field>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3">
+        <Field label="Default billing" htmlFor="sf-bill"><select id="sf-bill" className="inp" value={d.billing} onChange={e => { u('billing', e.target.value); u('units', defUnits(e.target.value)); }}>{BILLING.map(b => <option key={b}>{b}</option>)}</select></Field>
+        <Field label="Currency" htmlFor="sf-cur"><select id="sf-cur" className="inp" value={d.currency} onChange={e => u('currency', e.target.value)}>{CURRENCIES.map(c => <option key={c}>{c}</option>)}</select></Field>
+        <Field label="Default fee" htmlFor="sf-fee"><input id="sf-fee" type="number" min="0" className="inp num" value={d.fee} onChange={e => u('fee', e.target.value)} /></Field>
+        <Field label="Periods / filings" htmlFor="sf-units"><input id="sf-units" type="number" min="1" className="inp num" value={d.units} onChange={e => u('units', e.target.value)} disabled={!isRecurring(d.billing)} /></Field>
+      </div>
+      <Field label="Default billing schedule" htmlFor="sf-sched"><input id="sf-sched" className="inp" value={d.schedule} onChange={e => u('schedule', e.target.value)} /></Field>
+      <div className="flex flex-wrap gap-2" style={{marginTop:16}}>
+        <button type="button" className="btn pri" onClick={save}><Icon n="save" s={14} /> {isNew ? 'Add to catalog' : 'Save changes'}</button>
+        {!isNew && <ConfirmButton onConfirm={onDelete}><Icon n="trash" s={13} /> Delete service</ConfirmButton>}
+      </div>
+      <div className="hint" style={{marginTop:8}}>Catalog changes apply to services you add from now on. Services already in the open proposal keep their edited text.</div>
+    </div>
+  );
+}
+
+function CatalogModal({ catalog, setCatalog, firms, setFirms, onClose, toast }){
+  const [tab, setTab] = useState('services');
+  const [sel, setSel] = useState(catalog[0]?.id || null);
+  const [q, setQ] = useState('');
+  const [draftNew, setDraftNew] = useState(null);
+  const [firmSel, setFirmSel] = useState(firms[0].id);
+  const [importText, setImportText] = useState('');
+  const [importMode, setImportMode] = useState('merge');
+  const exportText = useMemo(() => JSON.stringify({ app:'CA Proposal Studio', version:1, exportedAt: new Date().toISOString(), services: catalog, firms }, null, 2), [catalog, firms]);
+  const cats = useMemo(() => { const s = [...CATS]; catalog.forEach(c => { if (!s.includes(c.category)) s.push(c.category); }); return s; }, [catalog]);
+  const current = draftNew || catalog.find(s => s.id === sel);
+  const firm = firms.find(f => f.id === firmSel);
+  const upFirm = (k, v) => setFirms(fs => fs.map(f => f.id === firmSel ? { ...f, [k]: v } : f));
+
+  const doImport = text => {
+    try {
+      const data = JSON.parse(text);
+      const list = Array.isArray(data) ? data : data.services;
+      if (!Array.isArray(list) || !list.length) throw new Error('No "services" list found in the file.');
+      const clean = list.filter(s => s && s.name).map(s => ({
+        id: s.id || uid(), category: s.category || 'Other Services', name: String(s.name), frequency: s.frequency || '',
+        scope: Array.isArray(s.scope) ? s.scope.map(String) : [], deliverables: Array.isArray(s.deliverables) ? s.deliverables.map(String) : [],
+        exclusions: Array.isArray(s.exclusions) ? s.exclusions.map(String) : [], billing: BILLING.includes(s.billing) ? s.billing : 'Fixed Fee',
+        fee: Number(s.fee) || 0, currency: CURRENCIES.includes(s.currency) ? s.currency : 'INR', units: Number(s.units) || defUnits(s.billing), schedule: s.schedule || '' }));
+      if (!clean.length) throw new Error('Every entry needs at least a "name".');
+      if (importMode === 'replace') setCatalog(clean);
+      else setCatalog(cur => { const m = new Map(cur.map(s => [s.id, s])); clean.forEach(s => m.set(s.id, s)); return [...m.values()]; });
+      if (!Array.isArray(data) && Array.isArray(data.firms) && data.firms.length){
+        setFirms(cur => cur.map(f => { const inc = data.firms.find(x => x.id === f.id); return inc ? { ...f, ...inc } : f; }));
+      }
+      setImportText('');
+      toast(`Imported ${clean.length} service${clean.length === 1 ? '' : 's'} (${importMode}).`);
+    } catch(e){ toast('Import failed: ' + e.message); }
+  };
+  const copyExport = async () => {
+    try { await navigator.clipboard.writeText(exportText); toast('Catalog JSON copied.'); }
+    catch(e){ const ta = document.getElementById('exp-json'); ta.focus(); ta.select(); toast('Text selected — press Ctrl+C to copy.'); }
+  };
+  const downloadExport = () => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([exportText], { type:'application/json' })); a.download = 'ca-proposal-catalog.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  const ql = q.toLowerCase();
+
+  return (
+    <Modal title="Manage service catalog" onClose={onClose}>
+      <div className="tabs" role="tablist">
+        {[['services','Services'],['firms','Firm profiles'],['io','Import / Export']].map(([k, l]) => <button key={k} type="button" role="tab" className="tab" aria-selected={tab === k} onClick={() => setTab(k)}>{l}</button>)}
+      </div>
+
+      {tab === 'services' && (
+        <div className="mgrid">
+          <div className="mlist">
+            <div className="flex gap-2"><input className="inp" placeholder="Filter…" value={q} onChange={e => setQ(e.target.value)} aria-label="Filter services" />
+              <button type="button" className="btn" onClick={() => setDraftNew({ id: uid(), category: cats[0], name:'', frequency:'', scope:[], deliverables:[], exclusions:[], billing:'Fixed Fee', fee:0, currency:'INR', units:1, schedule:'' })}><Icon n="plus" s={14} /> New</button></div>
+            {cats.map(cat => {
+              const items = catalog.filter(s => s.category === cat && s.name.toLowerCase().includes(ql));
+              if (!items.length) return null;
+              return <div key={cat}><div className="lbl">{cat}</div>{items.map(s => <button key={s.id} type="button" className="mitem" aria-current={!draftNew && sel === s.id} onClick={() => { setDraftNew(null); setSel(s.id); }}>{s.name}</button>)}</div>;
+            })}
+            <div style={{marginTop:16}}><ConfirmButton armedText="Click again: reset all services" onConfirm={() => { setCatalog(SEED); setSel(SEED[0].id); setDraftNew(null); toast('Catalog reset to the standard services.'); }}><Icon n="rotate" s={13} /> Reset to standard catalog</ConfirmButton></div>
+          </div>
+          <div style={{minWidth:0}}>
+            {current
+              ? <ServiceForm key={current.id} svc={current} cats={cats} isNew={!!draftNew}
+                  onSave={s => { if (draftNew){ setCatalog(c => [...c, s]); setDraftNew(null); setSel(s.id); toast('Service added to catalog.'); } else { setCatalog(c => c.map(x => x.id === s.id ? s : x)); toast('Service saved.'); } }}
+                  onDelete={() => { setCatalog(c => c.filter(x => x.id !== current.id)); setSel(null); toast('Service deleted.'); }} />
+              : <div className="hint" style={{padding:20}}>Pick a service on the left, or create a new one.</div>}
+          </div>
+        </div>
+      )}
+
+      {tab === 'firms' && (
+        <div style={{padding:'4px 16px 18px'}}>
+          <Field label="Firm"><div className="seg" role="group">{firms.map(f => <button key={f.id} type="button" aria-pressed={f.id === firmSel} onClick={() => setFirmSel(f.id)}>{f.name}</button>)}</div></Field>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
+            {[['name','Firm name'],['initials','Initials (for ref. no.)'],['frn','FRN'],['tagline','Tagline / credentials'],['email','Email'],['phone','Phone'],['website','Website'],['partner','Signing partner'],['designation','Designation'],['mno','ICAI membership no.'],['place','Place']].map(([k, l]) => (
+              <Field key={k} label={l} htmlFor={`fp-${k}`}><input id={`fp-${k}`} className="inp" value={firm[k] || ''} onChange={e => upFirm(k, k === 'initials' ? e.target.value.toUpperCase().replace(/[^A-Z]/g, '') : e.target.value)} /></Field>
+            ))}
+          </div>
+          <Field label="Address" htmlFor="fp-address"><input id="fp-address" className="inp" value={firm.address} onChange={e => upFirm('address', e.target.value)} /></Field>
+          <Field label="About the firm" htmlFor="fp-about" hint="One paragraph per line. Tokens {name}, {frn}, {partner}, {designation}, {mno}, {place} fill in automatically."><textarea id="fp-about" className="inp" rows={7} value={firm.about} onChange={e => upFirm('about', e.target.value)} /></Field>
+        </div>
+      )}
+
+      {tab === 'io' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{padding:'8px 16px 20px'}}>
+          <div style={{minWidth:0}}>
+            <div className="lbl">Export</div>
+            <div className="hint" style={{marginBottom:6}}>{catalog.length} services and {firms.length} firm profiles. Copy this JSON and keep it as your backup or share it with colleagues.</div>
+            <textarea id="exp-json" className="inp mono" readOnly rows={14} value={exportText} style={{fontSize:11.5}} />
+            <div className="flex flex-wrap gap-2" style={{marginTop:8}}>
+              <button type="button" className="btn pri" onClick={copyExport}><Icon n="copy" s={14} /> Copy JSON</button>
+              {!FRAMED && <button type="button" className="btn" onClick={downloadExport}><Icon n="download" s={14} /> Download .json</button>}
+            </div>
+          </div>
+          <div style={{minWidth:0}}>
+            <div className="lbl">Import</div>
+            <div className="hint" style={{marginBottom:6}}>Choose a .json file exported from this tool, or paste its contents.</div>
+            <label className="btn" style={{cursor:'pointer'}}><Icon n="upload" s={14} /> Choose file
+              <input type="file" accept=".json,application/json" hidden onChange={e => { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = () => setImportText(String(r.result)); r.readAsText(file); e.target.value = ''; }} />
+            </label>
+            <textarea id="imp-json" className="inp mono" rows={9} style={{marginTop:8,fontSize:11.5}} placeholder='{"services":[ … ]}' value={importText} onChange={e => setImportText(e.target.value)} />
+            <div className="seg" role="group" aria-label="Import mode" style={{marginTop:8}}>
+              <button type="button" aria-pressed={importMode === 'merge'} onClick={() => setImportMode('merge')}>Merge (update by id)</button>
+              <button type="button" aria-pressed={importMode === 'replace'} onClick={() => setImportMode('replace')}>Replace catalog</button>
+            </div>
+            <button type="button" className="btn pri" style={{marginTop:8}} disabled={!importText.trim()} onClick={() => doImport(importText)}><Icon n="upload" s={14} /> Import</button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function DraftsModal({ drafts, setDrafts, current, onLoad, onSave, onClose, firms }){
+  const sorted = [...drafts].sort((a, b) => b.savedAt - a.savedAt);
+  return (
+    <Modal title="Proposal drafts" onClose={onClose} narrow>
+      <div style={{padding:'12px 16px 18px'}}>
+        <button type="button" className="btn pri" onClick={onSave}><Icon n="save" s={14} /> Save current proposal</button>
+        <div className="hint" style={{marginTop:6}}>Drafts are kept in this browser only. Export your catalog regularly as a backup.</div>
+        <div style={{marginTop:14}}>
+          {!sorted.length && <div className="hint">No saved drafts yet.</div>}
+          {sorted.map(d => {
+            const f = firms.find(x => x.id === d.p.firmId);
+            return (
+              <div key={d.id} className="card" style={{padding:'10px 12px'}}>
+                <div className="flex items-start gap-3">
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:500}}>{d.p.client.name || 'Untitled client'} {d.id === current.id && <span className="chip">Open</span>}</div>
+                    <div className="svc-meta mono">{d.p.ref}</div>
+                    <div className="svc-meta">{f ? f.name : ''} · {d.p.services.length} services · saved {new Date(d.savedAt).toLocaleString('en-IN', { dateStyle:'medium', timeStyle:'short' })}</div>
+                  </div>
+                  <button type="button" className="btn sm" onClick={() => onLoad(d)}>Open</button>
+                  <ConfirmButton armedText="Confirm" onConfirm={() => setDrafts(ds => ds.filter(x => x.id !== d.id))}><Icon n="trash" s={12} /></ConfirmButton>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function PdfHelp({ onClose }){
+  return (
+    <Modal title="Save as PDF" onClose={onClose} narrow>
+      <div style={{padding:'12px 16px 18px', fontSize:13.5, lineHeight:1.6}}>
+        <p style={{marginTop:0}}>Printing is switched off inside this embedded preview. Two ways to get a clean A4 PDF:</p>
+        <ol style={{paddingLeft:20}}>
+          <li><b>Standalone copy:</b> open the <span className="mono">ca-proposal-studio.html</span> file in Chrome or Edge, then use <b>Print / PDF</b> in the top bar (or Ctrl+P) and choose <i>Save as PDF</i>. Margins, page breaks, running footer and page numbers are already set.</li>
+          <li><b>Through Word:</b> click <b>Copy for Word</b>, paste into a blank Word document, then <i>File → Save as → PDF</i>.</li>
+        </ol>
+        <p className="hint">Drafts and catalog are stored per browser, so the standalone copy starts with its own data. Use Import / Export to move your catalog across.</p>
+      </div>
+    </Modal>
+  );
+}
+
+/* ---------- App ---------- */
+function App(){
+  const [catalog, setCatalog] = usePersisted('cps.catalog.v1', SEED);
+  const [firms, setFirms] = usePersisted('cps.firms.v1', FIRMS);
+  const [seq, setSeq] = usePersisted('cps.seq.v1', { 'ABC|2026-27': 1 });
+  const [drafts, setDrafts] = usePersisted('cps.drafts.v1', []);
+  const [p, setP] = usePersisted('cps.current.v1', sampleProposal);
+  const [open, setOpen] = useState(1);
+  const [view, setView] = useState('build');
+  const [modal, setModal] = useState(null);
+  const [toastMsg, setToastMsg] = useState(null);
+  const paperRef = useRef(null);
+  const deskRef = useRef(null);
+  const [scale, setScale] = useState(1);
+  const firm = firms.find(f => f.id === p.firmId) || firms[0];
+
+  useEffect(() => { if (!toastMsg) return; const t = setTimeout(() => setToastMsg(null), 2800); return () => clearTimeout(t); }, [toastMsg]);
+  useEffect(() => {
+    const el = deskRef.current; if (!el) return;
+    const ro = new ResizeObserver(() => { const w = el.clientWidth - 32; setScale(Math.min(1, Math.max(0.3, w / 794))); });
+    ro.observe(el); return () => ro.disconnect();
+  }, [view]);
+
+  const nextNumber = (f, date) => { const key = `${f.initials}|${fyOf(date)}`; const n = (seq[key] || 0) + 1; setSeq(s => ({ ...s, [key]: n })); return makeRef(f.initials, fyOf(date), n); };
+  const switchFirm = id => { const nf = firms.find(f => f.id === id); setP(prev => ({ ...prev, firmId: id, ref: prev.ref.replace(/^[A-Z]+(?=\/PROP\/)/, nf.initials) })); };
+  const saveDraft = (silent) => { setDrafts(ds => [{ id: p.id, savedAt: Date.now(), p }, ...ds.filter(d => d.id !== p.id)]); if (!silent) setToastMsg('Draft saved.'); };
+  const newProposal = () => {
+    if (p.client.name.trim() || p.services.length) saveDraft(true);
+    const np = blankProposal(firm, 1); np.ref = nextNumber(firm, np.date);
+    setP(np); setOpen(1); setView('build');
+    setToastMsg(p.client.name.trim() ? 'Previous proposal saved to drafts. New proposal started.' : 'New proposal started.');
+  };
+  const copyWord = async () => {
+    const node = paperRef.current; if (!node) return;
+    const html = `<html><head><meta charset="utf-8"></head><body style="font-family:Calibri,Arial,sans-serif">${node.innerHTML}</body></html>`;
+    try {
+      if (!window.ClipboardItem || !navigator.clipboard?.write) throw new Error('no rich clipboard');
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type:'text/html' }), 'text/plain': new Blob([node.innerText], { type:'text/plain' }) })]);
+      setToastMsg('Copied with formatting. Paste into Word with Ctrl+V.');
+    } catch(e){
+      const r = document.createRange(); r.selectNodeContents(node); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      let ok = false; try { ok = document.execCommand('copy'); } catch(_){}
+      if (ok){ s.removeAllRanges(); setToastMsg('Copied with formatting. Paste into Word with Ctrl+V.'); }
+      else setToastMsg('Document selected — press Ctrl+C to copy.');
+    }
+  };
+
+  const totals = totalsOf(p.services);
+  const totalLine = Object.entries(totals).map(([c, v]) => money(v, c)).join(' + ');
+  const onClauses = Object.values(p.clauses).filter(c => c.on).length;
+  const steps = [
+    { n:1, t:'Client & engagement', s: p.client.name ? `${p.client.name} · ${p.ref}` : 'Client details, reference, validity', body: <StepClient p={p} firms={firms} firm={firm} setP={setP} switchFirm={switchFirm} setFirms={setFirms} nextRef={() => setP(prev => ({ ...prev, ref: nextNumber(firm, prev.date) }))} />, done: !!p.client.name },
+    { n:2, t:'Services & scope', s: p.services.length ? `${p.services.length} service${p.services.length === 1 ? '' : 's'} selected` : 'Pick from the catalog', body: <StepScope p={p} catalog={catalog} setP={setP} />, done: p.services.length > 0 },
+    { n:3, t:'Commercials & fees', s: p.services.length ? `Est. annual ${totalLine}` : 'Billing model, fees, schedule', body: <StepFees p={p} setP={setP} />, done: p.services.length > 0 && p.services.every(s => Number(s.fee) > 0) },
+    { n:4, t:'Terms & sign-off', s: `${onClauses} clause${onClauses === 1 ? '' : 's'}${p.accept ? ' · acceptance block' : ''}`, body: <StepTerms p={p} setP={setP} />, done: true },
+  ];
+  const esc = t => String(t).replace(/["\\]/g, '');
+
+  return (
+    <div className="app">
+      <style>{`@media print{@page{@bottom-left{content:"${esc(firm.name)}  ·  ${esc(p.ref)}";font:8pt 'IBM Plex Sans',Arial,sans-serif;color:#64748B}@bottom-right{content:"Page " counter(page) " of " counter(pages);font:8pt 'IBM Plex Sans',Arial,sans-serif;color:#64748B}}}`}</style>
+      <header className="topbar">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div style={{minWidth:0}}>
+            <div className="brand">CA Proposal <em>Studio</em></div>
+            <div className="bar-sub">{firm.name} · {firm.partner}</div>
+          </div>
+          <div className="flex flex-wrap gap-2 ml-auto">
+            <button type="button" className="bbtn" onClick={newProposal} title="New proposal"><Icon n="filePlus" s={15} /><span className="lbl-t">New</span></button>
+            <button type="button" className="bbtn" onClick={() => setModal('drafts')} title="Drafts"><Icon n="folder" s={15} /><span className="lbl-t">Drafts{drafts.length ? ` (${drafts.length})` : ''}</span></button>
+            <button type="button" className="bbtn" onClick={() => saveDraft(false)} title="Save draft"><Icon n="save" s={15} /><span className="lbl-t">Save</span></button>
+            <button type="button" className="bbtn" onClick={() => setModal('catalog')} title="Manage service catalog"><Icon n="book" s={15} /><span className="lbl-t">Manage catalog</span></button>
+            <button type="button" className="bbtn" onClick={() => FRAMED ? setModal('pdf') : window.print()} title="Print or save as PDF"><Icon n="printer" s={15} /><span className="lbl-t">{FRAMED ? 'PDF' : 'Print / PDF'}</span></button>
+            <button type="button" className="bbtn gold" onClick={copyWord} title="Copy as rich text for Word"><Icon n="copy" s={15} /><span className="lbl-t">Copy for Word</span></button>
+          </div>
+        </div>
+      </header>
+      <div className="viewtabs" role="tablist">
+        <button type="button" role="tab" className="vt" aria-selected={view === 'build'} onClick={() => setView('build')}>Build</button>
+        <button type="button" role="tab" className="vt" aria-selected={view === 'preview'} onClick={() => setView('preview')}>Preview</button>
+      </div>
+      <main className="main" data-view={view}>
+        <section className="left" aria-label="Proposal builder">
+          {steps.map(st => (
+            <div key={st.n} className={'step' + (open === st.n ? ' open' : '') + (st.done && open !== st.n ? ' done' : '')}>
+              <button type="button" className="step-h" aria-expanded={open === st.n} onClick={() => setOpen(open === st.n ? 0 : st.n)}>
+                <span className="step-n">{st.done && open !== st.n ? <Icon n="check" s={13} /> : st.n}</span>
+                <span style={{flex:1,minWidth:0}}><span className="step-t block">{st.t}</span><span className="step-s block">{st.s}</span></span>
+                <span className="chev"><Icon n="chev" /></span>
+              </button>
+              {open === st.n && <div className="step-b">{st.body}</div>}
+            </div>
+          ))}
+        </section>
+        <section className="right" ref={deskRef} aria-label="A4 document preview">
+          <div className="desk-inner">
+            <div className="paper" ref={paperRef} style={{ zoom: scale }}>
+              <Proposal p={p} firm={firm} />
+            </div>
+          </div>
+        </section>
+      </main>
+      {modal === 'catalog' && <CatalogModal catalog={catalog} setCatalog={setCatalog} firms={firms} setFirms={setFirms} onClose={() => setModal(null)} toast={setToastMsg} />}
+      {modal === 'drafts' && <DraftsModal drafts={drafts} setDrafts={setDrafts} current={p} firms={firms} onClose={() => setModal(null)} onSave={() => saveDraft(false)} onLoad={d => { setP(d.p); setModal(null); setToastMsg('Draft opened.'); }} />}
+      {modal === 'pdf' && <PdfHelp onClose={() => setModal(null)} />}
+      {toastMsg && <div className="toast" role="status">{toastMsg}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
