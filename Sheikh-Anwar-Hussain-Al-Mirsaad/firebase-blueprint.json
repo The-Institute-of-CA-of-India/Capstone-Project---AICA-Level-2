@@ -1,0 +1,91 @@
+{
+  "entities": {
+    "Business": {
+      "title": "Business",
+      "description": "Normalized UAE commercial entity record discovered from online directories, registries, or crawls.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the business" },
+        "nameEn": { "type": "string", "description": "English commercial trade name" },
+        "nameAr": { "type": "string", "description": "Arabic commercial trade name" },
+        "category": { "type": "string", "description": "Primary industry category" },
+        "subcategory": { "type": "string", "description": "Specific business subcategory" },
+        "emirate": { "type": "string", "description": "One of the 7 UAE Emirates" },
+        "city": { "type": "string", "description": "City or municipality" },
+        "area": { "type": "string", "description": "Commercial district or neighborhood" },
+        "primaryPhone": { "type": "string", "description": "Primary UAE landline or phone" },
+        "primaryEmail": { "type": "string", "description": "Verified commercial contact email" },
+        "whatsappNumber": { "type": "string", "description": "Official mobile or WhatsApp contact" },
+        "websiteUrl": { "type": "string", "description": "Company website" },
+        "latitude": { "type": "number", "description": "GPS latitude" },
+        "longitude": { "type": "number", "description": "GPS longitude" },
+        "qualityScore": { "type": "number", "description": "Data completeness and verification score 0-100" },
+        "crmLeadStatus": { "type": "string", "description": "Status in CRM pipeline" },
+        "dateDiscovered": { "type": "string", "description": "ISO timestamp when first discovered" },
+        "dateLastVerified": { "type": "string", "description": "ISO timestamp when last verified" }
+      },
+      "required": ["id", "nameEn", "category", "emirate"]
+    },
+    "CrmLead": {
+      "title": "CrmLead",
+      "description": "Sales opportunity converted from a discovered business record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Lead identifier" },
+        "businessId": { "type": "string", "description": "Reference to business entity" },
+        "businessName": { "type": "string", "description": "Business trade name" },
+        "pipelineStage": { "type": "string", "description": "Sales pipeline stage" },
+        "dealValueAed": { "type": "number", "description": "Estimated deal value in UAE Dirhams" },
+        "priority": { "type": "string", "description": "Sales priority" },
+        "assignedUserName": { "type": "string", "description": "Assigned sales rep" },
+        "updatedAt": { "type": "string", "description": "Last updated ISO timestamp" }
+      },
+      "required": ["id", "businessId", "businessName", "pipelineStage"]
+    },
+    "DailySearchRun": {
+      "title": "DailySearchRun",
+      "description": "Execution record of the daily 24-hour web crawler and contact extractor.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Run identifier" },
+        "timestamp": { "type": "string", "description": "Execution ISO timestamp" },
+        "status": { "type": "string", "description": "Execution status" },
+        "recordsScanned": { "type": "number", "description": "Total online records scanned" },
+        "newBusinessesAdded": { "type": "number", "description": "New entities added to storage" },
+        "duplicatesDetected": { "type": "number", "description": "Duplicates detected" }
+      },
+      "required": ["id", "timestamp", "status"]
+    },
+    "SuppressionRecord": {
+      "title": "SuppressionRecord",
+      "description": "UAE PDPL compliance opt-out or do-not-contact entry.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Record identifier" },
+        "type": { "type": "string", "description": "Type of identifier: phone, email, or domain" },
+        "value": { "type": "string", "description": "Suppressed value" },
+        "reason": { "type": "string", "description": "Legal or operational reason for suppression" },
+        "dateAdded": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["id", "type", "value"]
+    }
+  },
+  "firestore": {
+    "/businesses/{businessId}": {
+      "schema": "Business",
+      "description": "Collection of verified and discovered UAE businesses."
+    },
+    "/leads/{leadId}": {
+      "schema": "CrmLead",
+      "description": "Sales leads managed in the CRM pipeline."
+    },
+    "/daily_runs/{runId}": {
+      "schema": "DailySearchRun",
+      "description": "Audit and history of daily web search extractions."
+    },
+    "/suppressions/{suppressionId}": {
+      "schema": "SuppressionRecord",
+      "description": "UAE PDPL compliance suppression list."
+    }
+  }
+}

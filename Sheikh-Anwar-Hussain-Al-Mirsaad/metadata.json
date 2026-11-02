@@ -1,0 +1,6 @@
+{
+  "name": "Al-Mirsaad UAE Business Intelligence & CRM",
+  "description": "Enterprise UAE Business Data Intelligence, Lead Generation & Sales CRM platform covering all 7 Emirates with compliance, deduplication, and AI enrichment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
