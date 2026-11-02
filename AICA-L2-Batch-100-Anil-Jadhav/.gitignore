@@ -1,0 +1,10 @@
+# Never publish real data, local settings or built programs
+data/
+*.db
+*.db-journal
+*.lock
+dsc_config.json
+dist/
+build/
+__pycache__/
+*.pyc
