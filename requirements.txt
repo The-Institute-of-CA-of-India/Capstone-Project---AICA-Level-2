@@ -1,0 +1,2 @@
+# No third-party Python packages are required.
+# All dependencies ship with Python 3.10+ (including Python 3.14).
