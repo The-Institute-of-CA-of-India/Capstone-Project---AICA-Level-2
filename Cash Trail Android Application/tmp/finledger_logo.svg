@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F9F3E8" />
+      <stop offset="45%" stop-color="#F1EDE0" />
+      <stop offset="80%" stop-color="#E2EFE7" />
+      <stop offset="100%" stop-color="#D6EAE0" />
+    </linearGradient>
+    <linearGradient id="coralGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FBA686" />
+      <stop offset="50%" stop-color="#F38A66" />
+      <stop offset="100%" stop-color="#E6734E" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F9C664" />
+      <stop offset="50%" stop-color="#F1AE43" />
+      <stop offset="100%" stop-color="#E59828" />
+    </linearGradient>
+    <linearGradient id="recGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="60%" stop-color="#FAFBFB" />
+      <stop offset="100%" stop-color="#F1F3F2" />
+    </linearGradient>
+    <linearGradient id="walletGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B7E6D" />
+      <stop offset="55%" stop-color="#2B695A" />
+      <stop offset="100%" stop-color="#1D4D41" />
+    </linearGradient>
+    <radialGradient id="flapGrad" cx="45%" cy="65%" r="65%">
+      <stop offset="0%" stop-color="#4C8F7E" />
+      <stop offset="60%" stop-color="#2C6D5E" />
+      <stop offset="100%" stop-color="#19463B" />
+    </radialGradient>
+    <radialGradient id="btnGrad" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="45%" stop-color="#F7EFE4" />
+      <stop offset="80%" stop-color="#E9DAC7" />
+      <stop offset="100%" stop-color="#D6C3AB" />
+    </radialGradient>
+    <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#183B2F" stop-opacity="0.25" />
+      <stop offset="60%" stop-color="#183B2F" stop-opacity="0.10" />
+      <stop offset="100%" stop-color="#183B2F" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background container squircle -->
+  <rect x="0" y="0" width="512" height="512" rx="122" ry="122" fill="url(#bgGrad)" />
+
+  <!-- Ambient shadow under wallet -->
+  <ellipse cx="256" cy="396" rx="175" ry="34" fill="url(#shadowGrad)" />
+
+  <!-- 1. Coral / Peach Card (tilted -10 deg) -->
+  <g transform="rotate(-10 205 180)">
+    <rect x="108" y="110" width="195" height="145" rx="28" ry="28" fill="url(#coralGrad)" />
+    <rect x="116" y="116" width="179" height="10" rx="5" ry="5" fill="#FFFFFF" opacity="0.3" />
+  </g>
+
+  <!-- 2. Warm Golden-Yellow Card (tilted -3 deg) -->
+  <g transform="rotate(-3 215 210)">
+    <rect x="118" y="140" width="195" height="145" rx="28" ry="28" fill="url(#goldGrad)" />
+    <rect x="126" y="146" width="179" height="10" rx="5" ry="5" fill="#FFFFFF" opacity="0.25" />
+  </g>
+
+  <!-- 3. Crisp White Receipt (tilted 6.5 deg) -->
+  <g transform="rotate(6.5 307 210)">
+    <!-- Shadow -->
+    <rect x="222" y="115" width="180" height="205" rx="20" ry="20" fill="#123026" opacity="0.12" />
+    <!-- Receipt body with wavy teeth on top -->
+    <path d="M 218 116 
+             Q 240 106, 263 116 
+             Q 285 106, 308 116 
+             Q 330 106, 353 116 
+             Q 375 106, 398 116 
+             L 398 295 
+             Q 398 310, 383 310 
+             L 233 310 
+             Q 218 310, 218 295 
+             Z" fill="url(#recGrad)" />
+
+    <!-- Bill lines on left side -->
+    <rect x="238" y="165" width="55" height="12" rx="6" ry="6" fill="#A5B2A9" />
+    <rect x="238" y="190" width="38" height="12" rx="6" ry="6" fill="#A5B2A9" />
+    <rect x="238" y="215" width="60" height="12" rx="6" ry="6" fill="#A5B2A9" />
+    <rect x="238" y="240" width="46" height="12" rx="6" ry="6" fill="#A5B2A9" />
+
+    <!-- Dark Spruce Rupee '₹' symbol -->
+    <g transform="translate(345, 202)">
+      <!-- Top bar 1 -->
+      <line x1="-22" y1="-26" x2="22" y2="-26" stroke="#16473A" stroke-width="8" stroke-linecap="round" />
+      <!-- Top bar 2 -->
+      <line x1="-22" y1="-10" x2="18" y2="-10" stroke="#16473A" stroke-width="8" stroke-linecap="round" />
+      <!-- Vertical stem + loop -->
+      <path d="M -8 -26 L -8 4 C 22 -8, 22 4, -8 4" fill="none" stroke="#16473A" stroke-width="8" stroke-linecap="round" />
+      <!-- Diagonal leg -->
+      <line x1="-3" y1="4" x2="22" y2="34" stroke="#16473A" stroke-width="8" stroke-linecap="round" />
+    </g>
+  </g>
+
+  <!-- 4. Wallet Inner Pocket (dark spruce) -->
+  <path d="M 115 238 C 190 205, 322 205, 397 238 C 322 270, 190 270, 115 238 Z" fill="#13362B" />
+
+  <!-- Wallet Main Outer Pouch -->
+  <path d="M 102 232 
+           C 102 365, 147 400, 256 400 
+           C 365 400, 410 365, 410 232 
+           C 333 275, 179 275, 102 232 Z" fill="url(#walletGrad)" />
+
+  <!-- Wallet Overlapping Asymmetric Front Flap -->
+  <path d="M 102 232 
+           C 138 318, 218 360, 260 340 
+           C 285 300, 385 300, 410 232 
+           C 410 365, 365 400, 256 400 
+           C 147 400, 102 365, 102 232 Z" fill="url(#flapGrad)" />
+
+  <!-- Highlighted rim bevel line -->
+  <path d="M 106 235 
+           C 152 300, 228 348, 266 332 
+           C 288 300, 375 295, 406 235" 
+        fill="none" stroke="#76BFA9" stroke-width="6" stroke-linecap="round" opacity="0.65" />
+
+  <!-- 5. Cream / Ivory Circular Snap Button (on right flap) -->
+  <!-- Shadow -->
+  <circle cx="386" cy="342" r="45" fill="#122E25" opacity="0.25" />
+  <!-- Main button -->
+  <circle cx="384" cy="338" r="42" fill="url(#btnGrad)" stroke="#D3BEA5" stroke-width="4" />
+  <!-- Specular gleam -->
+  <circle cx="372" cy="326" r="15" fill="#FFFFFF" opacity="0.55" />
+</svg>

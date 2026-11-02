@@ -1,0 +1,161 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidAccount(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.type in ['BANK', 'CREDIT_CARD', 'DIGITAL_WALLET', 'CASH', 'PERSONAL'] &&
+             data.balance is number &&
+             (!('creditLimit' in data) || data.creditLimit == null || data.creditLimit is number) &&
+             (!('statementDay' in data) || data.statementDay == null || (data.statementDay is int && data.statementDay >= 0 && data.statementDay <= 31)) &&
+             (!('dueDay' in data) || data.dueDay == null || (data.dueDay is int && data.dueDay >= 0 && data.dueDay <= 31)) &&
+             (!('colorHex' in data) || data.colorHex == null || (data.colorHex is string && data.colorHex.size() <= 16)) &&
+             (!('institution' in data) || data.institution == null || (data.institution is string && data.institution.size() <= 100)) &&
+             (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 500)) &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidTransaction(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.type in ['EXPENSE', 'INCOME', 'TRANSFER'] &&
+             data.amount is number && data.amount >= 0 &&
+             data.accountId is string && data.accountId.size() <= 128 &&
+             (!('destinationAccountId' in data) || data.destinationAccountId == null || (data.destinationAccountId is string && data.destinationAccountId.size() <= 128)) &&
+             data.category is string && data.category.size() >= 1 && data.category.size() <= 100 &&
+             (!('note' in data) || data.note == null || (data.note is string && data.note.size() <= 500)) &&
+             (!('invoiceFileName' in data) || data.invoiceFileName == null || (data.invoiceFileName is string && data.invoiceFileName.size() <= 256)) &&
+             (!('invoiceUri' in data) || data.invoiceUri == null || (data.invoiceUri is string && data.invoiceUri.size() <= 2048)) &&
+             (!('date' in data) || data.date == null || data.date is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidInvestment(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.assetName is string && data.assetName.size() >= 1 && data.assetName.size() <= 100 &&
+             data.assetType in ['MUTUAL_FUNDS', 'STOCKS', 'FIXED_DEPOSIT', 'GOLD', 'CRYPTO', 'RETIREMENT', 'REAL_ESTATE', 'OTHER'] &&
+             data.action in ['CONTRIBUTION', 'WITHDRAWAL'] &&
+             data.amount is number && data.amount >= 0 &&
+             (!('sourceAccountId' in data) || data.sourceAccountId == null || (data.sourceAccountId is string && data.sourceAccountId.size() <= 128)) &&
+             (!('note' in data) || data.note == null || (data.note is string && data.note.size() <= 500)) &&
+             (!('date' in data) || data.date == null || data.date is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidPersonalDocument(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.category is string && data.category.size() >= 1 && data.category.size() <= 64 &&
+             (!('documentNumber' in data) || data.documentNumber == null || (data.documentNumber is string && data.documentNumber.size() <= 128)) &&
+             (!('issuer' in data) || data.issuer == null || (data.issuer is string && data.issuer.size() <= 128)) &&
+             (!('expiryDate' in data) || data.expiryDate == null || (data.expiryDate is string && data.expiryDate.size() <= 64)) &&
+             (!('issueDate' in data) || data.issueDate == null || (data.issueDate is string && data.issueDate.size() <= 64)) &&
+             (!('notes' in data) || data.notes == null || (data.notes is string && data.notes.size() <= 1000)) &&
+             (!('fileUri' in data) || data.fileUri == null || (data.fileUri is string && data.fileUri.size() <= 4096)) &&
+             (!('fileName' in data) || data.fileName == null || (data.fileName is string && data.fileName.size() <= 256)) &&
+             (!('colorHex' in data) || data.colorHex == null || (data.colorHex is string && data.colorHex.size() <= 16)) &&
+             (!('isFavorite' in data) || data.isFavorite == null || data.isFavorite is bool) &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    match /users/{userId} {
+      // User's private financial accounts
+      match /accounts/{accountId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(accountId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'name', 'type', 'balance', 'createdAt']) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidAccount(incoming());
+
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(accountId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidAccount(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'type', 'balance', 'creditLimit', 'statementDay', 'dueDay', 'colorHex', 'institution', 'notes', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(accountId);
+      }
+
+      // User's financial transactions (Expenses, Incomes, Journal Transfers)
+      match /transactions/{transactionId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(transactionId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'type', 'amount', 'accountId', 'category', 'createdAt']) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidTransaction(incoming());
+
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(transactionId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTransaction(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['type', 'amount', 'accountId', 'destinationAccountId', 'category', 'note', 'invoiceFileName', 'invoiceUri', 'date', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(transactionId);
+      }
+
+      // User's investment ledger
+      match /investments/{investmentId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(investmentId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'assetName', 'assetType', 'action', 'amount', 'createdAt']) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidInvestment(incoming());
+
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(investmentId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidInvestment(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['assetName', 'assetType', 'action', 'amount', 'sourceAccountId', 'note', 'date', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(investmentId);
+      }
+
+      // User's personal documents vault
+      match /documents/{documentId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+
+        allow create: if isSignedIn() && request.auth.uid == userId && isValidId(documentId) &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().keys().hasAll(['userId', 'name', 'category', 'createdAt']) &&
+                         incoming().createdAt is timestamp && incoming().createdAt <= request.time &&
+                         isValidPersonalDocument(incoming());
+
+        allow update: if isSignedIn() && request.auth.uid == userId && isValidId(documentId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidPersonalDocument(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'documentNumber', 'issuer', 'expiryDate', 'issueDate', 'notes', 'fileUri', 'fileName', 'colorHex', 'isFavorite', 'updatedAt']);
+
+        allow delete: if isSignedIn() && request.auth.uid == userId && isValidId(documentId);
+      }
+    }
+  }
+}
