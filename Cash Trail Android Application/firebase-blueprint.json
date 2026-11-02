@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "account": {
+      "title": "Account",
+      "description": "Financial account such as Bank Account, Credit Card, Digital Wallet, or Cash",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["BANK", "CREDIT_CARD", "DIGITAL_WALLET", "CASH", "PERSONAL"] },
+        "balance": { "type": "number" },
+        "creditLimit": { "type": "number" },
+        "statementDay": { "type": "integer" },
+        "dueDay": { "type": "integer" },
+        "colorHex": { "type": "string" },
+        "institution": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "type", "balance", "createdAt"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "Financial ledger entry: Expense, Income, or Inter-Account Transfer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["EXPENSE", "INCOME", "TRANSFER"] },
+        "amount": { "type": "number" },
+        "accountId": { "type": "string" },
+        "destinationAccountId": { "type": "string" },
+        "category": { "type": "string" },
+        "note": { "type": "string" },
+        "invoiceFileName": { "type": "string" },
+        "invoiceUri": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "amount", "accountId", "category", "createdAt"]
+    },
+    "investment": {
+      "title": "Investment",
+      "description": "Investment ledger entry recording capital contributions or withdrawals",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "assetName": { "type": "string" },
+        "assetType": { "type": "string", "enum": ["MUTUAL_FUNDS", "STOCKS", "FIXED_DEPOSIT", "GOLD", "CRYPTO", "RETIREMENT", "REAL_ESTATE", "OTHER"] },
+        "action": { "type": "string", "enum": ["CONTRIBUTION", "WITHDRAWAL"] },
+        "amount": { "type": "number" },
+        "sourceAccountId": { "type": "string" },
+        "note": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "assetName", "assetType", "action", "amount", "createdAt"]
+    },
+    "document": {
+      "title": "PersonalDocument",
+      "description": "User personal document info, identifiers, metadata and reminders",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "documentNumber": { "type": "string" },
+        "issuer": { "type": "string" },
+        "expiryDate": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "fileUri": { "type": "string" },
+        "fileName": { "type": "string" },
+        "colorHex": { "type": "string" },
+        "isFavorite": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "category", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": "account",
+      "description": "User accounts with balances"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "transaction",
+      "description": "Expenses, incomes, and inter-account journal transfers"
+    },
+    "/users/{userId}/investments/{investmentId}": {
+      "schema": "investment",
+      "description": "Investment contributions and redemptions ledger"
+    },
+    "/users/{userId}/documents/{documentId}": {
+      "schema": "document",
+      "description": "User personal documents vault"
+    }
+  }
+}

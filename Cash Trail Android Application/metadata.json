@@ -1,0 +1,6 @@
+{
+  "name": "Cashtrail - Budget & Expenses",
+  "description": "Sophisticated expense tracker, multi-account ledger, inter-account transfers, and investment tracking dashboard",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
