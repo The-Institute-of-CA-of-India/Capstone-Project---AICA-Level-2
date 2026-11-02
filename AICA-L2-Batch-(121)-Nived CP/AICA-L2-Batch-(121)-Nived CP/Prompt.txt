@@ -1,0 +1,93 @@
+ROLE
+You are a senior Python developer who also understands UAE VAT. I am a Tax Manager preparing the VAT 201
+return every month/quarter for several legal entities. Build ONE Python script (VAT201_Builder.py, ASCII-only
+source) that I can run in IDLE with F5. On first run it must auto-install missing libraries (pandas, numpy,
+openpyxl; xlrd optional) using pip with fallbacks (--user, --break-system-packages). Test it on the sample files
+I attach (VAT register, TB, sample VAT 201 summary) and verify the numbers by recalculating the output in
+LibreOffice before you deliver.
+
+INPUTS (per entity, one file each)
+1. VAT register (Excel/CSV). Sample columns: Sr#, Invoice Id, Voucher, Date of invoice, Supplier Code, Supplier
+   Name, Supplier VAT No, GL Code, GL Account, Invoice Narration, AED, VAT, Sales Tax Code, Sales Tax Group,
+   Source (Purchase / Sales / Operating). Auto-detect the sheet, header row (CSV with title lines too) and
+   columns. Drive the VAT treatment from "Sales Tax Group" (VAT = Standard 5%, NoTax = Out of scope,
+   Import = see below); cross-check against "Sales Tax Code". Amounts are natural by Source: Purchase/Operating
+   debit +ve, Sales credit +ve. Drop blank/"Total" rows; ignore lines outside the period (optional).
+   If GL name is blank, use the supplier name.
+2. Trial balance for the period (Excel/CSV): GL code, GL name, and either one balance column or Debit/Credit
+   columns. Convention: debit positive, credit negative. Handle a Credit column that already holds negatives.
+   Auto-check the TB sign against the register SEPARATELY for income GLs and expense GLs and flip a group
+   only if it matches the register inverted; record what was done (Checks tab and TB Data tab).
+
+VAT TREATMENTS
+Standard 5%, Zero rated, Exempt, Reverse charge (RCM), Import, Out of scope / No VAT. Import-tagged lines are NOT
+reported in the VAT 201 by default (flagged for review, as in my sample). Alternatives (kept under Advanced):
+treat as RCM (Boxes 3 and 10, 5% self-assessed if VAT is nil) or goods imports (Box 6 + Box 9). RCM goes to
+Box 3 and Box 10. Sales Standard goes to Box 1a-1g by emirate (default emirate selectable). Input Standard goes
+to Box 9 (including balance-sheet GLs such as accruals/capex). Zero = Box 4, Exempt = Box 5, Out of scope line
+below the totals.
+
+OUTPUT: one Excel workbook per entity, tabs in this order
+1. VAT 201 Summary - exact FTA layout (Taxpayer information, boxes 1a-1g, 2-7, 8 totals, 9-10, 11 totals,
+   12-14, Out of scope), every box linked by formula to its schedule tab; Boxes 2, 7 and the Adjustment column
+   are yellow manual-input cells. Box 14 positive = payable, negative = refund.
+2. "P&L & VAT Recon" (details below).
+3. One schedule tab per VAT 201 box that has data (1a..1g, 3, 4, 5, 6, 9, 10, Out of Scope): Date, Voucher,
+   Party, Party TRN, GL code, GL name, Tax group, Net, VAT, Gross, with total row. No GL-wise side table.
+4. VAT Data - all register lines used (incl. GL, IFRS line, tax group, treatment, side, net and VAT in P&L
+   basis). 5. TB Data - TB lines: Debit, Credit, Balance used (Dr+/Cr-), Balance as read, IFRS line, Sign adjusted?
+6. Checks & Exceptions - control totals (rows read/ignored/used, TB lines, TB net should be nil, sign checks),
+   then exceptions: VAT not 5% of net; VAT on zero/exempt/OOS lines; tax group vs tax code differ; input VAT
+   claimed with missing supplier TRN; Import line not reported; unclassified GL; missing date/GL code; income GLs
+   with debit balance; GLs where TB and register have opposite signs.
+
+P&L & VAT RECON TAB
+- IFRS statement, GL by GL: I Revenue, II Cost of sales, Gross profit, Other income/(losses), Selling &
+  distribution, G&A, Unclassified, Operating profit, Finance income, Finance costs, Profit before tax, Income
+  tax, Profit for the period, a memo row "total expenses incl. tax, net of other income", then a Balance sheet
+  section for balance-sheet GLs that appear in the register. Sequential roman numerals; only non-empty sections.
+- All amounts are ABSOLUTE numbers: income and expenses both positive. Income lines: Per TB = -SUMIF(TB
+  balance); expense lines: = +SUMIF. An income GL with a debit balance, or any debit-balance sales, stays in its
+  section and shows NEGATIVE (brackets); profit formulas then reduce accordingly.
+- Columns: GL Code | Particulars | Per TB | Per VAT register | Discrepancy | Standard 5% | (Zero/Exempt only if
+  used) | RCM | Import (review) | Out of scope | Total | Check | VAT on Standard | VAT on RCM | (VAT on Import if
+  any) | Total VAT. Per TB = SUMIF on TB Data; Per VAT register and every treatment/VAT column = SUMIF/SUMIFS on
+  VAT Data by GL code and treatment. Check = register total vs sum of treatment columns (green tick or red
+  difference). TB-only P&L GLs (e.g. depreciation) are listed too. Balance-sheet rows show "n/a" for TB.
+- Discrepancy per row = ROUND(IF(ROUND(C,2)*ROUND(D,2)<0, C+D, C-D),2), i.e. subtract normally, but ADD when
+  Per TB and Per VAT register have opposite signs (income with debit balance / expense with credit balance).
+  Highlight non-zero discrepancies red. Section totals and subtotals use SUM / signed sums of those rows.
+- Without a TB the tab falls back to a single "Per VAT register" column.
+
+GL CLASSIFICATION
+GL codes starting 1-3 = balance sheet; 4 and above = P&L (setting PL_START_DIGIT=4). Then keyword rules on the GL
+name (Hotel & Accommodation, Transportation & Conveyance, Forex variance -> G&A; "Salary ... (Direct)" -> Cost
+of sales; Current Income Tax -> tax; Accrued/Payable -> balance sheet), then fallback by first digit
+(4 Revenue, 5 Cost of sales, 6/7 G&A), else Unclassified. Keep GL_IFRS_Mapping.xlsx with columns GL Code | GL
+Name | Auto classification (refreshed every run) | Your override (optional, drop-down) - only the override is
+read back.
+
+FORMATTING RULES
+- NO merged cells anywhere (use fill + Center Across Selection).
+- Rows 1-3 on EVERY tab, in CAPITALS: A1 = company name, A2 = "VAT RETURN ANNEXURE FOR THE PERIOD dd/mm/yyyy
+  TO dd/mm/yyyy", A3 = box number and description (or tab description). Black title band, red underline.
+- Black/red/grey styling, accounting number format (negatives in brackets; setting NEGATIVE_AS_MINUS),
+  frozen panes, landscape fit-to-width, hidden gridlines.
+
+INTERFACE (tkinter, simple and colourful)
+Single scrollable window: navy banner with colour stripe; coloured numbered cards: (1) Browse VAT register(s) -
+multiple files, each row with Entity name, TB picker ("Select TB..."), TRN; (2) Return details - period from/to
+(suggested from the data as the quarter), return date (period end + 28 days), default emirate, ignore lines
+outside period; (3) VAT treatment table - each tax code with a coloured chip and drop-down, pre-filled by
+keywords. Collapsible Advanced panel: column mapping for register and TB, sheet/header row, amount sign, unsigned
+VAT option, Import-line handling. Pinned footer: output folder, progress bar, status line, green Generate button.
+Confirm if no TB is attached. TRN field: digits only, max 15, live counter, and Generate is blocked unless every
+entity has EXACTLY 15 digits (also validated in the core code).
+
+SETTINGS AT TOP OF SCRIPT
+VAT_RATE, TOLERANCE, CALC_RCM_VAT_IF_ZERO, TB_AUTO_SIGN, PL_START_DIGIT, MOVE_ON_DEBIT ({} = keep debit-balance
+income in place), NEGATIVE_AS_MINUS, IMPORT_ALSO_IN_BOX9.
+
+DELIVERABLE
+The single script, tested end to end on my sample files, plus a short summary of results (Box 9 amount/VAT,
+Box 14, P&L discrepancies, exceptions found) and any assumptions I should confirm.
