@@ -1,0 +1,17 @@
+Marcus Sterling
+
+marcus.sterling@devinno.io | +1 (555) 345-6789 | Austin, TX
+
+Summary: Principal Software Architect with 10+ years professional experience architecting mission-critical platforms, cloud-native deployments, and modern web architectures.
+
+Qualifications: Bachelor of Science in Computer Engineering, Georgia Institute of Technology; Master of Science in Software Engineering.
+
+Mandatory Requirements: Over 10 years experience verified. Bachelor degree in STEM. Full work authorization confirmed.
+
+Skills: Python, TypeScript, React, PostgreSQL, Docker, AWS, Distributed Systems, Microservices, System Design, Terraform, Redis, GraphQL, Agile Scrum.
+
+Experience:
+
+Principal Architect at Apex Cloud Solutions (2019 - Present): Led multi-tenant platform redesign with TypeScript, React frontend, and Python backend microservices. Reduced deployment downtime to zero.
+
+Lead Software Engineer at ScalePoint (2015 - 2019): Managed full-stack engineering team, delivered responsive dashboard in React and robust APIs in Python and PostgreSQL.
