@@ -1,0 +1,14 @@
+# Python 3.12 (64-bit, Windows). Exact versions bundled with Investor Manager v1.13.
+nicegui==3.18.0
+pandas==2.2.3
+numpy==1.26.4
+pytz==2026.6
+openpyxl==3.1.5
+reportlab==5.1.0
+pdfplumber==0.11.10
+pdfminer.six==20260107
+pypdfium2==5.14.0
+pytesseract==0.3.13
+pillow==13.0.0
+beautifulsoup4==4.15.0
+websockets==17.4
