@@ -1,0 +1,6 @@
+{
+  "name": "ATS CV Shortlisting",
+  "description": "Enterprise automated applicant tracking system (ATS) for high-volume CV screening, weighted criteria matching, OCR extraction, unbiased scoring, and candidate shortlisting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

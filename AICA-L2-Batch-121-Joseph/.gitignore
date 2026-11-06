@@ -1,0 +1,18 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+
+# Built executable (rebuild with install_and_build.bat)
+*.exe
+
+# Runtime data: uploaded candidate CVs and app state, must never be committed
+app_data/

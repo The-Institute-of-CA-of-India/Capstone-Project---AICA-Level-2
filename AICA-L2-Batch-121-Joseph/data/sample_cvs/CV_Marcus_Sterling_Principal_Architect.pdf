@@ -1,0 +1,19 @@
+%PDF-1.4
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj
+4 0 obj << /Length 1096 >>
+stream
+BT /F1 11 Tf 50 750 Td (Marcus Sterling marcus.sterling@devinno.io | +1 \(555\) 345-6789 | Austin, TX Summary: Principal Software Architect with 10+ years professional experience architecting mission-critical platforms, clou) Tj ET
+BT /F1 10 Tf 50 720 Td (d-native deployments, and modern web architectures. Qualifications: Bachelor of Science in Computer Engineering, Georgia Institute of Technology; Master of Science in Software Engineering. Mandatory Requirements: Over 10 years experience verified. Bachelor degree in STEM. Full work authorization con) Tj ET
+BT /F1 10 Tf 50 690 Td (firmed. Skills: Python, TypeScript, React, PostgreSQL, Docker, AWS, Distributed Systems, Microservices, System Design, Terraform, Redis, GraphQL, Agile Scrum. Experience: Principal Architect at Apex Cloud Solutions \(2019 - Present\): Led multi-tenant platform redesign with TypeScript, React fronten) Tj ET
+endstream
+endobj
+5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj
+xref
+0 6
+0000000000 65535 f
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+500
+%%EOF
