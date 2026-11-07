@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mukhota</title>
+<link rel="icon" href="/logo.png">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="header">
+  <img src="/logo.png" alt="" class="logo">
+  <div class="names"><div class="h-title">Mukhota</div><div class="h-sub">Private Notice Desk</div></div>
+  <div class="file-pill" id="filePill">No notice open</div>
+  <div class="grow"></div>
+  <div class="net-badge" title="Redaction and verification never use the network. Only Draft Reply contacts the AI provider you choose.">● Offline</div>
+  <div class="h-tag">MASK IT. CHECK IT. ANSWER IT.</div>
+  <button class="quit" id="btnAbout">About</button>
+  <button class="quit" id="btnQuit" title="Stop Mukhota">Quit</button>
+</header>
+
+<nav class="stepbar">
+  <ol class="steps" id="steps"></ol>
+  <button class="primary" id="btnPrimary">Open PDF</button>
+</nav>
+
+<div class="reminder" id="updatedBar" hidden role="alert">
+  <strong>Mukhota was updated while it was running.</strong>
+  <span>Click <b>Quit</b>, then start it again with run.bat, so the new features work.</span>
+</div>
+
+<div class="reminder" id="reminder" hidden role="status">
+  <strong id="reminderTitle"></strong>
+  <span id="reminderLines"></span>
+  <div class="grow"></div>
+  <button class="small" id="btnReminderOpen">Open Case Register</button>
+  <button class="banner-close" id="btnReminderClose" aria-label="Close">✕</button>
+</div>
+
+<main class="body">
+  <aside class="toolbar" id="toolbar">
+    <button class="tool" data-act="open" data-icon="open">Open PDF</button>
+    <button class="tool" data-act="detect" data-icon="detect">Detect PII</button>
+    <button class="tool" data-act="draw" data-icon="draw" aria-pressed="false">Draw Box</button>
+    <button class="tool" data-act="term" data-icon="term">Add Term</button>
+    <button class="tool" data-act="apply" data-icon="apply">Apply Redaction</button>
+    <button class="tool" data-act="verify" data-icon="verify">Verify</button>
+    <button class="tool" data-act="draft" data-icon="reply">Draft Reply</button>
+    <button class="tool" data-act="folder" data-icon="folder">Output Folder</button>
+    <button class="tool" data-act="register" data-icon="register">Case Register</button>
+    <div class="grow"></div>
+    <button class="tool" data-act="settings" data-icon="settings">Settings</button>
+  </aside>
+
+  <section class="card centre">
+    <div class="banner" id="banner" hidden>
+      <div class="banner-top"><strong id="bannerTitle"></strong><button class="banner-close" id="bannerClose" aria-label="Close">✕</button></div>
+      <div class="chips" id="bannerChips"></div>
+      <div class="banner-details" id="bannerDetails"></div>
+    </div>
+    <div class="nav">
+      <button class="navbtn" id="btnPrev" aria-label="Previous page">‹</button>
+      <select id="pageSelect" aria-label="Page"></select>
+      <button class="navbtn" id="btnNext" aria-label="Next page">›</button>
+      <span class="kind" id="kindBadge" hidden></span>
+      <span class="review-badge" id="reviewBadge" hidden>Manual review required</span>
+      <div class="grow"></div>
+      <label class="reviewed"><input type="checkbox" id="chkReviewed"> Reviewed – no PII</label>
+      <button class="navbtn wide" id="btnCompare" aria-pressed="false" title="Show the original and the redacted copy next to each other">Side by side</button>
+      <button class="navbtn" id="btnZoomOut" aria-label="Zoom out">−</button>
+      <button class="navbtn" id="btnZoomIn" aria-label="Zoom in">+</button>
+      <button class="navbtn wide" id="btnFit">Fit width</button>
+    </div>
+    <div class="well" id="well">
+      <div class="pane" id="paneOrig">
+        <div class="empty" id="emptyNote">Open a notice PDF to begin.<br><span>Your original file is never changed.</span></div>
+        <div class="pages" id="pagesOrig"></div>
+      </div>
+      <div class="pane" id="paneAfter" hidden>
+        <div class="pages" id="pagesAfter"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card side">
+    <div class="tabs" role="tablist">
+      <button role="tab" class="tab" id="tabItems" aria-selected="true">Detected items</button>
+      <button role="tab" class="tab" id="tabDraft" aria-selected="false">Draft reply</button>
+    </div>
+    <div id="panelItems">
+      <div class="summary" id="summary">Click <b>Detect PII</b> to scan this notice.</div>
+      <div class="chips" id="chips"></div>
+      <div class="row-btns" id="rowBtns" hidden>
+        <button class="small" id="btnAll">Select all</button>
+        <button class="small" id="btnNone">Clear all</button>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+    <div id="panelDraft" hidden>
+      <h3>Draft reply with AI</h3>
+      <div class="lock" id="draftLock">Draft Reply works only on a <b>verified</b> redacted PDF. Detect, redact and verify first; then only tokens such as [ASSESSEE] leave this computer.</div>
+      <p class="muted">In Draft Reply you choose:<br>
+        • <b>Model</b>: Claude (Opus, Sonnet, Haiku) or another provider set up in Settings > AI providers<br>
+        • <b>What you want back</b>: Reply + Advisory, or Law research only<br>
+        • <b>What to send</b>: redacted PDF + text, PDF only, or text only<br><br>
+        You see exactly what will be sent before anything leaves this computer. Placeholders such as [[TO CONFIRM]] are filled locally before saving the Word files.</p>
+      <button class="primary teal" id="btnOpenDraft">Open Draft Reply</button>
+    </div>
+  </section>
+</main>
+
+<footer class="status">
+  <span id="statusText">Ready. Open a notice PDF to begin.</span>
+  <div class="progress"><div class="bar" id="bar"></div><span id="pct">0%</span></div>
+</footer>
+
+<section class="sheet" id="draftSheet" hidden aria-labelledby="draftTitle">
+  <div class="sheet-head">
+    <h2 id="draftTitle">Draft Reply</h2>
+    <span class="muted" id="draftFile"></span>
+    <div class="grow"></div>
+    <button class="small" id="btnDraftClose">Close</button>
+  </div>
+  <div class="draft-status" id="dStatus" data-state="idle" role="status" aria-live="polite">
+    <span class="ds-chip" id="dState">READY</span>
+    <span class="ds-text" id="draftInfo"></span>
+    <span class="ds-time" id="dTime"></span>
+    <div class="progress ds-bar"><div class="bar" id="dBar"></div><span id="dPct">0%</span></div>
+  </div>
+  <div class="sheet-body draft">
+    <div class="card draft-form">
+      <fieldset class="field"><legend>What do you want back (tick any)</legend><div class="seg multi" id="dOut"></div></fieldset>
+      <fieldset class="field"><legend>How to get it</legend><div class="seg" id="dHow"></div></fieldset>
+      <div class="send-only" id="dSendOnly">
+        <label class="field">Model<select id="dModel"></select></label>
+        <fieldset class="field"><legend>What to send</legend><div class="seg" id="dIn"></div></fieldset>
+        <p class="muted small-text" id="dCapsNote" hidden></p>
+        <label class="check-row"><input type="checkbox" id="dWeb" checked> Let the model search the web to confirm law and case citations (small extra cost)</label>
+      </div>
+      <p class="muted small-text" id="dPromptNote" hidden>No API, no key, no cost. Mukhota makes a prompt with tokens only (no real names) to paste into ChatGPT, Claude.ai, Gemini, DeepSeek or any AI chat. Then paste the AI's answer back in the <b>Paste AI answer</b> tab to restore real values and save the Word files.</p>
+      <label class="field">Notice type<select id="dType"></select></label>
+      <label class="check-row"><input type="checkbox" id="dLib"> <span id="dLibLabel">Use my law library</span></label>
+      <label class="field">Facts and instructions
+        <textarea id="dFacts" rows="6" placeholder="Facts, explanations and instructions for the reply (optional). Names, PANs, account numbers etc. typed here are replaced with tokens before anything is sent."></textarea></label>
+      <label class="check-row"><input type="checkbox" id="dFrame"> <span><b>Frame the issues first</b> (six-box method, optional add-on)</span></label>
+      <div class="six-box" id="dSixBox" hidden>
+        <p class="muted small-text">Fill any box you know and leave the rest blank: the AI completes them from the notice. You get an extra <b>Issue framing</b> tab (allegations, facts vs assumptions, research questions, evidence checklist) before the reply. Text here is tokenised like the facts.</p>
+        <div id="dBoxes"></div>
+      </div>
+      <div class="btn-row" id="dSendBtns">
+        <button class="small" id="btnPreview">Preview what will be sent</button>
+        <button class="primary" id="btnSend">Send</button>
+      </div>
+      <div class="btn-row" id="dPromptBtns" hidden>
+        <button class="primary" id="btnMakePrompt">Make prompt</button>
+        <button class="small" id="btnCopyPrompt">Copy prompt</button>
+        <button class="small" id="btnSavePrompt">Save as .txt</button>
+      </div>
+      <div class="btn-row">
+        <button class="small" id="btnFacts" title="Status, auditor, turnover, filing dates... for this client, used to fill placeholders locally">Client facts…</button>
+        <button class="small" id="btnDraftFolder">Open folder</button>
+      </div>
+    </div>
+    <div class="card draft-out">
+      <div class="tabs" role="tablist" id="dTabs"></div>
+      <div class="draft-panels" id="dPanels"></div>
+      <div class="btn-row end">
+        <label class="check-row" id="rememberRow" hidden><input type="checkbox" id="dRemember"> <span id="rememberLabel">Remember the values I type here in this client's facts sheet</span></label>
+        <div class="grow"></div>
+        <button class="primary" id="btnSave" disabled>Save as Word</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="settingsSheet" hidden aria-labelledby="settingsTitle">
+  <div class="sheet-head">
+    <h2 id="settingsTitle">Settings</h2>
+    <div class="grow"></div>
+    <button class="small" id="btnSettingsCancel">Cancel</button>
+    <button class="primary" id="btnSettingsSave">Save</button>
+  </div>
+  <div class="sheet-body">
+    <div class="card settings">
+      <div class="tabs" role="tablist" id="sTabs">
+        <button role="tab" class="tab" data-tab="sGeneral" aria-selected="true">General</button>
+        <button role="tab" class="tab" data-tab="sAllow" aria-selected="false">Do-not-redact list</button>
+        <button role="tab" class="tab" data-tab="sMaster" aria-selected="false">Client master list</button>
+        <button role="tab" class="tab" data-tab="sApi" aria-selected="false">AI providers</button>
+      </div>
+      <div class="s-panel" id="sGeneral">
+        <label class="check-row"><input type="checkbox" id="sOfficer"> Redact officer name and ward/circle as role tokens</label>
+        <label class="check-row"><input type="checkbox" id="sPropagate"> Also find every other occurrence of each detected value</label>
+        <label class="field inline">Pre-tick items with confidence at least<input type="number" id="sAccept" min="0" max="1" step="0.05"></label>
+        <label class="field inline">Flag OCR pages for manual review below<input type="number" id="sLowConf" min="0.3" max="1" step="0.05"></label>
+        <label class="field inline">OCR resolution (DPI)<input type="number" id="sDpi" min="150" max="600" step="50"></label>
+        <div class="field">Output folder
+          <div class="btn-row"><input type="text" id="sOut" placeholder="Empty = next to the original notice"><button class="small" id="btnBrowse">Browse…</button></div>
+        </div>
+      </div>
+      <div class="s-panel" id="sAllow" hidden>
+        <p class="muted">Items matching these patterns or words are never redacted (sections, AY/FY, dates, amounts, notice DIN, form names, department names...). Patterns are regular expressions.</p>
+        <textarea id="sAllowText" class="mono" spellcheck="false"></textarea>
+      </div>
+      <div class="s-panel" id="sMaster" hidden>
+        <p class="muted">Known client names, directors, partners, addresses and IDs. Matching ignores case, spacing, M/s, Pvt/Private and Ltd/Limited. Role 'assessee' becomes [ASSESSEE]; 'director' becomes [DIRECTOR_1]...</p>
+        <div class="table-wrap"><table class="grid"><thead><tr><th>Term</th><th>PII type (NAME, ORG, ADDRESS, PAN...)</th><th>Role</th><th></th></tr></thead><tbody id="sMasterRows"></tbody></table></div>
+        <div class="btn-row"><button class="small" id="btnAddRow">Add row</button></div>
+      </div>
+      <div class="s-panel" id="sApi" hidden>
+        <label class="field">Default model for Draft Reply<select id="sModel"></select></label>
+        <label class="field inline">Maximum web searches per draft<input type="number" id="sWeb" min="0" max="20" step="1"></label>
+        <label class="field inline">Monthly spending limit ($, 0 = no limit)<input type="number" id="sLimit" min="0" max="10000" step="1"></label>
+        <p class="muted" id="sSpent"></p>
+
+        <h3>Claude (Anthropic)</h3>
+        <div class="field">Saved key <span id="sKeyState" class="kind"></span></div>
+        <label class="field">API key<input type="password" id="sKey" autocomplete="off" placeholder="Paste a new API key to save or replace it"></label>
+        <div class="btn-row"><button class="small" id="btnRemoveKey">Remove saved key</button></div>
+        <label class="field">Effort (higher = more thorough, costlier)<select id="sEffort"></select></label>
+
+        <h3>Other providers</h3>
+        <label class="field">Provider<select id="pSelect"></select></label>
+        <p class="muted small-text" id="pCaps"></p>
+        <label class="field">Server address<input type="text" id="pUrl" autocomplete="off"></label>
+        <label class="field">Model name<input type="text" id="pModel" autocomplete="off"></label>
+        <div class="field">Saved key <span id="pKeyState" class="kind"></span></div>
+        <label class="field" id="pKeyRow">API key<input type="password" id="pKey" autocomplete="off" placeholder="Paste this provider's API key to save or replace it"></label>
+        <div class="btn-row" id="pKeyBtns"><button class="small" id="btnRemovePKey">Remove this provider's key</button></div>
+        <label class="field inline">Price per million input tokens ($)<input type="number" id="pIn" min="0" step="0.01"></label>
+        <label class="field inline">Price per million output tokens ($)<input type="number" id="pOut" min="0" step="0.01"></label>
+        <label class="field inline" id="pSearchRow">Price per web search ($)<input type="number" id="pSearch" min="0" step="0.001"></label>
+        <label class="field inline">Max output tokens (0 = provider default)<input type="number" id="pMax" min="0" step="1000"></label>
+        <p class="muted">A provider appears in Draft Reply once it has a model name. Keys are kept in Windows Credential Manager, not in any file. Only Draft Reply uses the network, only for a verified redacted PDF, and only to the provider you choose.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="registerSheet" hidden aria-labelledby="registerTitle">
+  <div class="sheet-head">
+    <h2 id="registerTitle">Case Register</h2>
+    <span class="muted" id="registerSummary"></span>
+    <div class="grow"></div>
+    <button class="small" id="btnRegisterClose">Close</button>
+  </div>
+  <div class="sheet-body">
+    <div class="card wide-card">
+      <div class="table-wrap"><table class="grid cases"><thead><tr id="registerHead"></tr></thead><tbody id="registerRows"></tbody></table></div>
+      <div class="btn-row">
+        <button class="small" id="btnCaseEdit">Edit</button>
+        <button class="primary teal" id="btnCaseFiled">Mark filed</button>
+        <button class="small" id="btnCaseFolder">Open folder</button>
+        <button class="small" id="btnCaseRemove">Remove</button>
+        <div class="grow"></div>
+        <span class="muted small-text">Client names are stored encrypted on this computer. Double-click a row to edit it.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-back" id="modalBack" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle"></h2>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

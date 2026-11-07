@@ -1,0 +1,20 @@
+# Mukhota - Notice Redaction Suite
+# Python 3.12 (64-bit). Everything installs through pip; no external programs.
+# Versions pinned to the set installed and resolved together on 2026-10-28.
+PyQt6==6.9.1
+PyMuPDF==1.26.7
+rapidocr-onnxruntime==1.4.4
+onnxruntime==1.22.1
+opencv-python==4.11.0.86
+numpy==2.5.4
+spacy==3.8.18
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+cryptography==50.0.2
+keyring==25.7.0
+Pillow==13.0.0
+PyYAML==6.0.3
+# Phase 2 - Draft Reply
+anthropic==2.3.0
+openai==3.42.0
+google-genai==2.34.0
+python-docx==1.2.0

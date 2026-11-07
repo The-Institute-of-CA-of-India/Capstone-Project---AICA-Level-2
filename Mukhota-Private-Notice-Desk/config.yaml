@@ -1,0 +1,102 @@
+ocr:
+  dpi: 300
+  low_confidence_threshold: 0.8
+ingest:
+  min_text_chars: 30
+  image_coverage_ratio: 0.8
+detection:
+  accept_threshold: 0.6
+  redact_officer: true
+  spacy_model: en_core_web_sm
+  fuzzy_threshold: 0.88
+  visual_dpi: 150
+  propagate_values: true
+redaction:
+  image_dpi: 300
+  jpeg_quality: 85
+  padding: 1.5
+verify:
+  ocr_dpi: 300
+  tail_digits: 4
+  tail_label_window: 40
+ai:
+  model: claude-opus-5-5
+  effort: medium
+  max_tokens: 48000
+  web_search_max_uses: 5
+  monthly_limit_usd: 0
+providers:
+  openai:
+    base_url: https://api.openai.com/v1
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  gemini:
+    base_url: https://generativelanguage.googleapis.com
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  deepseek:
+    base_url: https://api.deepseek.com/v1
+    model: deepseek-v4-pro
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  mistral:
+    base_url: https://api.mistral.ai/v1
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  groq:
+    base_url: https://api.groq.com/openai/v1
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  ollama:
+    base_url: http://localhost:11434/v1
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  lmstudio:
+    base_url: http://localhost:1234/v1
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+  custom:
+    base_url: ''
+    model: ''
+    price_in: 0
+    price_out: 0
+    price_search: 0
+    max_tokens: 0
+notifications:
+  due_reminders: true
+law_library:
+  enabled: true
+  max_excerpts: 8
+  max_chars: 14000
+paths:
+  allowlist: allowlist.yaml
+  client_master: client_master.csv
+  log_dir: logs
+  output_root: ''
