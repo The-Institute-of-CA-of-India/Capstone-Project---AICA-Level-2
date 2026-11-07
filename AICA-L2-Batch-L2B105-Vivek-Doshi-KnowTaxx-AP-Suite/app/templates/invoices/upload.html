@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import icon %}
+{% block title %}Upload invoice{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Upload invoices</h1><div class="sub">{{ client.name }}</div></div></div>
+{% if not ocr.available %}
+<div class="flash flash-warning">Tesseract OCR is not installed on this server. Files are still stored, but fields must be entered by hand. See the troubleshooting section of the User Guide.</div>
+{% endif %}
+<div class="card" style="max-width:760px">
+  <form id="upload-form" method="post" enctype="multipart/form-data" action="{{ url_for('invoices.upload', client_id=client.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="btn btn-secondary camera-btn" for="camera-input">{{ icon('camera')|safe }}&nbsp;Take Photo</label>
+    <input class="visually-hidden" id="camera-input" type="file" accept="image/*" capture="camera">
+    <div class="drop-zone" id="drop-zone">
+      <p style="margin-bottom:10px"><strong>Drag and drop</strong> invoices here</p>
+      <label class="btn btn-primary file-label" for="file-picker">Choose files</label>
+      <input class="visually-hidden" id="file-picker" name="files" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+      <p class="small muted" style="margin:10px 0 0">PDF, JPG or PNG, up to 20 MB each. Several files at once are fine.</p>
+    </div>
+    <noscript><button class="btn btn-primary" type="submit" style="margin-top:10px">Upload</button></noscript>
+    <div class="progress" id="upload-progress" hidden><span></span></div>
+    <p class="small muted" id="upload-status" style="margin:8px 0 0" aria-live="polite"></p>
+    <ul class="upload-list" id="upload-results"></ul>
+  </form>
+</div>
+{% endblock %}

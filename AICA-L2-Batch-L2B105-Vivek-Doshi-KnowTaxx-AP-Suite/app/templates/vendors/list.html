@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import status_badge %}
+{% from 'components/_pagination.html' import pager %}
+{% block title %}Vendors{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Vendors</h1><div class="sub">{{ client.name }}</div></div>
+  <div class="actions"><a class="btn btn-secondary" href="{{ url_for('vendors.new_vendor', client_id=client.id) }}">New vendor</a></div>
+</div>
+<div class="kpis">
+  <div class="card kpi"><div class="label">Total vendors</div><div class="value">{{ stats.total }}</div></div>
+  <a class="card kpi" href="{{ url_for('vendors.list_vendors', client_id=client.id, status='pending') }}"><div class="label">Pending verification</div><div class="value">{{ stats.pending }}</div></a>
+  <div class="card kpi"><div class="label">MSME vendors</div><div class="value">{{ stats.msme_pct }}%</div></div>
+  <div class="card kpi"><div class="label">Recently added</div><div class="value" style="font-size:.95rem;font-weight:600">{{ recent[0].trade_name if recent else '-' }}</div></div>
+</div>
+<form class="filters" method="get">
+  <div class="grow"><label for="q">Search</label><input id="q" type="search" name="q" value="{{ term }}" placeholder="Name, code, PAN or GSTIN"></div>
+  <div><label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="">All live</option>
+      {% for s in ('pending','active','blacklisted','archived') %}<option value="{{ s }}" {{ 'selected' if status == s }}>{{ s|title }}</option>{% endfor %}
+    </select></div>
+  <button class="btn btn-primary" type="submit">Filter</button>
+</form>
+<div class="card">
+  {% if page.items %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Code</th><th>Trade name</th><th>PAN</th><th>GSTIN</th><th>Category</th><th>MSME</th><th>Source</th><th>Status</th></tr></thead>
+    <tbody>{% for v in page.items %}
+      <tr><td class="mono">{{ v.code }}</td><td><a href="{{ url_for('vendors.detail', client_id=client.id, vendor_id=v.id) }}">{{ v.trade_name }}</a></td>
+      <td class="mono">{{ v.pan or '-' }}</td><td class="mono">{{ v.gstin or '-' }}</td><td>{{ v.category|title }}</td><td>{{ 'Yes' if v.msme_registered else 'No' }}</td>
+      <td>{{ 'Self-registered' if v.registered_by == 'self' else 'Internal' }}</td><td>{{ status_badge(v.status) }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {{ pager(page, 'vendors.list_vendors') }}
+  {% else %}<p class="empty">No vendors match. Add one, or share the self-registration link from the client overview.</p>{% endif %}
+</div>
+<div class="grid cols-2" style="margin-top:14px">
+  <div class="card">
+    <h2 style="margin-bottom:10px">Top vendors by spend</h2>
+    {% if top %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Vendor</th><th class="num">Spend (incl. GST)</th></tr></thead>
+      <tbody>{% for v, spend in top %}<tr><td>{{ v.trade_name }}</td><td class="num">{{ spend|inr }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No spend recorded yet.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:10px">Recently added</h2>
+    {% if recent %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Vendor</th><th>Added</th><th>Status</th></tr></thead>
+      <tbody>{% for v in recent %}<tr><td>{{ v.trade_name }}</td><td>{{ v.created_at|ist('%d %b %Y') }}</td><td>{{ status_badge(v.status) }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">None yet.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

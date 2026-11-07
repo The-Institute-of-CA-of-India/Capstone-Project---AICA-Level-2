@@ -1,0 +1,59 @@
+{
+  "note": "Synthetic sample documents. Not a measure of accuracy on real vendor invoices.",
+  "clean": {
+    "documents": 7,
+    "field_accuracy": 1.0,
+    "per_field": {
+      "vendor": 1.0,
+      "gstin": 1.0,
+      "number": 1.0,
+      "date": 1.0,
+      "taxable": 1.0,
+      "cgst": 1.0,
+      "sgst": 1.0,
+      "igst": 1.0,
+      "total": 1.0
+    },
+    "average_confidence": 0.939
+  },
+  "degraded_photo": {
+    "documents": 7,
+    "field_accuracy": 0.937,
+    "per_field": {
+      "vendor": 0.714,
+      "gstin": 0.857,
+      "number": 0.857,
+      "date": 1.0,
+      "taxable": 1.0,
+      "cgst": 1.0,
+      "sgst": 1.0,
+      "igst": 1.0,
+      "total": 1.0
+    },
+    "average_confidence": 0.923
+  },
+  "misses": {
+    "clean": [],
+    "degraded_photo": [
+      {
+        "file": "invoice_gst_4.png",
+        "fields": [
+          "vendor"
+        ]
+      },
+      {
+        "file": "invoice_gst_5.png",
+        "fields": [
+          "number"
+        ]
+      },
+      {
+        "file": "expense_receipt_1.jpg",
+        "fields": [
+          "vendor",
+          "gstin"
+        ]
+      }
+    ]
+  }
+}

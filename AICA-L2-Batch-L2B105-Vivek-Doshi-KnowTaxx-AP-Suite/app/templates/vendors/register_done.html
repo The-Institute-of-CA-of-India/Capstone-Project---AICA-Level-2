@@ -1,0 +1,9 @@
+{% extends 'base_public.html' %}
+{% block title %}Registration received{% endblock %}
+{% block content %}
+<div class="card card-accent">
+  <h1>Registration received</h1>
+  <p style="margin-top:8px">Thank you, {{ vendor.trade_name }}. {{ client.name }} will review your details and documents. You can close this page.</p>
+  <p class="small muted" style="margin:0">Reference: {{ client.code }}-{{ vendor.code }}</p>
+</div>
+{% endblock %}

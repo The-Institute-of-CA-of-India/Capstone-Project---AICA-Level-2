@@ -1,0 +1,50 @@
+{% extends 'base_public.html' %}
+{% from 'components/_macros.html' import field %}
+{% block title %}Vendor registration{% endblock %}
+{% block content %}
+<h1>Vendor registration</h1>
+<p class="muted" style="margin-top:4px">For <strong>{{ client.name }}</strong>. Please fill in your details and attach the documents. Your registration is reviewed before it becomes active.</p>
+<form method="post" enctype="multipart/form-data" novalidate class="stack">
+  {{ form.hidden_tag() }}
+  <section class="card">
+    <h2 style="margin-bottom:10px">Business details</h2>
+    <div class="form-grid cols-2">
+      {{ field(form.trade_name) }}
+      {{ field(form.legal_name) }}
+      {{ field(form.pan) }}
+      {{ field(form.gstin) }}
+      {{ field(form.category) }}
+      {{ field(form.msme_registered) }}
+      {{ field(form.udyam_number, 'span-all') }}
+    </div>
+  </section>
+  <section class="card">
+    <h2 style="margin-bottom:10px">Bank details</h2>
+    <div class="form-grid cols-2">
+      {{ field(form.bank_account_no) }}
+      {{ field(form.bank_ifsc) }}
+      {{ field(form.bank_branch, 'span-all') }}
+    </div>
+  </section>
+  <section class="card">
+    <h2 style="margin-bottom:10px">Contact</h2>
+    <div class="form-grid cols-2">
+      {{ field(form.contact_person) }}
+      {{ field(form.contact_email) }}
+      {{ field(form.contact_phone) }}
+      {{ field(form.address, 'span-all') }}
+    </div>
+  </section>
+  <section class="card">
+    <h2 style="margin-bottom:4px">Documents</h2>
+    <p class="small muted">PDF, JPG or PNG, up to 20 MB each. You can take a photo on your phone.</p>
+    <div class="form-grid cols-2">
+      {{ field(form.doc_pan) }}
+      {{ field(form.doc_cheque) }}
+      {{ field(form.doc_gst) }}
+      {{ field(form.doc_msme) }}
+    </div>
+  </section>
+  {{ form.submit(class='btn btn-secondary btn-block') }}
+</form>
+{% endblock %}

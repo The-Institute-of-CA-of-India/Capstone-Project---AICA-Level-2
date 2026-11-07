@@ -1,0 +1,36 @@
+# Runtime data - never commit financial documents or databases
+instance/
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Portable third-party binaries (see README)
+tools/
+
+# Build output
+dist/
+build/
+*.spec
+installer/vendor/
+installer/*.exe
+
+# Node
+node_modules/
+
+# IDE / OS
+.vscode/
+.idea/
+.claude/
+*.swp
+Thumbs.db
+.DS_Store

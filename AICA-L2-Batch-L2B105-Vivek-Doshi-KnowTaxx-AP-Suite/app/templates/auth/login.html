@@ -1,0 +1,18 @@
+{% extends 'base_public.html' %}
+{% from 'components/_macros.html' import logo, field %}
+{% block title %}Sign in{% endblock %}
+{% block body %}
+<div class="auth-page">
+  <div class="auth-brand">{{ logo(230) }}<span class="tagline">Knowledge Backed Innovative Solutions</span></div>
+  <div class="auth-card">
+    <h1>AP &amp; Expense Intelligence Suite</h1>
+    {% include 'components/_flash.html' %}
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.username) }}
+      {{ field(form.password) }}
+      {{ form.submit(class='btn btn-primary btn-block') }}
+    </form>
+  </div>
+</div>
+{% endblock %}

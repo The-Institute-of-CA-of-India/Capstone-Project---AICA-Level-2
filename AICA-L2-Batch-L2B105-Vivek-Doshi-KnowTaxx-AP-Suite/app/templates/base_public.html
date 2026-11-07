@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1E3A6E">
+  <meta name="robots" content="noindex">
+  <title>{% block title %}KnowTaxx{% endblock %} | KnowTaxx</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body data-user-id="">
+  {% block body %}
+  {% from 'components/_macros.html' import logo %}
+  <header class="public-head">{{ logo(170) }}<span class="tagline">Knowledge Backed Innovative Solutions</span></header>
+  <main class="public-body">
+    {% include 'components/_flash.html' %}
+    {% block content %}{% endblock %}
+  </main>
+  {% endblock %}
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

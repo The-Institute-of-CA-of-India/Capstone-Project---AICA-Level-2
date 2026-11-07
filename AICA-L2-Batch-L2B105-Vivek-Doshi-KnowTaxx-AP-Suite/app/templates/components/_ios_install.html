@@ -1,0 +1,12 @@
+{% from 'components/_macros.html' import icon %}
+<div class="ios-overlay" id="ios-install" role="dialog" aria-labelledby="ios-title" hidden>
+  <div class="ios-card">
+    <h2 id="ios-title">Install KnowTaxx AP Suite</h2>
+    <ol>
+      <li>Tap the Share button {{ icon('share') }} in Safari's toolbar.</li>
+      <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+      <li>Tap <strong>Add</strong>.</li>
+    </ol>
+    <button class="btn btn-primary btn-block" type="button" data-dismiss>Got it</button>
+  </div>
+</div>

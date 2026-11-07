@@ -1,0 +1,11 @@
+{% macro pager(page, endpoint) %}
+{% if page.pages > 1 %}
+{% set args = dict(request.view_args or {}) %}
+{% for k, v in request.args.items() %}{% if k != 'page' %}{% set _ = args.update({k: v}) %}{% endif %}{% endfor %}
+<nav class="pagination" aria-label="Pages">
+  {% if page.has_prev %}<a class="btn btn-sm btn-outline" href="{{ url_for(endpoint, page=page.prev_num, **args) }}">Previous</a>{% endif %}
+  <span class="small muted">Page {{ page.page }} of {{ page.pages }} ({{ page.total }} records)</span>
+  {% if page.has_next %}<a class="btn btn-sm btn-outline" href="{{ url_for(endpoint, page=page.next_num, **args) }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}

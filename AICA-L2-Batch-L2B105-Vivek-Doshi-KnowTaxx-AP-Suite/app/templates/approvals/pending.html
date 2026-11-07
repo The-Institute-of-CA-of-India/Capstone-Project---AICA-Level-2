@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Pending approvals{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Pending approvals</h1><div class="sub">{{ invoices|length }} invoice(s). On a phone, swipe a card right to approve or left to reject.</div></div>
+  <div class="actions">
+    <button class="btn btn-outline" id="enable-alerts" type="button" hidden>Enable alerts</button>
+    {% if current_user.role in ('admin','manager') %}
+    <a class="btn btn-outline" href="{{ url_for('approvals.pending', view='mine' if view != 'mine' else None) }}">{{ 'Show all' if view == 'mine' else 'Only mine' }}</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="card kpi"><div class="label">Average approval time</div><div class="value">{{ sla.avg_hours if sla.avg_hours is not none else '-' }}{% if sla.avg_hours is not none %}<span class="small"> h</span>{% endif %}</div></div>
+  <div class="card kpi"><div class="label">Waiting over 24h</div><div class="value">{{ sla.over_24 }}</div></div>
+  <div class="card kpi"><div class="label">Waiting over 48h</div><div class="value">{{ sla.over_48 }}</div></div>
+  <div class="card kpi"><div class="label">Waiting over 72h</div><div class="value">{{ sla.over_72 }}</div></div>
+</div>
+
+{% if conflicts %}
+<div class="card card-accent" style="margin-bottom:14px">
+  <h2 style="margin-bottom:8px">Offline sync conflicts</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Synced</th><th>User</th><th>What happened</th><th></th></tr></thead>
+    <tbody>{% for c in conflicts %}
+      <tr><td>{{ c.synced_at|ist }}</td><td>{{ c.user.full_name if c.user else '-' }}</td>
+      <td>{{ c.conflict_details }}{% if c.invoice %} <a href="{{ url_for('invoices.detail', invoice_id=c.invoice_id) }}">Open invoice</a>{% endif %}</td>
+      <td class="right"><form method="post" action="{{ url_for('approvals.resolve_conflict', item_id=c.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline" type="submit">Mark resolved</button></form></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if invoices %}
+<div class="approval-list">
+  {% for i in invoices %}
+  <article class="approval-card" data-base="{{ url_for('approvals.pending')|replace('/pending','') }}/{{ i.id }}" data-vendor="{{ i.display_vendor }}">
+    <div class="approval-vendor">{{ i.display_vendor }}</div>
+    <div class="approval-amount">{{ i.amount|inr }}</div>
+    <div class="small muted">{{ i.client.name }}</div>
+    <div class="approval-meta">
+      <div><span>Invoice</span><a href="{{ url_for('invoices.detail', invoice_id=i.id) }}">{{ i.display_number }}</a></div>
+      <div><span>Invoice date</span>{{ i.display_date|fdate }}</div>
+      <div><span>Category</span>{{ i.expense_category or '-' }}</div>
+      <div><span>Cost centre</span>{{ i.cost_centre.name if i.cost_centre else '-' }}</div>
+      <div><span>Submitted by</span>{{ i.reviewer.full_name if i.reviewer else '-' }}</div>
+      <div><span>Level / since</span>L{{ i.current_level }}{% if i.current_approver and i.current_approver_id != current_user.id %} ({{ i.current_approver.full_name }}){% endif %} &middot; {{ i.submitted_at|ist('%d %b') }}</div>
+    </div>
+    <div class="approval-actions">
+      <button class="btn btn-success" type="button" data-action="approve">Approve</button>
+      <button class="btn btn-danger" type="button" data-action="reject">Reject</button>
+      <button class="btn btn-warning" type="button" data-action="query">Query</button>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><p class="empty">Nothing is waiting for you. All clear.</p></div>
+{% endif %}
+
+<dialog id="decision-dialog">
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h2 data-title style="margin-bottom:10px"></h2>
+    <label data-label for="decision-comment"></label>
+    <textarea id="decision-comment" name="comments" maxlength="1000"></textarea>
+    <div class="dialog-actions">
+      <button class="btn btn-outline" type="button" data-cancel>Cancel</button>
+      <button class="btn btn-success" type="submit" data-confirm>Confirm</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

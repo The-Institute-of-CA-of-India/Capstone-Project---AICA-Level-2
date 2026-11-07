@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1E3A6E">
+  <title>Offline capture | KnowTaxx</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body data-user-id="">
+  <header class="public-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div>
+      <strong style="color:#fff;font-size:1.25rem">KnowTaxx</strong>
+      <span class="tagline">Knowledge Backed Innovative Solutions</span>
+    </div>
+    <span class="net-pill" id="net-pill">Checking...</span>
+  </header>
+  <main class="public-body">
+    <div class="flash flash-info">You are offline. Data captured here will sync when you reconnect.</div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="capture" role="tab" type="button">Capture</button>
+      <button class="tab" data-tab="approvals" role="tab" type="button">Approvals</button>
+      <button class="tab" data-tab="queue" role="tab" type="button">Queue <span id="queue-count"></span></button>
+    </div>
+
+    <section data-panel="capture" class="card">
+      <h2 style="margin-bottom:10px">Capture an invoice</h2>
+      <form id="capture-form">
+        <div class="field" style="margin-bottom:12px">
+          <label for="cap-client">Client</label>
+          <select id="cap-client" required></select>
+          <div class="help" id="cap-client-help"></div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label for="cap-photo">Photo of the invoice</label>
+          <input id="cap-photo" type="file" accept="image/*" capture="environment" required>
+        </div>
+        <div class="form-grid cols-2" style="margin-bottom:12px">
+          <div class="field"><label for="cap-vendor">Vendor (optional)</label><input id="cap-vendor" type="text" maxlength="200"></div>
+          <div class="field"><label for="cap-amount">Amount (optional)</label><input id="cap-amount" type="text" inputmode="decimal" maxlength="20"></div>
+          <div class="field span-all"><label for="cap-note">Note (optional)</label><input id="cap-note" type="text" maxlength="200"></div>
+        </div>
+        <button class="btn btn-secondary btn-block" type="submit">Save on this device</button>
+      </form>
+    </section>
+
+    <section data-panel="approvals" hidden>
+      <p class="small muted" id="cache-time"></p>
+      <div class="approval-list" id="pending-list"></div>
+      <p class="empty" id="pending-empty" hidden>Nothing was waiting for you the last time this device was online.</p>
+    </section>
+
+    <section data-panel="queue" hidden>
+      <div class="card-head">
+        <h2>Waiting to sync</h2>
+        <button class="btn btn-primary btn-sm" id="sync-now" type="button">Sync now</button>
+      </div>
+      <div id="queue-list" class="stack"></div>
+      <p class="empty" id="queue-empty">Nothing queued.</p>
+    </section>
+
+    <p style="margin-top:16px"><a class="btn btn-outline btn-block" href="/">Back to the app</a></p>
+  </main>
+  <script src="/static/js/sw-register.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+  (function () {
+    const K = window.KTAP;
+    const $ = id => document.getElementById(id);
+    const inr = v => v === null || v === undefined ? '-' : '₹' + Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.querySelectorAll('[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== tab.dataset.tab; });
+    }));
+
+    async function renderClients() {
+      const clients = (await K.cacheGet('clients')) || [];
+      const select = $('cap-client');
+      select.textContent = '';
+      clients.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.id;
+        option.textContent = c.code + ' - ' + c.name;
+        select.appendChild(option);
+      });
+      $('cap-client-help').textContent = clients.length ? '' : 'No clients on this device yet. Sign in once while connected to the office network.';
+    }
+
+    function text(tag, value, cls) {
+      const el = document.createElement(tag);
+      el.textContent = value;
+      if (cls) el.className = cls;
+      return el;
+    }
+
+    async function renderPending() {
+      const pending = (await K.cacheGet('pending')) || [];
+      const queued = await K.queueAll();
+      const decided = new Set(queued.filter(q => q.action_type === 'approval').map(q => q.payload.invoice_id));
+      const cachedAt = await K.cacheGet('cached_at');
+      $('cache-time').textContent = cachedAt ? 'Snapshot from ' + new Date(cachedAt).toLocaleString('en-IN') : '';
+      const list = $('pending-list');
+      list.textContent = '';
+      const open = pending.filter(i => !decided.has(i.id));
+      $('pending-empty').hidden = open.length > 0;
+      open.forEach(invoice => {
+        const card = document.createElement('article');
+        card.className = 'approval-card';
+        card.appendChild(text('div', invoice.vendor, 'approval-vendor'));
+        card.appendChild(text('div', inr(invoice.amount), 'approval-amount'));
+        card.appendChild(text('div', invoice.client_name + ' · ' + invoice.invoice_number + ' · ' + (invoice.invoice_date || '-'), 'small muted'));
+        const actions = document.createElement('div');
+        actions.className = 'approval-actions';
+        actions.style.gridTemplateColumns = '1fr 1fr';
+        actions.style.marginTop = '10px';
+        const approve = text('button', 'Approve', 'btn btn-success');
+        const reject = text('button', 'Reject', 'btn btn-danger');
+        approve.type = reject.type = 'button';
+        approve.addEventListener('click', () => decide(invoice, 'approve', null));
+        reject.addEventListener('click', () => {
+          const reason = prompt('Reason for rejection');
+          if (reason && reason.trim()) decide(invoice, 'reject', reason.trim());
+        });
+        actions.append(approve, reject);
+        card.appendChild(actions);
+        list.appendChild(card);
+      });
+    }
+
+    async function decide(invoice, decision, comments) {
+      await K.enqueue('approval', { invoice_id: invoice.id, decision, comments, seen_updated_at: invoice.updated_at },
+        { label: decision + ': ' + invoice.vendor + ' ' + inr(invoice.amount) });
+      K.toast('Queued. It will apply when you reconnect.', 'success');
+      refresh();
+    }
+
+    async function renderQueue() {
+      const items = await K.queueAll();
+      $('queue-count').textContent = items.length ? '(' + items.length + ')' : '';
+      $('queue-empty').hidden = items.length > 0;
+      const list = $('queue-list');
+      list.textContent = '';
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const head = document.createElement('div');
+        head.className = 'card-head';
+        head.appendChild(text('strong', item.label || item.action_type));
+        const kind = { queued: 'warning', conflict: 'danger', failed: 'danger' }[item.state] || '';
+        head.appendChild(text('span', item.state, 'badge badge-' + kind));
+        card.appendChild(head);
+        card.appendChild(text('div', new Date(item.created_at).toLocaleString('en-IN'), 'small muted'));
+        if (item.detail) card.appendChild(text('p', item.detail, 'small'));
+        if (item.state !== 'queued') {
+          const remove = text('button', 'Remove', 'btn btn-outline btn-sm');
+          remove.type = 'button';
+          remove.addEventListener('click', async () => { await K.queueDelete(item.uuid); refresh(); });
+          card.appendChild(remove);
+        }
+        list.appendChild(card);
+      });
+    }
+
+    async function refresh() {
+      await Promise.all([renderClients(), renderPending(), renderQueue()]);
+    }
+
+    async function updateNet() {
+      const online = await K.serverReachable();
+      const pill = $('net-pill');
+      pill.textContent = online ? 'Server reachable' : 'Offline';
+      pill.classList.toggle('on', online);
+      return online;
+    }
+
+    $('capture-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const file = $('cap-photo').files[0];
+      const select = $('cap-client');
+      if (!file || !select.value) return;
+      const vendor = $('cap-vendor').value.trim();
+      await K.enqueue('invoice_upload', {
+        client_id: Number(select.value),
+        details: { vendor, amount: $('cap-amount').value.trim(), note: $('cap-note').value.trim() }
+      }, {
+        blob: file, filename: file.name || 'offline_capture.jpg',
+        label: 'Invoice: ' + (vendor || file.name || 'photo') + ' for ' + select.options[select.selectedIndex].text
+      });
+      e.target.reset();
+      K.toast('Saved on this device. It will sync when you reconnect.', 'success');
+      refresh();
+    });
+
+    $('sync-now').addEventListener('click', async () => {
+      const result = await K.syncQueue();
+      if (result === null && !(await K.queueAll()).some(i => i.state === 'queued')) K.toast('Nothing to sync.', 'info');
+      refresh();
+    });
+
+    document.addEventListener('ktap:queue-changed', refresh);
+    window.addEventListener('online', async () => { if (await updateNet()) { await K.syncQueue({ silent: true }); refresh(); } });
+    window.addEventListener('offline', updateNet);
+    refresh();
+    updateNet();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% set k = data.kpis %}
+<div class="page-head">
+  <div><h1>Dashboard</h1><div class="sub">{{ client.name }}. Spend counts reviewed invoices only, including GST.</div></div>
+  <div class="actions">
+    <a class="btn btn-outline" href="{{ url_for('reports.export_report', client_id=client.id, name='dashboard.xlsx') }}">Excel</a>
+    <a class="btn btn-outline" href="{{ url_for('reports.export_report', client_id=client.id, name='dashboard.pdf') }}">PDF</a>
+    <a class="btn btn-secondary" href="{{ url_for('reports.export_report', client_id=client.id, name='tally.csv') }}">Tally CSV</a>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="card kpi card-accent"><div class="label">Invoices this month</div><div class="value">{{ k.invoice_count }}</div></div>
+  <div class="card kpi card-accent"><div class="label">Total amount this month</div><div class="value">{{ k.total_amount|inr(decimals=0) }}</div></div>
+  <a class="card kpi card-accent" href="{{ url_for('approvals.pending') }}"><div class="label">Pending approvals</div><div class="value">{{ k.pending_approvals }}</div></a>
+  <a class="card kpi card-accent" href="{{ url_for('reports.aging', client_id=client.id) }}"><div class="label">Overdue payments</div><div class="value">{{ k.overdue_count }}</div><div class="note">{{ k.overdue_amount|inr(decimals=0) }}</div></a>
+</div>
+
+<div class="grid cols-2">
+  <section class="card">
+    <h2>Monthly spend, last 12 months</h2>
+    <div class="chart-wrap" style="margin-top:10px"><canvas id="chart-trend" role="img" aria-label="Line chart of monthly spend. The values are in the table below."></canvas></div>
+    <details class="small" style="margin-top:8px"><summary>Show as table</summary>
+      <div class="table-wrap"><table><thead><tr><th>Month</th><th class="num">Spend</th></tr></thead><tbody>
+      {% for label in data.trend.labels %}<tr><td>{{ label }}</td><td class="num">{{ data.trend['values'][loop.index0]|inr(decimals=0) }}</td></tr>{% endfor %}
+      </tbody></table></div></details>
+  </section>
+  <section class="card">
+    <h2>Spend by category</h2>
+    <div class="chart-wrap" style="margin-top:10px"><canvas id="chart-category" role="img" aria-label="Doughnut chart of spend by category. The values are in the table below."></canvas></div>
+    <details class="small" style="margin-top:8px"><summary>Show as table</summary>
+      <div class="table-wrap"><table><thead><tr><th>Category</th><th class="num">Spend</th></tr></thead><tbody>
+      {% for label in data.category.labels %}<tr><td>{{ label }}</td><td class="num">{{ data.category['values'][loop.index0]|inr(decimals=0) }}</td></tr>{% endfor %}
+      </tbody></table></div></details>
+  </section>
+  <section class="card">
+    <h2>Top 10 vendors by spend</h2>
+    <div class="chart-wrap" style="margin-top:10px;height:320px"><canvas id="chart-vendors" role="img" aria-label="Horizontal bar chart of top vendors. The values are in the table below."></canvas></div>
+    <details class="small" style="margin-top:8px"><summary>Show as table</summary>
+      <div class="table-wrap"><table><thead><tr><th>Vendor</th><th class="num">Spend</th></tr></thead><tbody>
+      {% for label in data.vendors.labels %}<tr><td>{{ label }}</td><td class="num">{{ data.vendors['values'][loop.index0]|inr(decimals=0) }}</td></tr>{% endfor %}
+      </tbody></table></div></details>
+  </section>
+  <section class="card">
+    <h2>Approval status by invoice month</h2>
+    <div class="chart-wrap" style="margin-top:10px;height:320px"><canvas id="chart-status" role="img" aria-label="Stacked bar chart of invoice counts by status. The values are in the table below."></canvas></div>
+    <details class="small" style="margin-top:8px"><summary>Show as table</summary>
+      <div class="table-wrap"><table><thead><tr><th>Status</th>{% for label in data.status.labels %}<th class="num">{{ label }}</th>{% endfor %}</tr></thead><tbody>
+      {% for status, counts in data.status.series.items() %}<tr><td>{{ status.replace('_',' ')|title }}</td>{% for c in counts %}<td class="num">{{ c }}</td>{% endfor %}</tr>{% endfor %}
+      </tbody></table></div></details>
+  </section>
+</div>
+
+<section class="card" style="margin-top:14px">
+  <h2 style="margin-bottom:10px">Approval turnaround</h2>
+  <div class="kpis" style="margin:0">
+    <div class="kpi"><div class="label">Average approval time</div><div class="value">{{ sla.avg_hours if sla.avg_hours is not none else '-' }}{% if sla.avg_hours is not none %}<span class="small"> h</span>{% endif %}</div></div>
+    <div class="kpi"><div class="label">Waiting over 24h</div><div class="value">{{ sla.over_24 }}</div></div>
+    <div class="kpi"><div class="label">Waiting over 48h</div><div class="value">{{ sla.over_48 }}</div></div>
+    <div class="kpi"><div class="label">Waiting over 72h</div><div class="value">{{ sla.over_72 }}</div></div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+<script>
+(function () {
+  const data = {{ data|tojson }};
+  const NAVY = '#1E3A6E', GOLD = '#E8A020', BLUE = '#2563EB', GREEN = '#059669', GOLD_DARK = '#C88A18', GRAY = '#6B7280';
+  const STATUS = { approved: GREEN, paid: NAVY, pending_approval: GOLD, reviewed: BLUE, pending_review: '#D97706',
+                   auto_captured: '#8FA3C7', rejected: '#DC2626', cancelled: GRAY };
+  const inr = v => '₹' + Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  const compact = v => v >= 1e7 ? '₹' + (v / 1e7).toFixed(1) + ' Cr' : v >= 1e5 ? '₹' + (v / 1e5).toFixed(1) + ' L' : v >= 1e3 ? '₹' + (v / 1e3).toFixed(0) + 'K' : '₹' + v;
+  const title = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  Chart.defaults.color = '#6B7280';
+  Chart.defaults.maintainAspectRatio = false;
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxHeight = 8;
+  const grid = { color: '#EEF1F6' };
+  const quiet = { grid: { display: false }, border: { color: '#D8DDE6' } };
+
+  new Chart('chart-trend', {
+    type: 'line',
+    data: { labels: data.trend.labels, datasets: [{ data: data.trend.values, borderColor: NAVY, backgroundColor: NAVY, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBorderColor: '#fff', pointBorderWidth: 2, cubicInterpolationMode: 'monotone' }] },
+    options: { interaction: { mode: 'index', intersect: false }, scales: { x: quiet, y: { beginAtZero: true, grid, border: { display: false }, ticks: { callback: compact } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => inr(c.parsed.y) } } } }
+  });
+
+  new Chart('chart-category', {
+    type: 'doughnut',
+    data: { labels: data.category.labels, datasets: [{ data: data.category.values, backgroundColor: [NAVY, GOLD, BLUE, GREEN, GOLD_DARK, GRAY], borderColor: '#fff', borderWidth: 2 }] },
+    options: { cutout: '62%', plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: c => c.label + ': ' + inr(c.parsed) } } } }
+  });
+
+  new Chart('chart-vendors', {
+    type: 'bar',
+    data: { labels: data.vendors.labels, datasets: [{ data: data.vendors.values, backgroundColor: NAVY, borderRadius: 4, borderSkipped: 'start', barThickness: 14, hoverBackgroundColor: GOLD }] },
+    options: { indexAxis: 'y', scales: { x: { beginAtZero: true, grid, border: { display: false }, ticks: { callback: compact } }, y: quiet },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => inr(c.parsed.x) } } } }
+  });
+
+  new Chart('chart-status', {
+    type: 'bar',
+    data: { labels: data.status.labels, datasets: Object.keys(data.status.series).map(s => ({
+      label: title(s), data: data.status.series[s], backgroundColor: STATUS[s] || GRAY, borderColor: '#fff', borderWidth: { top: 2 }, maxBarThickness: 48 })) },
+    options: { scales: { x: Object.assign({ stacked: true }, quiet), y: { stacked: true, beginAtZero: true, grid, border: { display: false }, ticks: { precision: 0 } } },
+      plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', filter: i => i.parsed.y > 0 } } }
+  });
+})();
+</script>
+{% endblock %}

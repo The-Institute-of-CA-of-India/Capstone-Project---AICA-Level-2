@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Start | KnowTaxx AP Suite</title>
+<style>
+:root { --navy:#1E3A6E; --gold:#E8A020; --gray:#6B7280; --line:#EEF1F6; }
+* { box-sizing:border-box; }
+body { margin:0; font:15px/1.6 'Inter','Segoe UI',system-ui,sans-serif; color:#1F2937; background:#F8F9FC; }
+header { background:var(--navy); color:#fff; padding:22px 18px; }
+header strong { font-size:1.6rem; }
+header span { display:block; color:var(--gold); font-size:.82rem; }
+header p { margin:8px 0 0; }
+main { max-width:900px; margin:0 auto; padding:16px; }
+.step { background:#fff; border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:10px; padding:14px 18px; margin-bottom:12px; display:grid; gap:12px; grid-template-columns:minmax(0,1fr); }
+h2 { color:var(--navy); margin:0 0 6px; font-size:1.1rem; }
+p { margin:0 0 6px; }
+ul, ol { margin:4px 0; padding-left:20px; }
+img { width:100%; border:1px solid var(--line); border-radius:6px; display:block; }
+code { font:.9em Consolas,monospace; background:#F8F9FC; padding:1px 4px; border-radius:4px; }
+.foot { color:var(--gray); font-size:.85rem; }
+@media (min-width:700px) { .step { grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); } .step.plain { grid-template-columns:minmax(0,1fr); } }
+@media print {
+  body { background:#fff; font-size:10.5pt; line-height:1.4; }
+  header { -webkit-print-color-adjust:exact; print-color-adjust:exact; padding:12px 16px; }
+  main { padding:8px 0; max-width:none; }
+  .step { grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); break-inside:avoid; margin-bottom:8px; padding:8px 12px; }
+  img { max-height:50mm; object-fit:contain; object-position:top; }
+}
+</style>
+</head>
+<body>
+<header><strong>KnowTaxx</strong><span>Knowledge Backed Innovative Solutions</span><p>AP &amp; Expense Intelligence Suite: Quick Start</p></header>
+<main>
+  <div class="step plain">
+    <div><h2>1. Install the server and note the admin password</h2>
+      <p>Run <code>KnowTaxx_AP_Suite_Server_Setup.exe</code> as administrator and keep the default port, 5000. The last page shows the first sign-in details, so write them down. The server then runs as a Windows service.</p></div>
+  </div>
+  <div class="step">
+    <div><h2>2. Sign in and create your first client</h2>
+      <ol><li>Open the <strong>KnowTaxx AP Suite</strong> desktop shortcut, or <code>http://localhost:5000</code>.</li>
+      <li>Sign in and set your own password when asked.</li>
+      <li>Go to <strong>Clients → New client</strong>. Enter the name, PAN and GSTIN, then save.</li></ol></div>
+    <img src="screenshots/client_detail.png" alt="Client overview">
+  </div>
+  <div class="step">
+    <div><h2>3. Share the vendor registration link</h2>
+      <p>Copy the link from the client overview and send it to a vendor by WhatsApp or email. They fill in the form with no login. It arrives as <strong>Pending</strong> under <strong>Vendors</strong> for you to approve.</p></div>
+    <img src="screenshots/vendor_register.png" alt="Vendor registration form">
+  </div>
+  <div class="step">
+    <div><h2>4. Upload your first invoice and see OCR in action</h2>
+      <p>Open <strong>Upload invoice</strong> and drop in a PDF or photo. On the review screen, fields are colour-coded: green is high confidence, amber means check, red is low. Correct anything wrong and choose a cost centre.</p></div>
+    <img src="screenshots/review.png" alt="OCR review">
+  </div>
+  <div class="step">
+    <div><h2>5. Set up approval rules and approve on your phone</h2>
+      <ol><li>Open <strong>Approval matrix</strong> and add a rule: an amount range, an approver and a level.</li>
+      <li>On the invoice, press <strong>Submit for approval</strong>.</li>
+      <li>The approver opens <strong>Pending</strong> on a phone and taps Approve, or swipes the card right.</li></ol>
+      <p class="foot">To install the app on a phone or work offline, the server must run on HTTPS: <code>python run.py --https</code>. See User Guide section 13.</p></div>
+    <img src="screenshots/mobile_approvals.png" alt="Approval cards on a phone">
+  </div>
+  <div class="step">
+    <div><h2>6. View your dashboard</h2>
+      <p>Open <strong>Dashboard</strong> for spend, pending approvals, overdue payments and charts. Export to Excel, PDF or a Tally-ready CSV from the same page.</p>
+      <p class="foot">Next: add budgets for variance analysis, and connect a mailbox to capture emailed invoices. See the User Guide.</p></div>
+    <img src="screenshots/dashboard.png" alt="Dashboard">
+  </div>
+</main>
+</body>
+</html>

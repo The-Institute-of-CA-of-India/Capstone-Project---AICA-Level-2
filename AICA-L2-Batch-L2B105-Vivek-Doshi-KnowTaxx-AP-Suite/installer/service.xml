@@ -1,0 +1,19 @@
+<!-- WinSW service definition. The server installer replaces @PORT@ and @DATA_DIR@ at install time. -->
+<service>
+  <id>KTAPSuiteServer</id>
+  <name>KnowTaxx AP Suite Server</name>
+  <description>KnowTaxx AP and Expense Intelligence Suite web server.</description>
+  <executable>%BASE%\KnowTaxx_AP_Suite\KnowTaxx_AP_Suite.exe</executable>
+  <arguments>--port @PORT@</arguments>
+  <env name="KTAP_DATA_DIR" value="@DATA_DIR@"/>
+  <env name="KTAP_PORT" value="@PORT@"/>
+  <startmode>Automatic</startmode>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="60 sec"/>
+  <resetfailure>1 hour</resetfailure>
+  <logpath>@DATA_DIR@\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+</service>

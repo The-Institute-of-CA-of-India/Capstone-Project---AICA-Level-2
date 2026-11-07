@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import status_badge %}
+{% block title %}{{ client.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ client.name }}</h1><div class="sub">{{ client.code }}{% if client.is_archived %} &middot; <span class="badge badge-danger">Archived</span>{% endif %}</div></div>
+  <div class="actions">
+    <a class="btn btn-secondary" href="{{ url_for('invoices.upload', client_id=client.id) }}">Upload invoice</a>
+    {% if current_user.role in ('admin','manager') %}
+    <a class="btn btn-outline" href="{{ url_for('clients.edit', client_id=client.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('clients.archive', client_id=client.id) }}" data-confirm-text="{{ 'Restore' if client.is_archived else 'Archive' }} this client?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline" type="submit">{{ 'Restore' if client.is_archived else 'Archive' }}</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kpis">
+  <a class="card kpi" href="{{ url_for('vendors.list_vendors', client_id=client.id) }}"><div class="label">Vendors</div><div class="value">{{ stats.vendors }}</div><div class="note">{{ stats.pending_vendors }} awaiting verification</div></a>
+  <a class="card kpi" href="{{ url_for('invoices.list_invoices', client_id=client.id) }}"><div class="label">Invoices</div><div class="value">{{ stats.invoices }}</div><div class="note">{{ stats.to_review }} to review</div></a>
+  <a class="card kpi" href="{{ url_for('approvals.pending') }}"><div class="label">Pending approvals</div><div class="value">{{ stats.pending }}</div></a>
+  <a class="card kpi" href="{{ url_for('reports.dashboard', client_id=client.id) }}"><div class="label">Spend this month</div><div class="value">{{ stats.spend|inr(decimals=0) }}</div><div class="note">Including GST</div></a>
+</div>
+
+<div class="grid cols-2">
+  <div class="card card-accent">
+    <h2 style="margin-bottom:6px">Vendor self-registration link</h2>
+    <p class="small muted">Send this to a vendor by WhatsApp or email. They fill in their details and upload documents without logging in. Each submission waits for your approval.</p>
+    <div class="actions" style="flex-wrap:nowrap">
+      <input id="reg-link" type="text" readonly value="{{ registration_url }}" aria-label="Vendor registration link">
+      <button class="btn btn-primary" type="button" data-copy="reg-link">Copy</button>
+    </div>
+    <form method="post" action="{{ url_for('clients.regenerate_link', client_id=client.id) }}" style="margin-top:8px" data-confirm-text="Create a new link? The current link will stop working.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-sm btn-outline" type="submit">Generate a new link</button>
+    </form>
+    <h2 style="margin:16px 0 4px">Invoice email alias</h2>
+    <p class="small muted" style="margin:0">Mail sent to the configured mailbox with the tag <code>+{{ client.email_alias }}</code> is captured for this client.</p>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:10px">Details</h2>
+    <dl class="facts">
+      <div><dt>Entity type</dt><dd>{{ client.entity_type|upper if client.entity_type in ('llp','aop') else client.entity_type|title }}</dd></div>
+      <div><dt>PAN</dt><dd class="mono">{{ client.pan or '-' }}</dd></div>
+      <div><dt>GSTIN</dt><dd class="mono">{{ client.gstin or '-' }}</dd></div>
+      <div><dt>{{ 'LLPIN' if client.entity_type == 'llp' else 'CIN' }}</dt><dd class="mono">{{ client.llpin or client.cin or '-' }}</dd></div>
+      <div><dt>Contact</dt><dd>{{ client.contact_person or '-' }}</dd></div>
+      <div><dt>Email</dt><dd>{{ client.contact_email or '-' }}</dd></div>
+      <div><dt>Phone</dt><dd>{{ client.contact_phone or '-' }}</dd></div>
+      <div><dt>Address</dt><dd>{{ client.address or '-' }}</dd></div>
+    </dl>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="card-head"><h2>Recent invoices</h2><a class="btn btn-sm btn-outline" href="{{ url_for('invoices.list_invoices', client_id=client.id) }}">All invoices</a></div>
+  {% if recent %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Invoice</th><th>Vendor</th><th>Date</th><th class="num">Amount</th><th>Status</th></tr></thead>
+    <tbody>{% for i in recent %}
+      <tr><td><a href="{{ url_for('invoices.detail', invoice_id=i.id) }}">{{ i.display_number }}</a></td><td>{{ i.display_vendor }}</td><td>{{ i.display_date|fdate }}</td><td class="num">{{ i.amount|inr }}</td><td>{{ status_badge(i.status) }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="empty">No invoices yet.</p>{% endif %}
+</div>
+{% endblock %}

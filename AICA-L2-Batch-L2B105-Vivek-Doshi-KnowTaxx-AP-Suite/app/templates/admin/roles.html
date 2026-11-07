@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Roles{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Roles</h1><div class="sub">What each role can do. Assign roles on the Users page.</div></div></div>
+{% set rows = [
+  ('Clients visible', 'All', 'All', 'Assigned', 'Via approvals', 'Assigned'),
+  ('Create and edit clients', 'Yes', 'Yes', '-', '-', '-'),
+  ('Manage vendors, cost centres, budgets', 'Yes', 'Yes', 'Yes', '-', '-'),
+  ('Upload invoices', 'Yes', 'Yes', 'Yes', '-', 'Yes'),
+  ('Review OCR and submit', 'Yes', 'Yes', 'Yes', '-', '-'),
+  ('Approve, reject, query', 'Any invoice', 'Any invoice', '-', 'Own queue', '-'),
+  ('Configure the approval matrix', 'Yes', 'Yes', '-', '-', '-'),
+  ('Reports and exports', 'Yes', 'Yes', 'Yes', '-', '-'),
+  ('Audit log', 'Yes', 'Yes', '-', '-', '-'),
+  ('Users, email settings, backup', 'Yes', '-', '-', '-', '-')
+] %}
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Capability</th><th>Admin</th><th>Manager</th><th>Accountant</th><th>Approver</th><th>Field staff</th></tr></thead>
+    <tbody>{% for r in rows %}<tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

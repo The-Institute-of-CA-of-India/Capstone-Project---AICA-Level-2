@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AP Intelligence Suite | KnowTaxx</title>
+<style>
+:root { --navy:#1E3A6E; --navy-d:#142952; --navy-l:#2A4F8F; --gold:#E8A020; --gray:#6B7280; --ink:#1F2937; --line:#EEF1F6; --bg:#F8F9FC; --green:#059669; --red:#DC2626; }
+* { box-sizing:border-box; }
+html, body { margin:0; height:100%; background:#0b1730; overflow:hidden; font-family:'Inter','Segoe UI',system-ui,sans-serif; color:var(--ink); }
+#stage { position:absolute; left:50%; top:50%; width:1280px; height:720px; transform-origin:center center; background:#fff; overflow:hidden; }
+.slide { position:absolute; inset:0; padding:44px 56px 40px; display:none; flex-direction:column; background:#fff; }
+.slide.on { display:flex; }
+.slide h1 { color:var(--navy); font-size:38px; margin:0 0 4px; line-height:1.15; }
+.slide .kicker { color:var(--gold); font-size:15px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+.slide .lead { font-size:20px; color:var(--gray); margin:0 0 18px; }
+.body { flex:1; min-height:0; display:grid; gap:24px; }
+.c2 { grid-template-columns:1fr 1fr; }
+.c32 { grid-template-columns:3fr 2fr; }
+.c23 { grid-template-columns:2fr 3fr; }
+.navy { background:var(--navy); color:#fff; }
+.navy h1 { color:#fff; }
+.navy .lead { color:#D8DDE6; }
+ul.pts { margin:0; padding:0; list-style:none; font-size:20px; line-height:1.4; }
+ul.pts li { padding:9px 0 9px 26px; position:relative; }
+ul.pts li::before { content:""; position:absolute; left:2px; top:17px; width:12px; height:7px; border-left:3px solid var(--gold); border-bottom:3px solid var(--gold); transform:rotate(-45deg); }
+ul.pts strong { color:var(--navy); }
+.navy ul.pts strong { color:var(--gold); }
+.shot { border:1px solid var(--line); border-radius:10px; box-shadow:0 6px 22px rgba(30,58,110,.16); overflow:hidden; background:#fff; min-height:0; }
+.shot img { display:block; width:100%; }
+.cap { font-size:14px; color:var(--gray); margin-top:6px; }
+.phone { width:232px; border:9px solid var(--navy-d); border-radius:30px; overflow:hidden; box-shadow:0 8px 26px rgba(20,41,82,.35); background:#fff; height:490px; flex:none; }
+.phone img { display:block; width:100%; }
+.phones { display:flex; gap:22px; justify-content:center; align-items:flex-start; }
+.grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; align-content:center; }
+.tile { border:1px solid var(--line); border-top:4px solid var(--gold); border-radius:10px; padding:22px; background:#fff; }
+.tile svg { width:42px; height:42px; color:var(--navy); }
+.tile h3 { color:var(--navy); margin:8px 0 8px; font-size:24px; }
+.tile p { margin:0; font-size:19px; color:var(--ink); line-height:1.38; }
+.metric { border:1px solid var(--line); border-left:5px solid var(--gold); border-radius:10px; padding:24px 22px; }
+.metric b { display:block; color:var(--navy); font-size:40px; line-height:1.15; }
+.metric span { font-size:19px; color:var(--ink); }
+.tag { display:inline-block; background:#FFF3D6; color:#7A4E00; padding:3px 12px; border-radius:14px; font-size:14px; font-weight:600; }
+.proof { background:var(--bg); border-radius:10px; padding:14px 18px; font-size:17px; }
+.proof strong { color:var(--navy); }
+footer.bar { position:absolute; left:0; right:0; bottom:0; height:26px; padding:0 56px; display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--gray); }
+.navy footer.bar { color:#A9B6D2; }
+.title-brand { font-size:64px; font-weight:800; color:#fff; letter-spacing:-.5px; }
+.title-brand i { font-style:normal; color:var(--gold); }
+svg text { font-family:'Inter','Segoe UI',system-ui,sans-serif; }
+.big { font-size:64px; font-weight:800; line-height:1.1; color:#fff; }
+#progress { position:fixed; left:0; bottom:0; height:4px; background:var(--gold); transition:width .2s; z-index:5; }
+#hint { position:fixed; right:12px; bottom:10px; color:#8fa3c7; font-size:12px; z-index:5; }
+@media print {
+  @page { size:1280px 720px; margin:0; }
+  html, body { height:auto; overflow:visible; background:#fff; }
+  #stage { position:static; transform:none !important; height:auto; overflow:visible; margin:0 !important; }
+  .slide { display:flex; position:relative; inset:auto; width:1280px; height:720px; break-after:page; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  #progress, #hint { display:none; }
+}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 Title -->
+<section class="slide navy" style="justify-content:center;padding-left:90px">
+  <div class="title-brand">Know<i>Taxx</i></div>
+  <div style="color:var(--gold);font-size:19px;margin-bottom:34px">Knowledge Backed Innovative Solutions</div>
+  <h1 style="font-size:48px">AI-Powered AP &amp; Expense<br>Intelligence Suite</h1>
+  <p style="font-size:22px;margin:26px 0 2px">Submitted by CA Vivek Doshi</p>
+  <p style="font-size:18px;color:#D8DDE6;margin:0">ICAI AI Committee Level 2 Capstone</p>
+</section>
+
+<!-- 2 Problem -->
+<section class="slide">
+  <div class="kicker">The problem</div>
+  <h1>Manual AP is slow, risky and hard to see</h1>
+  <p class="lead">What Indian enterprises and their CA firms face every month</p>
+  <div class="body grid4" style="grid-template-columns:repeat(3,1fr)">
+    <div class="tile"><h3>Data entry</h3><p>Every invoice keyed by hand: GSTIN, tax split, totals. Each one is a chance for error.</p></div>
+    <div class="tile"><h3>Delayed approvals</h3><p>Paper and email chains with no view of who is holding what, or for how long.</p></div>
+    <div class="tile"><h3>Duplicate payments</h3><p>The same invoice arrives by email and in hard copy, and can be booked twice.</p></div>
+    <div class="tile"><h3>No visibility</h3><p>Spend by cost centre and budget variance appear only after month-end work.</p></div>
+    <div class="tile"><h3>MSMED risk</h3><p>The 45-day limit under section 15 is hard to track without a live view of open MSME invoices.</p></div>
+    <div class="tile"><h3>Data sensitivity</h3><p>Vendor bank and tax data often should not leave the firm's own network.</p></div>
+  </div>
+</section>
+
+<!-- 3 Solution -->
+<section class="slide">
+  <div class="kicker">The solution</div>
+  <h1>From invoice to payment, on your own network</h1>
+  <p class="lead">One system that captures, reads, routes and reports, with a person checking every OCR result.</p>
+  <div class="body" style="align-items:center">
+    <svg viewBox="0 0 1160 330" role="img" aria-label="Flow from capture sources through OCR, human review, approvals and payment, feeding reports">
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1E3A6E"/></marker></defs>
+      <g font-size="17" text-anchor="middle">
+        <g fill="#fff" stroke="#E8A020" stroke-width="2">
+          <rect x="4" y="20" width="170" height="52" rx="8"/><rect x="4" y="88" width="170" height="52" rx="8"/><rect x="4" y="156" width="170" height="52" rx="8"/>
+        </g>
+        <g fill="#1F2937"><text x="89" y="52">Upload / PDF</text><text x="89" y="120">Phone camera</text><text x="89" y="188">Email (IMAP)</text></g>
+        <g fill="#1E3A6E"><rect x="240" y="72" width="170" height="84" rx="10"/><rect x="480" y="72" width="170" height="84" rx="10"/><rect x="720" y="72" width="170" height="84" rx="10"/><rect x="960" y="72" width="170" height="84" rx="10"/></g>
+        <g fill="#fff" font-weight="700"><text x="325" y="108">OCR + rules</text><text x="565" y="108">Human review</text><text x="805" y="108">Approvals</text><text x="1045" y="108">Paid</text></g>
+        <g fill="#D8DDE6" font-size="14"><text x="325" y="132">Offline, Tesseract</text><text x="565" y="132">Confidence colours</text><text x="805" y="132">Multi-level matrix</text><text x="1045" y="132">UTR recorded</text></g>
+        <g stroke="#1E3A6E" stroke-width="2.5" fill="none" marker-end="url(#a1)">
+          <path d="M174 46 L240 96"/><path d="M174 114 L240 114"/><path d="M174 182 L240 132"/>
+          <path d="M410 114 L480 114"/><path d="M650 114 L720 114"/><path d="M890 114 L960 114"/>
+        </g>
+        <rect x="240" y="238" width="890" height="64" rx="10" fill="#FFF3D6" stroke="#E8A020" stroke-width="2"/>
+        <text x="685" y="268" fill="#1E3A6E" font-weight="700" font-size="19">Dashboards · Cost centres · Variance commentary · AP aging · MSMED · Excel, PDF, Tally CSV</text>
+        <text x="685" y="291" fill="#6B7280" font-size="14">Every action written to the audit log</text>
+        <g stroke="#E8A020" stroke-width="2" stroke-dasharray="5 4" fill="none">
+          <path d="M565 156 V238"/><path d="M805 156 V238"/><path d="M1045 156 V238"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- 4 Features -->
+<section class="slide">
+  <div class="kicker">Key features</div>
+  <h1>Eight capabilities, one suite</h1>
+  <div class="body grid4" style="margin-top:18px">
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M7 9h10M7 12h10M7 15h6"/></svg><h3>Invoice OCR</h3><p>GSTIN, dates, tax split, totals, line items, confidence per field</p></div>
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M17 8l2 2 4-4"/></svg><h3>Vendor portal</h3><p>Self-registration link, document upload, duplicate detection</p></div>
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><h3>Approval workflow</h3><p>Rules by amount, category and cost centre, on any number of levels</p></div>
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM22 6l-10 7L2 6"/></svg><h3>Email ingestion</h3><p>IMAP listener, plus-addressing routes mail to each client</p></div>
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M8 17v-5M13 17V7M18 17v-8"/></svg><h3>Cost analytics</h3><p>Dashboards, budget variance, aging, MSMED 45-day view</p></div>
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg><h3>Mobile PWA</h3><p>Installable on Android and iOS, camera capture, swipe to approve</p></div>
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M3 21v-5h5"/></svg><h3>Offline sync</h3><p>Queue photos and decisions; conflicts flagged on reconnect</p></div>
+    <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/><path d="M7 7h.01M7 17h.01"/></svg><h3>LAN deployment</h3><p>Windows service, EXE installers, no cloud dependency for core work</p></div>
+  </div>
+</section>
+
+<!-- 5 Architecture -->
+<section class="slide">
+  <div class="kicker">Architecture</div>
+  <h1>Simple, single-server, portable</h1>
+  <div class="body" style="align-items:center">
+    <svg viewBox="0 0 1160 480" role="img" aria-label="Devices on the LAN connect to a Flask server containing modules, SQLite, file storage and Tesseract">
+      <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1E3A6E"/></marker></defs>
+      <g font-size="16">
+        <text x="110" y="34" text-anchor="middle" fill="#6B7280" font-weight="700">ON YOUR LAN</text>
+        <g fill="#fff" stroke="#E8A020" stroke-width="2"><rect x="10" y="50" width="200" height="74" rx="8"/><rect x="10" y="140" width="200" height="74" rx="8"/><rect x="10" y="230" width="200" height="74" rx="8"/><rect x="10" y="320" width="200" height="74" rx="8"/></g>
+        <g text-anchor="middle" fill="#1F2937">
+          <text x="110" y="82" font-weight="700">Office browsers</text><text x="110" y="104" font-size="14" fill="#6B7280">Edge, Chrome</text>
+          <text x="110" y="172" font-weight="700">Phones (PWA)</text><text x="110" y="194" font-size="14" fill="#6B7280">Service worker, IndexedDB</text>
+          <text x="110" y="262" font-weight="700">Vendors</text><text x="110" y="284" font-size="14" fill="#6B7280">Public form, tokenised link</text>
+          <text x="110" y="352" font-weight="700">Mail server</text><text x="110" y="374" font-size="14" fill="#6B7280">IMAP over TLS (optional)</text>
+        </g>
+        <g stroke="#1E3A6E" stroke-width="2.5" marker-end="url(#a2)" marker-start="url(#a2)"><path d="M214 87 H296"/><path d="M214 177 H296"/><path d="M214 267 H296"/><path d="M214 357 H296"/></g>
+        <text x="255" y="76" text-anchor="middle" font-size="13" fill="#6B7280">HTTP(S)</text>
+        <rect x="300" y="40" width="850" height="400" rx="14" fill="#F8F9FC" stroke="#1E3A6E" stroke-width="2"/>
+        <text x="320" y="70" fill="#1E3A6E" font-weight="700" font-size="19">Server (Windows service via WinSW, or python run.py)</text>
+        <rect x="320" y="84" width="810" height="56" rx="8" fill="#1E3A6E"/>
+        <text x="725" y="118" fill="#fff" text-anchor="middle" font-weight="700" font-size="17">Waitress · Flask · Flask-Login · CSRF protection · Role-based access</text>
+        <g fill="#fff" stroke="#D8DDE6"><rect x="320" y="154" width="150" height="62" rx="8"/><rect x="484" y="154" width="150" height="62" rx="8"/><rect x="648" y="154" width="150" height="62" rx="8"/><rect x="812" y="154" width="150" height="62" rx="8"/><rect x="976" y="154" width="154" height="62" rx="8"/></g>
+        <g text-anchor="middle" fill="#1E3A6E" font-weight="600"><text x="395" y="191">Clients, vendors</text><text x="559" y="191">Invoices</text><text x="723" y="191">Approvals</text><text x="887" y="191">Reports</text><text x="1053" y="191">REST API, sync</text></g>
+        <g fill="#FFF3D6" stroke="#E8A020" stroke-width="2"><rect x="320" y="232" width="255" height="82" rx="8"/><rect x="598" y="232" width="255" height="82" rx="8"/><rect x="875" y="232" width="255" height="82" rx="8"/></g>
+        <g text-anchor="middle" fill="#1E3A6E"><text x="447" y="266" font-weight="700">OCR engine</text><text x="725" y="266" font-weight="700">Email listener</text><text x="1002" y="266" font-weight="700">Rules engine</text></g>
+        <g text-anchor="middle" fill="#6B7280" font-size="14"><text x="447" y="290">Tesseract, Pillow, regex, check digits</text><text x="725" y="290">Background thread, imaplib</text><text x="1002" y="290">Routing, variance, aging</text></g>
+        <g fill="#1E3A6E"><rect x="320" y="330" width="255" height="88" rx="8"/><rect x="598" y="330" width="255" height="88" rx="8"/><rect x="875" y="330" width="255" height="88" rx="8"/></g>
+        <g text-anchor="middle" fill="#fff"><text x="447" y="368" font-weight="700">SQLite (WAL)</text><text x="725" y="368" font-weight="700">File store</text><text x="1002" y="368" font-weight="700">Exports</text></g>
+        <g text-anchor="middle" fill="#D8DDE6" font-size="14"><text x="447" y="392">Single file, online backup</text><text x="725" y="392">Per client, SHA-256 hashes</text><text x="1002" y="392">openpyxl, fpdf2, Tally CSV</text></g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- 6 OCR -->
+<section class="slide">
+  <div class="kicker">Module 1 · Invoice OCR</div>
+  <h1>The document beside what was read</h1>
+  <div class="body c32" style="margin-top:12px">
+    <div class="shot" style="height:540px"><img src="../docs/screenshots/review.png" alt="OCR review screen"></div>
+    <div>
+      <ul class="pts" style="font-size:18px">
+        <li><strong>Check digit</strong> confirms each GSTIN, and repairs common misreads such as O for 0</li>
+        <li><strong>Arithmetic check:</strong> taxable + taxes = total</li>
+        <li><strong>Seller, not buyer:</strong> skips the client's own GSTIN</li>
+        <li><strong>Auto-links</strong> the vendor by GSTIN</li>
+      </ul>
+      <div class="proof" style="margin-top:12px">
+        <strong>Measured field accuracy</strong> ({{OCR_DOCS}} synthetic documents)<br>
+        <span style="font-size:30px;font-weight:800;color:var(--navy)">{{OCR_CLEAN}}</span> clean &nbsp; <span style="font-size:30px;font-weight:800;color:var(--navy)">{{OCR_PHOTO}}</span> simulated phone photo
+        <div class="cap">Real-invoice accuracy will vary and is still to be measured.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 Vendors -->
+<section class="slide">
+  <div class="kicker">Module 2 · Vendor management</div>
+  <h1>Vendors register themselves. You verify.</h1>
+  <div class="body" style="grid-template-columns:1fr 250px;margin-top:12px">
+    <div>
+      <div class="shot" style="height:355px"><img src="../docs/screenshots/vendors.png" alt="Vendor list"></div>
+      <ul class="pts" style="font-size:18px;margin-top:8px">
+        <li><strong>Shareable link</strong> by WhatsApp or email, with no login</li>
+        <li><strong>Duplicate detection:</strong> same PAN, GSTIN, or a name over 80% similar</li>
+        <li><strong>MSME tracking</strong> and a blacklist that blocks approval</li>
+      </ul>
+    </div>
+    <div class="phone" style="justify-self:center"><img src="../docs/screenshots/vendor_register.png" alt="Public registration form"></div>
+  </div>
+</section>
+
+<!-- 8 Email -->
+<section class="slide">
+  <div class="kicker">Module 3 · Email ingestion</div>
+  <h1>Invoices arrive by themselves</h1>
+  <p class="lead">One mailbox serves every client through plus-addressing.</p>
+  <div class="body" style="align-items:center">
+    <svg viewBox="0 0 1160 340" role="img" aria-label="Email to OCR to record to approval flow">
+      <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1E3A6E"/></marker></defs>
+      <g text-anchor="middle" font-size="16">
+        <rect x="6" y="40" width="270" height="110" rx="10" fill="#FFF3D6" stroke="#E8A020" stroke-width="2"/>
+        <text x="141" y="76" font-weight="700" fill="#1E3A6E" font-size="18">Vendor emails PDF</text>
+        <text x="141" y="104" fill="#1F2937" font-family="Consolas,monospace" font-size="14">knowtaxxap+c0001</text>
+        <text x="141" y="126" fill="#1F2937" font-family="Consolas,monospace" font-size="14">@gmail.com</text>
+        <g fill="#1E3A6E"><rect x="330" y="40" width="190" height="110" rx="10"/><rect x="570" y="40" width="190" height="110" rx="10"/><rect x="810" y="40" width="340" height="110" rx="10"/></g>
+        <g fill="#fff" font-weight="700" font-size="18"><text x="425" y="84">IMAP poller</text><text x="665" y="84">OCR</text><text x="980" y="84">Invoice record</text></g>
+        <g fill="#D8DDE6" font-size="14"><text x="425" y="110">Unread mail, per client</text><text x="665" y="110">Same engine as upload</text><text x="980" y="110">source = email, sender and subject kept</text></g>
+        <g stroke="#1E3A6E" stroke-width="2.5" marker-end="url(#a3)"><path d="M276 95 H330" fill="none"/><path d="M520 95 H570" fill="none"/><path d="M760 95 H810" fill="none"/></g>
+        <path d="M980 150 V212 H775" stroke="#1E3A6E" stroke-width="2.5" fill="none" marker-end="url(#a3)"/>
+        <g fill="#fff" stroke="#1E3A6E" stroke-width="2"><rect x="570" y="186" width="200" height="56" rx="10"/><rect x="330" y="186" width="190" height="56" rx="10"/></g>
+        <text x="670" y="220" fill="#1E3A6E" font-weight="700">Accountant review</text>
+        <text x="425" y="220" fill="#1E3A6E" font-weight="700">Approval matrix</text>
+        <path d="M570 214 H524" stroke="#1E3A6E" stroke-width="2.5" fill="none" marker-end="url(#a3)"/>
+        <text x="580" y="292" fill="#6B7280" font-size="17">Marked as read only after the invoice is saved, so a failure loses nothing.</text>
+        <text x="580" y="318" fill="#6B7280" font-size="17">The sender's domain helps match the vendor. App passwords are stored encrypted.</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- 9 Approvals -->
+<section class="slide">
+  <div class="kicker">Module 4 · Approval workflow</div>
+  <h1>Approve from your phone, in seconds</h1>
+  <div class="body" style="grid-template-columns:250px 1fr;margin-top:12px">
+    <div class="phone" style="justify-self:center"><img src="../docs/screenshots/mobile_approvals.png" alt="Mobile approval cards"></div>
+    <div>
+      <div class="shot" style="height:300px"><img src="../docs/screenshots/matrix.png" alt="Approval matrix"></div>
+      <ul class="pts" style="font-size:18px;margin-top:10px">
+        <li><strong>Rules</strong> by amount, category and cost centre; most specific wins</li>
+        <li><strong>Approve, Reject, Query</strong>, by button or swipe; a rejection needs a reason</li>
+        <li><strong>SLA tracking:</strong> average time, items waiting over 24, 48 and 72 hours</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 10 Dashboards -->
+<section class="slide">
+  <div class="kicker">Module 5 · Dashboards</div>
+  <h1>Spend, status and risk at a glance</h1>
+  <div class="body" style="margin-top:12px">
+    <div class="shot" style="height:540px"><img src="../docs/screenshots/dashboard.png" alt="Main dashboard"></div>
+  </div>
+</section>
+
+<!-- 11 Variance -->
+<section class="slide">
+  <div class="kicker">Module 6 · Variance analysis</div>
+  <h1>Budget against actual, with commentary</h1>
+  <div class="body c32" style="margin-top:12px">
+    <div class="shot" style="height:540px"><img src="../docs/screenshots/variance.png" alt="Variance analysis"></div>
+    <ul class="pts" style="font-size:19px">
+      <li><strong>Traffic lights:</strong> within 5%, 5 to 15%, over 15%</li>
+      <li><strong>Commentary</strong> names the largest vendor and category behind each overspend</li>
+      <li><strong>It says where, not why:</strong> the reader confirms the cause</li>
+      <li><strong>Period comparison</strong> by month and Indian FY quarter</li>
+      <li><strong>Excel export</strong> with navy headers and Indian digit grouping</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 12 PWA -->
+<section class="slide">
+  <div class="kicker">Module 7 · Mobile PWA</div>
+  <h1>An app with no app store</h1>
+  <div class="body c23" style="margin-top:12px">
+    <ul class="pts" style="font-size:19px">
+      <li><strong>Installable</strong> on Android and iOS, with a guided iOS overlay</li>
+      <li><strong>Camera capture</strong> straight into OCR</li>
+      <li><strong>Offline queue:</strong> photos and decisions wait in IndexedDB</li>
+      <li><strong>Sync on reconnect:</strong> "3 items synced, 1 conflict"</li>
+      <li><strong>No financial pages cached</strong> on the device</li>
+      <li style="color:var(--gray);font-size:16px">Needs HTTPS on a LAN: run.py --https creates a self-signed certificate</li>
+    </ul>
+    <div class="phones">
+      <div class="phone"><img src="../docs/screenshots/mobile_capture.png" alt="Camera capture on a phone"></div>
+      <div class="phone"><img src="../docs/screenshots/mobile_offline.png" alt="Offline mode on a phone"></div>
+      <div class="phone"><img src="../docs/screenshots/mobile_dashboard.png" alt="Dashboard on a phone"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 AI -->
+<section class="slide">
+  <div class="kicker">AI &amp; technology</div>
+  <h1>What makes this intelligent</h1>
+  <p class="lead">Practical, explainable methods that run offline, with no external AI service.</p>
+  <div class="body grid4" style="grid-template-columns:repeat(3,1fr)">
+    <div class="tile"><h3>OCR intelligence</h3><p>A neural OCR engine (Tesseract LSTM), plus Indian GST-specific extraction and self-checks.</p></div>
+    <div class="tile"><h3>Pattern matching</h3><p>Finds invoice numbers, Indian date formats, tax lines and HSN codes. Repairs OCR confusions by position.</p></div>
+    <div class="tile"><h3>Auto-categorisation</h3><p>Reads the line items and suggests the expense category and TDS section for the accountant to confirm.</p></div>
+    <div class="tile"><h3>Variance commentary</h3><p>Rule-based narrative naming the vendors and categories behind each overspend.</p></div>
+    <div class="tile"><h3>Duplicate detection</h3><p>File hash, invoice number with vendor and amount, and fuzzy vendor-name matching.</p></div>
+    <div class="tile"><h3>Confidence scoring</h3><p>Every field is scored, so people look where it matters most.</p></div>
+  </div>
+</section>
+
+<!-- 14 Responsible AI -->
+<section class="slide navy">
+  <div class="kicker">Responsible AI</div>
+  <h1>People stay in control</h1>
+  <div class="body c2" style="margin-top:22px;align-content:center">
+    <ul class="pts" style="font-size:24px">
+      <li><strong>Local data.</strong> Invoices and OCR stay on your server. Nothing is sent to an AI service.</li>
+      <li><strong>Human in the loop.</strong> No OCR value reaches approval or reports until a person has reviewed it.</li>
+      <li><strong>Confidence shown.</strong> Green, amber and red tell the reviewer where to look.</li>
+    </ul>
+    <ul class="pts" style="font-size:24px">
+      <li><strong>Audit trail.</strong> Original OCR is kept beside corrected values, with who, when and from where.</li>
+      <li><strong>Least privilege.</strong> Five roles, client-level access, forced password change, account lockout.</li>
+      <li><strong>Honest limits.</strong> TDS and categories are suggestions. Commentary does not guess causes.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 15 Impact -->
+<section class="slide">
+  <div class="kicker">Impact</div>
+  <h1>The outcomes this is built to deliver</h1>
+  <p class="lead"><span class="tag">Design targets, to be validated in a pilot</span></p>
+  <div class="body" style="grid-template-columns:repeat(3,1fr);align-content:start">
+    <div class="metric"><b>70%</b><span>less data entry time</span></div>
+    <div class="metric"><b>3 days → same day</b><span>approval cycle</span></div>
+    <div class="metric"><b>3 checks</b><span>against duplicate payment</span></div>
+    <div class="metric"><b>45 days</b><span>MSMED limit tracked, flagged from day 30</span></div>
+    <div class="metric"><b>Live</b><span>spend by cost centre, with budget variance</span></div>
+    <div class="metric"><b>100%</b><span>of actions in the audit log</span></div>
+  </div>
+  <div class="proof" style="margin-top:16px"><strong>Measured so far:</strong> OCR field accuracy {{OCR_CLEAN}} clean and {{OCR_PHOTO}} simulated photo on synthetic documents; automated tests and browser checks all passing.</div>
+</section>
+
+<!-- 16 Demo -->
+<section class="slide navy" style="justify-content:center;align-items:center;text-align:center">
+  <div class="big">Let me show you...</div>
+  <p style="font-size:24px;color:var(--gold);margin-top:18px">Upload → OCR → Review → Approve on phone → Dashboard</p>
+  <p style="font-size:18px;color:#D8DDE6;font-family:Consolas,monospace">http://localhost:5000</p>
+</section>
+
+<!-- 17 Roadmap -->
+<section class="slide">
+  <div class="kicker">Future roadmap</div>
+  <h1>Where it goes next</h1>
+  <div class="body grid4" style="margin-top:24px;grid-template-columns:repeat(2,1fr);align-content:center">
+    <div class="tile"><h3>Tally integration</h3><p>Direct posting to Tally Prime, beyond CSV import.</p></div>
+    <div class="tile"><h3>GST reconciliation</h3><p>Match purchase invoices to GSTR-2B and flag credit at risk.</p></div>
+    <div class="tile"><h3>Multi-branch</h3><p>Branch-level access, and consolidated reporting across sites.</p></div>
+    <div class="tile"><h3>Native mobile app</h3><p>Background alerts, and better document scanning on the device.</p></div>
+  </div>
+</section>
+
+<!-- 18 Thank you -->
+<section class="slide navy" style="justify-content:center">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 40px">
+    <div>
+      <div class="title-brand">Know<i>Taxx</i></div>
+      <div style="color:var(--gold);font-size:19px;margin-bottom:30px">Knowledge Backed Innovative Solutions</div>
+      <h1 style="font-size:46px">Thank you</h1>
+      <p style="font-size:22px;margin:14px 0 2px">CA Vivek Doshi</p>
+      <p style="font-size:18px;color:#D8DDE6;margin:0">KnowTaxx Consultancy · AICA Level 2, batch L2B105</p>
+      <p style="font-size:13px;color:#D8DDE6;margin:14px 0 0;font-family:Consolas,monospace;max-width:720px;overflow-wrap:anywhere">{{REPO_URL}}</p>
+    </div>
+    <div style="background:#fff;padding:14px;border-radius:12px;width:250px;height:250px" class="qr">{{QR_SVG}}</div>
+  </div>
+</section>
+
+</div>
+<div id="progress"></div>
+<div id="hint">← → to move · F for full screen</div>
+<script>
+(function () {
+  const stage = document.getElementById('stage');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const progress = document.getElementById('progress');
+  const hint = document.getElementById('hint');
+  let index = Math.min(Math.max((parseInt(location.hash.slice(1), 10) || 1) - 1, 0), slides.length - 1);
+
+  slides.forEach((slide, i) => {
+    const bar = document.createElement('footer');
+    bar.className = 'bar';
+    bar.innerHTML = '<span>KnowTaxx AP &amp; Expense Intelligence Suite</span><span>' + (i + 1) + ' / ' + slides.length + '</span>';
+    if (i && i < slides.length - 1) slide.appendChild(bar);
+  });
+
+  function fit() {
+    const scale = Math.min(innerWidth / 1280, innerHeight / 720);
+    stage.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+  }
+  function show(next) {
+    index = Math.min(Math.max(next, 0), slides.length - 1);
+    slides.forEach((s, i) => s.classList.toggle('on', i === index));
+    progress.style.width = ((index + 1) * 100 / slides.length) + '%';
+    history.replaceState(null, '', '#' + (index + 1));
+    hint.style.display = index === 0 ? '' : 'none';
+  }
+  addEventListener('resize', fit);
+  addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(index + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(index - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  });
+  addEventListener('click', e => { show(index + (e.clientX < innerWidth / 3 ? -1 : 1)); });
+  let touchX = null;
+  addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 40) show(index + (dx < 0 ? 1 : -1));
+  });
+  const qr = document.querySelector('.qr svg');
+  if (qr) { qr.setAttribute('width', '100%'); qr.setAttribute('height', '100%'); }
+  fit();
+  show(index);
+})();
+</script>
+</body>
+</html>

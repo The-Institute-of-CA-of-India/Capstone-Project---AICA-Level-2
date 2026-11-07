@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import field %}
+{% block title %}Approval matrix{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Approval matrix</h1><div class="sub">{{ client.name }}. Level 1 approves first, then level 2. Where several rules fit one level, the most specific wins.</div></div></div>
+<div class="grid cols-2">
+  <div class="card">
+    <h2 style="margin-bottom:10px">Rules</h2>
+    {% if rules %}
+    <div class="table-wrap"><table>
+      <thead><tr><th class="num">From</th><th class="num">To</th><th>Category</th><th>Cost centre</th><th>Level</th><th>Approver</th><th></th></tr></thead>
+      <tbody>{% for r in rules %}
+        <tr {% if not r.is_active %}class="muted"{% endif %}>
+          <td class="num">{{ r.min_amount|inr(decimals=0) }}</td><td class="num">{{ r.max_amount|inr(decimals=0) if r.max_amount is not none else 'No limit' }}</td>
+          <td>{{ r.expense_category or 'Any' }}</td><td>{{ r.cost_centre.name if r.cost_centre else 'Any' }}</td><td>L{{ r.approval_level }}</td>
+          <td>{{ r.approver.full_name }}{% if not r.is_active %} <span class="badge">Inactive</span>{% endif %}</td>
+          <td class="right"><div class="actions" style="justify-content:flex-end;flex-wrap:nowrap">
+            <a class="btn btn-sm btn-outline" href="{{ url_for('approvals.matrix', client_id=client.id, edit=r.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('approvals.delete_rule', client_id=client.id, rule_id=r.id) }}" data-confirm-text="Delete this rule?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline" type="submit">Delete</button></form>
+          </div></td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No rules yet. Invoices cannot go for approval until a rule matches them.</p>{% endif %}
+  </div>
+  <div class="card card-accent">
+    <h2 style="margin-bottom:10px">{{ 'Edit rule' if editing else 'Add a rule' }}</h2>
+    <form method="post" novalidate class="form-grid cols-2">
+      {{ form.hidden_tag() }}
+      {{ field(form.min_amount) }}
+      {{ field(form.max_amount) }}
+      {{ field(form.expense_category) }}
+      {{ field(form.cost_centre_id) }}
+      {{ field(form.approver_id) }}
+      {{ field(form.approval_level) }}
+      {{ field(form.is_active, 'span-all') }}
+      <div class="actions span-all">
+        {{ form.submit(class='btn btn-primary') }}
+        {% if editing %}<a class="btn btn-outline" href="{{ url_for('approvals.matrix', client_id=client.id) }}">Cancel</a>{% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% from 'components/_macros.html' import icon %}
+<header class="topbar">
+  <button class="icon-btn" id="sidebar-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar" type="button">{{ icon('menu') }}</button>
+  {% if my_clients and current_user.role in ('admin','manager','accountant','field_staff') %}
+  <div class="client-switch">
+    <label for="client-switch" class="visually-hidden">Active client</label>
+    <select id="client-switch" onchange="if(this.value) location.href=this.value">
+      {% for c in my_clients %}
+      <option value="{{ url_for('clients.detail', client_id=c.id) if current_user.role != 'field_staff' else url_for('invoices.upload', client_id=c.id) }}" {{ 'selected' if active_client and c.id == active_client.id }}>{{ c.code }} - {{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <span class="spacer"></span>
+  {% if current_user.role != 'field_staff' %}
+  <a class="icon-btn" href="{{ url_for('approvals.pending') }}" aria-label="{{ pending_count }} approvals waiting for you">{{ icon('bell') }}{% if pending_count %}<span class="badge-dot">{{ pending_count }}</span>{% endif %}</a>
+  {% endif %}
+  <span class="user-name">{{ current_user.full_name }} <span class="muted small">({{ current_user.role.replace('_',' ') }})</span></span>
+  <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}" data-clear-offline>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="icon-btn" type="submit" aria-label="Sign out" title="Sign out">{{ icon('logout') }}</button>
+  </form>
+</header>

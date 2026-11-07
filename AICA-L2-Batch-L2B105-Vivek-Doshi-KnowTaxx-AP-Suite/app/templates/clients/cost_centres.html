@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import field %}
+{% block title %}Cost centres{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Cost centres</h1><div class="sub">{{ client.name }}</div></div></div>
+<div class="grid cols-2">
+  <div class="card">
+    <div class="card-head"><h2>All cost centres</h2></div>
+    {% if centres %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Code</th><th>Name</th><th>Parent</th><th>Status</th><th></th></tr></thead>
+      <tbody>{% for c in centres %}
+        <tr><td class="mono">{{ c.code }}</td><td>{{ c.name }}</td><td>{{ c.parent.name if c.parent else '-' }}</td>
+        <td><span class="badge badge-{{ 'success' if c.is_active else '' }}">{{ 'Active' if c.is_active else 'Inactive' }}</span></td>
+        <td class="right"><a class="btn btn-sm btn-outline" href="{{ url_for('clients.cost_centres', client_id=client.id, edit=c.id) }}">Edit</a></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No cost centres yet. Add the first one here.</p>{% endif %}
+  </div>
+  <div class="card card-accent">
+    <h2 style="margin-bottom:10px">{{ 'Edit ' + editing.code if editing else 'Add a cost centre' }}</h2>
+    <form method="post" novalidate class="form-grid">
+      {{ form.hidden_tag() }}
+      {{ field(form.code) }}
+      {{ field(form.name) }}
+      {{ field(form.parent_id) }}
+      {{ field(form.is_active) }}
+      <div class="actions">
+        {{ form.submit(class='btn btn-primary') }}
+        {% if editing %}<a class="btn btn-outline" href="{{ url_for('clients.cost_centres', client_id=client.id) }}">Cancel</a>{% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

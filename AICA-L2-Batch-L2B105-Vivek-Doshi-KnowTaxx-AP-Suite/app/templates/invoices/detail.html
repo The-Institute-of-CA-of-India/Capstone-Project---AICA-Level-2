@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import status_badge, field %}
+{% block title %}Invoice {{ invoice.display_number }}{% endblock %}
+{% block content %}
+{% set office = current_user.role in ('admin','manager','accountant') %}
+<div class="page-head">
+  <div><h1>Invoice {{ invoice.display_number }}</h1><div class="sub">{{ client.name }} &middot; {{ status_badge(invoice.status) }}{% if invoice.is_duplicate_flag %} <span class="badge badge-danger">Possible duplicate</span>{% endif %}{% if invoice.synced_from_offline %} <span class="badge">Synced from offline</span>{% endif %}</div></div>
+  <div class="actions">
+    {% if office and invoice.status in ('auto_captured','pending_review','reviewed') %}<a class="btn btn-primary" href="{{ url_for('invoices.review', invoice_id=invoice.id) }}">Review</a>{% endif %}
+    {% if invoice.original_filepath %}<a class="btn btn-outline" href="{{ url_for('invoices.original_file', invoice_id=invoice.id) }}">Download original</a>{% endif %}
+    {% if office and invoice.status not in ('paid','cancelled') %}
+    <form method="post" action="{{ url_for('invoices.cancel', invoice_id=invoice.id) }}" data-confirm-text="Cancel this invoice?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline" type="submit">Cancel invoice</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% if invoice.notes %}<div class="flash flash-info">{{ invoice.notes }}</div>{% endif %}
+{% if invoice.rejection_reason %}<div class="flash flash-danger"><strong>Rejected:</strong> {{ invoice.rejection_reason }}</div>{% endif %}
+{% if invoice.is_duplicate_flag and invoice.duplicate_of %}<div class="flash flash-warning">Possible duplicate of <a href="{{ url_for('invoices.detail', invoice_id=invoice.duplicate_of_id) }}">{{ invoice.duplicate_of.display_number }}</a>.</div>{% endif %}
+
+<div class="review-layout">
+  <div class="stack">
+    <div class="card card-accent kpi"><div class="label">Total amount</div><div class="value">{{ invoice.amount|inr }}</div>
+      {% if invoice.tds_amount %}<div class="note">TDS {{ invoice.final_tds_section }} at {{ invoice.final_tds_rate }}%: {{ invoice.tds_amount|inr }}</div>{% endif %}</div>
+    <div class="card">
+      <h2 style="margin-bottom:10px">Details</h2>
+      <dl class="facts">
+        <div><dt>Vendor</dt><dd>{% if invoice.vendor and office %}<a href="{{ url_for('vendors.detail', client_id=client.id, vendor_id=invoice.vendor_id) }}">{{ invoice.display_vendor }}</a>{% else %}{{ invoice.display_vendor }}{% endif %}</dd></div>
+        <div><dt>GSTIN</dt><dd class="mono">{{ invoice.final_gstin or invoice.ocr_gstin or '-' }}</dd></div>
+        <div><dt>Invoice date</dt><dd>{{ invoice.display_date|fdate }}</dd></div>
+        <div><dt>Due date</dt><dd>{{ invoice.due_date|fdate }}</dd></div>
+        <div><dt>Taxable value</dt><dd>{{ invoice.final_taxable_amount|inr }}</dd></div>
+        <div><dt>CGST / SGST / IGST</dt><dd>{{ invoice.final_cgst|inr }} / {{ invoice.final_sgst|inr }} / {{ invoice.final_igst|inr }}</dd></div>
+        <div><dt>Category</dt><dd>{{ invoice.expense_category or '-' }}</dd></div>
+        <div><dt>Cost centre</dt><dd>{{ invoice.cost_centre.name if invoice.cost_centre else '-' }}</dd></div>
+        <div><dt>GL account</dt><dd>{{ invoice.gl_account or '-' }}</dd></div>
+        <div><dt>HSN / SAC</dt><dd>{{ invoice.final_hsn_sac or '-' }}</dd></div>
+        <div><dt>Source</dt><dd>{{ invoice.source|title }}{% if invoice.source_email_from %}: {{ invoice.source_email_from }}{% endif %}</dd></div>
+        <div><dt>OCR confidence</dt><dd>{{ '%d%%'|format((invoice.ocr_confidence_score or 0) * 100) }}</dd></div>
+        {% if invoice.source_email_subject %}<div><dt>Email subject</dt><dd>{{ invoice.source_email_subject }}</dd></div>{% endif %}
+        {% if invoice.current_approver %}<div><dt>Waiting with</dt><dd>{{ invoice.current_approver.full_name }} (level {{ invoice.current_level }})</dd></div>{% endif %}
+        {% if invoice.payment_date %}<div><dt>Paid</dt><dd>{{ invoice.payment_date|fdate }}, ref {{ invoice.payment_reference }}</dd></div>{% endif %}
+        {% if invoice.narration %}<div><dt>Narration</dt><dd>{{ invoice.narration }}</dd></div>{% endif %}
+      </dl>
+    </div>
+    {% if invoice.line_items %}
+    <div class="card">
+      <h2 style="margin-bottom:10px">Line items</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Description</th><th>HSN/SAC</th><th class="num">Qty</th><th class="num">Rate</th><th class="num">Taxable</th></tr></thead>
+        <tbody>{% for li in invoice.line_items %}<tr><td>{{ li.description }}</td><td>{{ li.hsn_sac or '-' }}</td><td class="num">{{ '%g'|format(li.quantity|float) if li.quantity is not none else '-' }}</td><td class="num">{{ li.unit_price|inr(symbol=False) }}</td><td class="num">{{ li.taxable_amount|inr(symbol=False) }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    {% endif %}
+    {% if office and invoice.status == 'approved' %}
+    <div class="card card-accent">
+      <h2 style="margin-bottom:10px">Record payment</h2>
+      <form method="post" action="{{ url_for('invoices.pay', invoice_id=invoice.id) }}" class="form-grid cols-2" novalidate>
+        {{ pay_form.hidden_tag() }}
+        {{ field(pay_form.payment_date) }}
+        {{ field(pay_form.payment_reference) }}
+        <div>{{ pay_form.submit(class='btn btn-primary') }}</div>
+      </form>
+    </div>
+    {% endif %}
+    <div class="card">
+      <h2 style="margin-bottom:10px">Approval trail</h2>
+      {% if invoice.logs %}
+      <div class="table-wrap"><table>
+        <thead><tr><th>When</th><th>Action</th><th>By</th><th>Level</th><th>Comment</th></tr></thead>
+        <tbody>{% for l in invoice.logs %}<tr><td>{{ l.acted_at|ist }}</td><td>{{ l.action|title }}</td><td>{{ l.actor.full_name }}</td><td>{{ l.level or '-' }}</td><td>{{ l.comments or '-' }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+      {% else %}<p class="muted">Not yet submitted.</p>{% endif %}
+    </div>
+  </div>
+  <div class="doc-pane card" style="padding:0" id="doc-viewer">
+    <div class="doc-toolbar">
+      <button class="btn btn-sm btn-outline" type="button" data-zoom-out aria-label="Zoom out">−</button>
+      <span class="small" data-zoom-level>100%</span>
+      <button class="btn btn-sm btn-outline" type="button" data-zoom-in aria-label="Zoom in">+</button>
+      <button class="btn btn-sm btn-outline" type="button" data-zoom-fit>Fit</button>
+    </div>
+    <div class="doc-scroll">
+      {% if invoice.original_filepath %}<img src="{{ url_for('invoices.preview', invoice_id=invoice.id) }}" data-src="{{ url_for('invoices.preview', invoice_id=invoice.id) }}" alt="Original invoice">
+      {% else %}<p class="empty">No document attached{{ ' (demo record)' if not invoice.file_hash }}.</p>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/ocr-preview.js') }}"></script>{% endblock %}
