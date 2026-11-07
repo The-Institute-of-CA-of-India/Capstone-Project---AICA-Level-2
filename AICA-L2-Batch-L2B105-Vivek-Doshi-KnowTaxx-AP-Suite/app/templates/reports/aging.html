@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% macro table(rows, heading) %}
+<div class="card" style="margin-top:14px">
+  <h2 style="margin-bottom:10px">{{ heading }}</h2>
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th>{% for b in data.buckets %}<th class="num">{{ b }}</th>{% endfor %}<th class="num">Total</th></tr></thead>
+    <tbody>{% for r in rows %}<tr><td>{{ r.name }}</td>{% for b in data.buckets %}<td class="num">{{ r[b]|inr(decimals=0) if r[b] else '-' }}</td>{% endfor %}<td class="num"><strong>{{ r.total|inr(decimals=0) }}</strong></td></tr>{% endfor %}</tbody>
+    <tfoot><tr><td>Total</td>{% for b in data.buckets %}<td class="num">{{ data.totals[b]|inr(decimals=0) }}</td>{% endfor %}<td class="num">{{ data.totals.total|inr(decimals=0) }}</td></tr></tfoot>
+  </table></div>
+  {% else %}<p class="empty">Nothing outstanding.</p>{% endif %}
+</div>
+{% endmacro %}
+{% block title %}AP aging{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>AP aging &amp; MSMED</h1><div class="sub">{{ client.name }} &middot; As of {{ data.as_of|fdate }} &middot; Days past due date, including GST</div></div>
+  <div class="actions"><a class="btn btn-outline" href="{{ url_for('reports.export_report', client_id=client.id, name='aging.xlsx') }}">Export Excel</a></div>
+</div>
+<div class="kpis" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr))">
+  {% for b in data.buckets %}<div class="card kpi"><div class="label">{{ b }}{{ ' days' if b != 'Current' }}</div><div class="value" style="font-size:1.15rem">{{ data.totals[b]|inr(decimals=0) }}</div></div>{% endfor %}
+</div>
+
+<div class="card card-accent">
+  <h2 style="margin-bottom:4px">MSMED 45-day compliance</h2>
+  <p class="small muted">Section 15 of the MSMED Act sets a maximum of 45 days. Open invoices from MSME vendors are shown here, counted from the invoice date. Flagged from day 30.</p>
+  {% if data.msme %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Vendor</th><th>Invoice</th><th>Invoice date</th><th class="num">Age</th><th>45-day limit</th><th class="num">Days left</th><th class="num">Amount</th><th>State</th></tr></thead>
+    <tbody>{% for m in data.msme %}
+      <tr><td>{{ m.invoice.display_vendor }}</td><td><a href="{{ url_for('invoices.detail', invoice_id=m.invoice.id) }}">{{ m.invoice.display_number }}</a></td><td>{{ m.invoice.display_date|fdate }}</td><td class="num">{{ m.age }}</td><td>{{ m.limit_date|fdate }}</td><td class="num">{{ m.days_left }}</td><td class="num">{{ m.amount|inr(decimals=0) }}</td>
+      <td><span class="badge badge-{{ {'breached':'danger','approaching':'warning','ok':'success'}[m.state] }}">{{ {'breached':'Past 45 days','approaching':'Approaching','ok':'Within limit'}[m.state] }}</span></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="empty">No open invoices from MSME vendors.</p>{% endif %}
+</div>
+{{ table(data.by_vendor, 'By vendor') }}
+{{ table(data.by_centre, 'By cost centre') }}
+{% endblock %}

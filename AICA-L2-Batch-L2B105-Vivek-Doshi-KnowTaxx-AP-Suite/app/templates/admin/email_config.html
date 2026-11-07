@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import field %}
+{% block title %}Email ingestion{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Email ingestion</h1><div class="sub">Unread mail is read over IMAP. PDF and image attachments become invoices. Plus-addressing (mailbox+c0001@gmail.com) routes mail to the right client.</div></div></div>
+<div class="grid cols-2">
+  <div class="card card-accent">
+    <h2 style="margin-bottom:10px">Settings</h2>
+    <form method="post" novalidate id="email-form" class="form-grid cols-2">
+      {{ form.hidden_tag() }}
+      {{ field(form.client_id, 'span-all') }}
+      {{ field(form.imap_server) }}
+      {{ field(form.imap_port) }}
+      {{ field(form.email_address, 'span-all') }}
+      {{ field(form.email_password, 'span-all') }}
+      {{ field(form.poll_interval_minutes) }}
+      {{ field(form.is_active) }}
+      <div class="actions span-all">
+        {{ form.submit(class='btn btn-primary') }}
+        <button class="btn btn-outline" type="submit" formaction="{{ url_for('admin.email_test') }}">Test connection</button>
+      </div>
+    </form>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:10px">Listener status</h2>
+    {% if configs %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Client</th><th>Mailbox</th><th>Status</th><th>Last poll</th><th></th></tr></thead>
+      <tbody>{% for c in configs %}
+        <tr><td>{{ c.client.code }}</td><td>{{ c.email_address }}</td>
+        <td><span class="badge badge-{{ 'danger' if c.last_error else ('success' if c.is_active else '') }}">{{ 'Error' if c.last_error else ('Active' if c.is_active else 'Off') }}</span>{% if c.last_error %}<div class="small error">{{ c.last_error }}</div>{% endif %}</td>
+        <td>{{ c.last_poll_at|ist }}</td>
+        <td class="right"><a class="btn btn-sm btn-outline" href="{{ url_for('admin.email_config', client=c.client_id) }}">Edit</a></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No mailboxes configured yet.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

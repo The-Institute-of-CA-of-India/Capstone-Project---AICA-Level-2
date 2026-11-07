@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% from 'components/_pagination.html' import pager %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Audit log</h1><div class="sub">{{ page.total }} entries. Times in IST.</div></div></div>
+<form class="filters" method="get">
+  <div class="grow"><label for="q">Search</label><input id="q" type="search" name="q" value="{{ term }}" placeholder="User, entity, details or IP"></div>
+  <div><label for="action">Action</label>
+    <select id="action" name="action"><option value="">All</option>{% for a in actions %}<option value="{{ a }}" {{ 'selected' if a == action }}>{{ a|title }}</option>{% endfor %}</select></div>
+  <button class="btn btn-primary" type="submit">Search</button>
+</form>
+<div class="card">
+  {% if page.items %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Entity</th><th>Details</th><th>IP</th></tr></thead>
+    <tbody>{% for a in page.items %}
+      <tr><td style="white-space:nowrap">{{ a.timestamp|ist('%d %b %Y %H:%M:%S') }}</td><td>{{ a.user.username if a.user else 'system' }}</td><td><span class="badge">{{ a.action }}</span></td>
+      <td>{{ a.entity_type or '-' }}{% if a.entity_id %} #{{ a.entity_id }}{% endif %}</td><td class="small mono" style="overflow-wrap:anywhere;min-width:220px">{{ a.details or '-' }}</td><td class="mono">{{ a.ip_address or '-' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {{ pager(page, 'admin.audit_log') }}
+  {% else %}<p class="empty">No entries match.</p>{% endif %}
+</div>
+{% endblock %}

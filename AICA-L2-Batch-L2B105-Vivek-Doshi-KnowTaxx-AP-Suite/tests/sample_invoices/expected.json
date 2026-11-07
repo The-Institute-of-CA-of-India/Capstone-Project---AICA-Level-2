@@ -1,0 +1,92 @@
+[
+  {
+    "file": "invoice_gst_1.png",
+    "vendor": "Sharma Steel Traders",
+    "gstin": "27AAFFS1234K1Z6",
+    "number": "SST/26-27/0451",
+    "date": "2026-10-26",
+    "taxable": 98500.0,
+    "cgst": 8865.0,
+    "sgst": 8865.0,
+    "igst": 0.0,
+    "total": 116230.0,
+    "buyer_gstin": "27AABCA1234C1ZF"
+  },
+  {
+    "file": "invoice_gst_2.png",
+    "vendor": "Patel Consultancy Services",
+    "gstin": "24AACFP5678M1ZQ",
+    "number": "PCS-1187",
+    "date": "2026-10-18",
+    "taxable": 45000.0,
+    "cgst": 0.0,
+    "sgst": 0.0,
+    "igst": 8100.0,
+    "total": 53100.0,
+    "buyer_gstin": "27AABCA1234C1ZF"
+  },
+  {
+    "file": "invoice_gst_3.png",
+    "vendor": "Greenfield Facility Services",
+    "gstin": "27AAGCG9012P1Z5",
+    "number": "GFS/2627/0093",
+    "date": "2026-11-02",
+    "taxable": 69000.0,
+    "cgst": 6210.0,
+    "sgst": 6210.0,
+    "igst": 0.0,
+    "total": 81420.0,
+    "buyer_gstin": "27AABCA1234C1ZF"
+  },
+  {
+    "file": "invoice_gst_4.png",
+    "vendor": "Nexa Cloud Technologies",
+    "gstin": "29AAHCN3456Q1ZN",
+    "number": "NCT-INV-20764",
+    "date": "2026-10-08",
+    "taxable": 118000.0,
+    "cgst": 0.0,
+    "sgst": 0.0,
+    "igst": 21240.0,
+    "total": 139240.0,
+    "buyer_gstin": "27AABCA1234C1ZF"
+  },
+  {
+    "file": "invoice_gst_5.png",
+    "vendor": "Mahalaxmi Packaging Industries",
+    "gstin": "27AAIFM7890R1Z5",
+    "number": "MPI/0782",
+    "date": "2026-09-30",
+    "taxable": 46300.0,
+    "cgst": 2778.0,
+    "sgst": 2778.0,
+    "igst": 0.0,
+    "total": 51856.0,
+    "buyer_gstin": "27AABCA1234C1ZF"
+  },
+  {
+    "file": "invoice_gst_2.pdf",
+    "vendor": "Patel Consultancy Services",
+    "gstin": "24AACFP5678M1ZQ",
+    "number": "PCS-1187",
+    "date": "2026-10-18",
+    "taxable": 45000.0,
+    "cgst": 0.0,
+    "sgst": 0.0,
+    "igst": 8100.0,
+    "total": 53100.0,
+    "buyer_gstin": "27AABCA1234C1ZF"
+  },
+  {
+    "file": "expense_receipt_1.jpg",
+    "vendor": "Hotel Konkan Residency",
+    "gstin": "27AAJFK2345S1ZO",
+    "number": "HKR-5521",
+    "date": "2026-11-04",
+    "taxable": 3500.0,
+    "cgst": 210.0,
+    "sgst": 210.0,
+    "igst": 0.0,
+    "total": 3920.0
+  }
+]

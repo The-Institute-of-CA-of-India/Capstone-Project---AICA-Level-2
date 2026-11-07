@@ -1,0 +1,65 @@
+{# Shared Jinja macros #}
+{% macro logo(width=170) %}
+<svg class="logo" width="{{ width }}" viewBox="0 0 220 44" role="img" aria-label="KnowTaxx" xmlns="http://www.w3.org/2000/svg">
+  <!-- book-page motif on the K -->
+  <path d="M4 7 C8 4 12 4 15 7 V37 C12 34 8 34 4 37 Z" fill="none" stroke="#E8A020" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M7.5 13 C9 12 10.5 12 12 13 M7.5 19 C9 18 10.5 18 12 19 M7.5 25 C9 24 10.5 24 12 25" stroke="#E8A020" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  <text x="19" y="33" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="31" font-weight="800" fill="#FFFFFF" letter-spacing="-.5">KnowTaxx</text>
+  <!-- gold check swooshes on the W and the final X -->
+  <path d="M73 8 l5 5 l10 -10" stroke="#E8A020" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M170 8 l5 5 l10 -10" stroke="#E8A020" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro field(f, cls='', conf=None) %}
+{% set conf_class = '' %}
+{% if conf is not none %}{% set conf_class = 'conf-high' if conf > 0.8 else ('conf-mid' if conf >= 0.5 else 'conf-low') %}{% endif %}
+<div class="field {{ cls }} {{ conf_class }} {{ 'has-error' if f.errors }}">
+  {% if f.type == 'BooleanField' %}
+    <label class="check">{{ f() }} {{ f.label.text }}</label>
+  {% else %}
+    <label for="{{ f.id }}">{{ f.label.text }}{% if conf is not none %}<span class="conf-tag">{{ 'High' if conf > 0.8 else ('Check' if conf >= 0.5 else 'Low') }}</span>{% endif %}</label>
+    {{ f() }}
+  {% endif %}
+  {% if f.description %}<div class="help">{{ f.description }}</div>{% endif %}
+  {% for e in f.errors %}<div class="error">{{ e }}</div>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro status_badge(status) %}
+{% set kinds = {'approved':'success','paid':'success','active':'success','rejected':'danger','blacklisted':'danger','cancelled':'danger',
+  'pending_approval':'warning','pending':'warning','pending_review':'warning','auto_captured':'info','reviewed':'info','archived':''} %}
+<span class="badge badge-{{ kinds.get(status, '') }}">{{ status.replace('_', ' ').title() }}</span>
+{% endmacro %}
+
+{% macro icon(name) %}
+{% set p = {
+ 'home':'M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10',
+ 'users':'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+ 'building':'M4 21V5l8-3 8 3v16M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4',
+ 'file':'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8',
+ 'upload':'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+ 'check':'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+ 'clock':'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2',
+ 'chart':'M3 3v18h18M8 17v-5M13 17V7M18 17v-8',
+ 'tree':'M6 3v12M6 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9',
+ 'scale':'M12 3v18M5 7l-3 7a4 4 0 0 0 6 0zM19 7l-3 7a4 4 0 0 0 6 0zM5 7h14',
+ 'calendar':'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
+ 'rules':'M4 6h16M4 12h10M4 18h6M18 14l2 2 3-4',
+ 'wallet':'M21 12V7H5a2 2 0 0 1 0-4h14v4M3 5v14a2 2 0 0 0 2 2h16v-5M18 12a2 2 0 0 0 0 4h4v-4z',
+ 'shield':'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+ 'log':'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5zM8 7h8M8 11h6',
+ 'mail':'M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM22 6l-10 7L2 6',
+ 'db':'M12 8c5 0 9-1.3 9-3s-4-3-9-3-9 1.3-9 3 4 3 9 3zM3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3',
+ 'offline':'M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 4.2-2.7M22 8.8A15 15 0 0 0 10.7 5M5 12.9a10 10 0 0 1 5.2-2.7M19 12.9a10 10 0 0 0-2.5-1.8M12 20h.01',
+ 'menu':'M3 6h18M3 12h18M3 18h18',
+ 'bell':'M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',
+ 'logout':'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
+ 'key':'M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4',
+ 'camera':'M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+ 'share':'M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13'
+} %}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ p.get(name, '') }}"/></svg>
+{% endmacro %}

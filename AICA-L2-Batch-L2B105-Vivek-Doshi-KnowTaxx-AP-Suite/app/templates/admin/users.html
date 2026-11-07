@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Users</h1><div class="actions"><a class="btn btn-secondary" href="{{ url_for('admin.new_user') }}">New user</a></div></div>
+<div class="card">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Clients</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+    <tbody>{% for u in users %}
+      <tr><td class="mono">{{ u.username }}</td><td>{{ u.full_name }}</td><td>{{ u.role.replace('_',' ')|title }}</td>
+      <td>{{ 'All' if u.sees_all_clients else (u.clients|map(attribute='code')|join(', ') or '-') }}</td>
+      <td><span class="badge badge-{{ 'success' if u.is_active else 'danger' }}">{{ 'Active' if u.is_active else 'Inactive' }}</span>
+        {% if u.locked_until %}<span class="badge badge-warning">Lock recorded</span>{% endif %}{% if u.must_change_password %}<span class="badge">Temp password</span>{% endif %}</td>
+      <td>{{ u.last_login|ist }}</td>
+      <td class="right"><div class="actions" style="justify-content:flex-end;flex-wrap:nowrap">
+        <a class="btn btn-sm btn-outline" href="{{ url_for('admin.edit_user', user_id=u.id) }}">Edit</a>
+        {% if u.locked_until %}<form method="post" action="{{ url_for('admin.unlock_user', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline" type="submit">Unlock</button></form>{% endif %}
+      </div></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

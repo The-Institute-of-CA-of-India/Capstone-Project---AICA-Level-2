@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Guide | KnowTaxx AP Suite</title>
+<style>
+:root { --navy:#1E3A6E; --gold:#E8A020; --gray:#6B7280; --ink:#1F2937; --line:#EEF1F6; --bg:#F8F9FC; }
+* { box-sizing:border-box; }
+body { margin:0; font:15px/1.65 'Inter','Segoe UI',system-ui,sans-serif; color:var(--ink); background:var(--bg); }
+header.cover { background:var(--navy); color:#fff; padding:56px 24px; text-align:center; }
+.cover h1 { font-size:2.4rem; margin:0; color:#fff; }
+.cover .tag { color:var(--gold); }
+.cover p { margin:8px 0 0; }
+.wrap { display:grid; grid-template-columns:minmax(0,1fr); max-width:1160px; margin:0 auto; }
+nav.toc { padding:20px 16px; background:#fff; border-bottom:1px solid var(--line); }
+nav.toc h2 { margin:0 0 8px; font-size:1rem; border:0; padding:0; }
+nav.toc ol { margin:0; padding-left:22px; }
+nav.toc a { color:var(--navy); text-decoration:none; line-height:1.9; }
+main { padding:16px; min-width:0; }
+section { background:#fff; border:1px solid var(--line); border-radius:12px; padding:22px; margin-bottom:18px; }
+h2 { color:var(--navy); font-size:1.45rem; margin:0 0 12px; padding-bottom:8px; border-bottom:3px solid var(--gold); }
+h3 { color:var(--navy); font-size:1.05rem; margin:20px 0 6px; }
+figure { margin:14px 0; }
+figure img { width:100%; border:1px solid var(--line); border-radius:8px; display:block; }
+figure.phone { max-width:280px; }
+figcaption { font-size:.82rem; color:var(--gray); margin-top:4px; }
+table { width:100%; border-collapse:collapse; margin:10px 0; font-size:.9rem; }
+th { background:var(--navy); color:#fff; text-align:left; padding:7px 9px; }
+td { border-bottom:1px solid var(--line); padding:7px 9px; vertical-align:top; }
+code { font:.9em Consolas,monospace; background:var(--bg); padding:1px 5px; border-radius:4px; }
+pre { background:var(--navy); color:#fff; padding:12px 14px; border-radius:8px; overflow-x:auto; font:.88rem Consolas,monospace; }
+.note { border-left:4px solid var(--gold); background:#FFF8E8; padding:10px 14px; border-radius:6px; margin:12px 0; }
+.warn { border-left:4px solid #DC2626; background:#FEF2F2; padding:10px 14px; border-radius:6px; margin:12px 0; }
+@media (min-width:1000px) {
+  .wrap { grid-template-columns:260px minmax(0,1fr); }
+  nav.toc { position:sticky; top:0; align-self:start; max-height:100vh; overflow:auto; border:0; background:transparent; }
+}
+@media print {
+  body { background:#fff; font-size:12pt; }
+  .wrap { display:block; max-width:none; }
+  nav.toc { break-after:page; background:#fff; }
+  main { padding:0; }
+  section { border:0; padding:0; break-before:page; }
+  header.cover { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  th { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  figure { break-inside:avoid; }
+  figure img { max-height:125mm; width:auto; max-width:100%; }
+}
+</style>
+</head>
+<body>
+<header class="cover">
+  <h1>KnowTaxx</h1>
+  <div class="tag">Knowledge Backed Innovative Solutions</div>
+  <p style="font-size:1.25rem;margin-top:18px">AP &amp; Expense Intelligence Suite: User Guide</p>
+  <p>Version 1.0</p>
+</header>
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">Introduction &amp; requirements</a></li>
+    <li><a href="#s2">Installation</a></li>
+    <li><a href="#s3">First login &amp; password</a></li>
+    <li><a href="#s4">Client management</a></li>
+    <li><a href="#s5">Vendors &amp; self-registration</a></li>
+    <li><a href="#s6">Invoice capture</a></li>
+    <li><a href="#s7">OCR review &amp; correction</a></li>
+    <li><a href="#s8">Approval workflow</a></li>
+    <li><a href="#s9">Cost centres</a></li>
+    <li><a href="#s10">Reports &amp; dashboards</a></li>
+    <li><a href="#s11">Variance analysis</a></li>
+    <li><a href="#s12">Excel &amp; Tally export</a></li>
+    <li><a href="#s13">Mobile app (PWA)</a></li>
+    <li><a href="#s14">Offline mode &amp; sync</a></li>
+    <li><a href="#s15">Administration</a></li>
+    <li><a href="#s16">Troubleshooting</a></li>
+  </ol>
+</nav>
+<main>
+
+<section id="s1">
+  <h2>1. Introduction &amp; system requirements</h2>
+  <p>The AP Suite takes a vendor invoice from capture to payment for Indian CA firms and mid-size enterprises. It reads invoices with OCR, routes them through your approval rules, and reports on spend, budgets, aging and MSMED compliance. It runs on your own computer and network. Invoices are processed locally and no cloud service is used for core functions.</p>
+  <h3>How an invoice moves through the system</h3>
+  <table>
+    <tr><th>Step</th><th>Who</th><th>Status afterwards</th></tr>
+    <tr><td>Captured by upload, camera or email, and read by OCR</td><td>Anyone with upload rights, or automatic</td><td>Auto Captured (high confidence) or Pending Review</td></tr>
+    <tr><td>Fields checked and corrected against the document</td><td>Accountant</td><td>Reviewed, then Pending Approval</td></tr>
+    <tr><td>Approved at every level the rules require</td><td>Approvers</td><td>Approved (or Rejected, or back to Pending Review on a query)</td></tr>
+    <tr><td>Payment recorded with UTR or reference</td><td>Accountant</td><td>Paid</td></tr>
+  </table>
+  <h3>Server requirements</h3>
+  <ul>
+    <li>Windows 10 or 11, or Windows Server 2016 or later (64-bit). For development: any OS with Python 3.11 or later.</li>
+    <li>4 GB RAM and 2 GB of disk to start. Allow about 1 GB for every 5,000 scanned invoices.</li>
+    <li>Tesseract OCR 5. The installer can include it; otherwise install it separately. Without it, files are stored but fields must be typed in.</li>
+  </ul>
+  <h3>User devices</h3>
+  <ul>
+    <li>Any current browser: Edge, Chrome, Firefox or Safari.</li>
+    <li>Phones: Android Chrome or iOS Safari on the same network as the server.</li>
+  </ul>
+</section>
+
+<section id="s2">
+  <h2>2. Installation</h2>
+  <h3>Server</h3>
+  <ol>
+    <li>Run <code>KnowTaxx_AP_Suite_Server_Setup.exe</code> as administrator.</li>
+    <li>Accept the install folder. Program files go to <code>C:\Program Files\KnowTaxx AP Suite</code> and your data to <code>C:\ProgramData\KnowTaxx AP Suite</code>.</li>
+    <li>Choose a network port. Keep 5000 unless another program uses it.</li>
+    <li>Note the first sign-in details on the last page.</li>
+  </ol>
+  <p>The installer registers a Windows service named <code>KTAPSuiteServer</code> that starts with the computer, and opens the chosen port in the firewall for private and domain networks. The Start Menu folder has Open AP Suite, Stop Service, Start Service and Uninstall.</p>
+  <h3>Client computers</h3>
+  <p>A client computer needs no software, because the browser is enough. <code>KnowTaxx_AP_Suite_Client_Setup.exe</code> just adds shortcuts: enter the server's address and port, it tests the connection, and it creates a shortcut that opens the suite in its own Edge or Chrome window.</p>
+  <h3>Running from source</h3>
+  <pre>pip install -r requirements.txt
+python run.py</pre>
+  <p>The app is then at <code>http://localhost:5000</code>. Add <code>--port</code> to change the port and <code>--https</code> for phone installation (see section 13). To load demonstration data, run <code>python scripts/seed_demo_data.py</code>.</p>
+  <div class="note">Uninstalling asks before deleting your data. The default answer keeps it.</div>
+</section>
+
+<section id="s3">
+  <h2>3. First login &amp; password setup</h2>
+  <figure><img src="screenshots/login.png" alt="Sign-in page"><figcaption>The sign-in page.</figcaption></figure>
+  <ol>
+    <li>Open the suite and sign in with the temporary administrator details shown by the installer.</li>
+    <li>You are taken straight to Change Password. Nothing else opens until you have set your own.</li>
+    <li>Passwords need at least 8 characters, with at least one letter and one digit.</li>
+  </ol>
+  <h3>Good to know</h3>
+  <ul>
+    <li>Five wrong passwords lock the account for 15 minutes. An administrator can unlock it sooner from the Users page.</li>
+    <li>Sessions end after 10 hours.</li>
+    <li>Every sign-in, sign-out and data change is written to the audit log.</li>
+  </ul>
+</section>
+
+<section id="s4">
+  <h2>4. Client management</h2>
+  <figure><img src="screenshots/clients.png" alt="Client list"><figcaption>The client list. Search by name, code, PAN or GSTIN.</figcaption></figure>
+  <h3>Create a client</h3>
+  <p>Go to <strong>Clients → New client</strong> (administrators and managers). The code (C0001, C0002 and so on) is automatic. PAN is checked for format, and GSTIN for format and check digit.</p>
+  <p>Each new client automatically receives a vendor registration link and an email alias such as <code>c0001</code>.</p>
+  <figure><img src="screenshots/client_detail.png" alt="Client overview"><figcaption>The client overview: counts, this month's spend, the shareable vendor link.</figcaption></figure>
+  <h3>Switching client</h3>
+  <p>The dropdown at the top of every page switches the active client. The sidebar then shows that client's vendors, invoices and reports.</p>
+  <h3>Archive and restore</h3>
+  <p>Archiving hides a client without deleting anything, and stops its vendor link. Use <strong>Show archived</strong> on the client list to find and restore it.</p>
+</section>
+
+<section id="s5">
+  <h2>5. Vendor management &amp; self-registration</h2>
+  <figure><img src="screenshots/vendors.png" alt="Vendor list"><figcaption>Vendor dashboard: totals, pending verification, MSME percentage, top vendors by spend.</figcaption></figure>
+  <h3>Add a vendor yourself</h3>
+  <p><strong>Vendors → New vendor</strong>. A vendor you add is active immediately. PAN is required, and a GSTIN must contain that same PAN.</p>
+  <h3>Let the vendor register</h3>
+  <ol>
+    <li>Copy the link from the client overview and send it by WhatsApp or email.</li>
+    <li>The vendor opens it on any device, with no login, and fills in business, bank and contact details.</li>
+    <li>They attach a PAN card copy and cancelled cheque, plus a GST certificate if they have a GSTIN, and optionally an MSME certificate.</li>
+    <li>The record arrives as <strong>Pending</strong> with a badge in your sidebar.</li>
+    <li>Check the documents, then press <strong>Approve vendor</strong>.</li>
+  </ol>
+  <figure class="phone"><img src="screenshots/vendor_register.png" alt="Public vendor registration form on a phone"><figcaption>The public form on a phone.</figcaption></figure>
+  <div class="note">If a link has reached the wrong person, press <strong>Generate a new link</strong> on the client overview. The old link stops working at once.</div>
+  <h3>Duplicate detection</h3>
+  <p>Before saving, the suite looks for an existing vendor with the same PAN, the same GSTIN, or a name more than 80% similar. You see the matches and must tick a box to save anyway. On the public form, matches are never shown to the vendor; they are noted on the pending record for you.</p>
+  <h3>Blacklisting</h3>
+  <p>A blacklisted vendor needs a reason, and their invoices cannot be submitted for approval. A change of bank details is recorded in the audit log, so check it against a cancelled cheque before paying.</p>
+</section>
+
+<section id="s6">
+  <h2>6. Invoice capture</h2>
+  <figure><img src="screenshots/upload_result.png" alt="Upload page with a result"><figcaption>Drop files on the page. Each shows its OCR confidence and a Review button.</figcaption></figure>
+  <h3>Upload</h3>
+  <p>Open <strong>Upload invoice</strong> and drag files on, or choose them. PDF, JPG and PNG are accepted, up to 20 MB each, and several at once. The first 10 pages of a PDF are read.</p>
+  <h3>Camera</h3>
+  <p>On a phone, a large <strong>Take Photo</strong> button opens the camera. For the best OCR: flat page, good light, whole invoice in frame, no shadow across the numbers.</p>
+  <figure class="phone"><img src="screenshots/mobile_capture.png" alt="Upload page on a phone"><figcaption>Field staff land directly on this page.</figcaption></figure>
+  <h3>Email</h3>
+  <p>Once an administrator connects a mailbox (section 15), the suite checks it for unread mail. PDF and image attachments become invoices, and sender, subject and date are stored with them. The vendor is matched by the GSTIN on the document, or else by sender address or company domain.</p>
+  <p>Using plus-addressing, a single mailbox can serve every client:</p>
+  <pre>knowtaxxap+c0001@gmail.com  → Client C0001
+knowtaxxap+c0002@gmail.com  → Client C0002</pre>
+  <h3>Duplicate protection</h3>
+  <p>Uploading the same file twice for a client flags the second as a possible duplicate, as does the same invoice number, vendor and amount.</p>
+</section>
+
+<section id="s7">
+  <h2>7. OCR review &amp; correction</h2>
+  <figure><img src="screenshots/review.png" alt="OCR review screen"><figcaption>The original document on the left, extracted fields on the right.</figcaption></figure>
+  <p>Nothing goes for approval until a person has reviewed it. Open an invoice from <strong>Invoices → To review</strong>.</p>
+  <h3>Reading the colours</h3>
+  <table>
+    <tr><th>Colour</th><th>Label</th><th>Meaning</th></tr>
+    <tr><td>Green</td><td>High</td><td>Confidence above 0.8. For example, the GSTIN passed its check digit, or the amounts add up.</td></tr>
+    <tr><td>Amber</td><td>Check</td><td>Confidence 0.5 to 0.8. Probably right, but compare it with the document.</td></tr>
+    <tr><td>Red</td><td>Low</td><td>Below 0.5, or nothing was found.</td></tr>
+  </table>
+  <h3>Working through the screen</h3>
+  <ol>
+    <li>Compare the fields with the document. Use + and − to zoom, or Ctrl and the mouse wheel.</li>
+    <li><strong>Accept All</strong> restores every value OCR read, if you have changed something and want to go back.</li>
+    <li>Link the vendor if it is not already linked. If it is unknown, use <strong>Register this vendor</strong>.</li>
+    <li>Watch the <strong>Arithmetic check</strong>: taxable value plus taxes must match the total within ₹1.</li>
+    <li>Choose the category, cost centre and GL ledger. Check any suggested TDS section and rate.</li>
+    <li>Press <strong>Submit for approval</strong>, or <strong>Save for later</strong> to return to it.</li>
+  </ol>
+  <div class="warn">Category and TDS are rule-based suggestions and must be confirmed. Section labels use the familiar Income-tax Act 1961 numbers (194C, 194J and so on), which from 1 April 2026 are consolidated in section 393 of the Income-tax Act 2025. Check the applicable rate and any threshold yourself.</div>
+  <p>What OCR read is kept beside what you corrected, and the raw OCR text stays at the bottom of the page for audit.</p>
+</section>
+
+<section id="s8">
+  <h2>8. Approval workflow</h2>
+  <h3>Setting the rules</h3>
+  <figure><img src="screenshots/matrix.png" alt="Approval matrix"><figcaption>The approval matrix, for each client (administrators and managers).</figcaption></figure>
+  <p>A rule sets an amount range, optionally a category and a cost centre, an approver and a level. Level 1 approves first, then level 2. For example, ₹10,001 to ₹1,00,000 might go to a Finance Manager at level 1 and the CFO at level 2.</p>
+  <p>If several rules fit one level, the most specific wins. If no rule fits an invoice, it stays Reviewed and you are told to add one.</p>
+  <h3>Deciding</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:14px">
+    <figure class="phone"><img src="screenshots/mobile_approvals.png" alt="Approval cards on a phone"><figcaption>Approval cards.</figcaption></figure>
+    <figure class="phone"><img src="screenshots/mobile_reject_dialog.png" alt="Reject dialog on a phone"><figcaption>A rejection needs a reason.</figcaption></figure>
+  </div>
+  <table>
+    <tr><th>Action</th><th>Result</th></tr>
+    <tr><td><strong>Approve</strong> (or swipe right)</td><td>Moves to the next level, or to Approved after the last level.</td></tr>
+    <tr><td><strong>Reject</strong> (or swipe left)</td><td>Needs a reason. The status becomes Rejected, and this is final.</td></tr>
+    <tr><td><strong>Query</strong></td><td>Needs your question. The invoice returns to the accountant as Pending Review, showing the question.</td></tr>
+  </table>
+  <p>Approvers see only their own queue. Administrators and managers see everything and can act on any invoice, which is recorded under their name.</p>
+  <h3>Turnaround tracking</h3>
+  <p>The Pending page and the dashboard show average approval time and the number of invoices waiting more than 24, 48 and 72 hours.</p>
+  <h3>Paying</h3>
+  <p>Open an approved invoice and use <strong>Record payment</strong> with the date and UTR. Payment itself is made through your bank; the suite only records it.</p>
+</section>
+
+<section id="s9">
+  <h2>9. Cost centre management</h2>
+  <p>Open <strong>Cost centres</strong> in the sidebar. Each has a code and a name, and can sit under a parent to form a tree, such as Sales with North and South beneath it.</p>
+  <p>Assign the cost centre on the review screen. Inactive centres stay in old reports but cannot be chosen for new invoices.</p>
+  <figure><img src="screenshots/cost_centre.png" alt="Cost centre spend report"><figcaption>The spend report. Click a cost centre to see its invoices.</figcaption></figure>
+  <p>The report shows spend directly on a centre, and with its children added. Invoices with no cost centre appear as Unallocated, so nothing goes missing. Amounts here are taxable value, excluding GST.</p>
+</section>
+
+<section id="s10">
+  <h2>10. Reports &amp; dashboards</h2>
+  <figure><img src="screenshots/dashboard.png" alt="Dashboard"><figcaption>The client dashboard. Each chart has a "Show as table" link.</figcaption></figure>
+  <h3>Dashboard</h3>
+  <ul>
+    <li><strong>KPI cards:</strong> invoices and amount this month, pending approvals, overdue payments.</li>
+    <li><strong>Charts:</strong> monthly spend for 12 months, spend by category, top 10 vendors, approval status by month.</li>
+    <li><strong>What counts as spend:</strong> reviewed invoices onward. Captured-but-unreviewed, rejected, cancelled and flagged duplicate invoices are left out, so OCR guesses never reach your figures.</li>
+  </ul>
+  <h3>AP aging and MSMED</h3>
+  <figure><img src="screenshots/aging.png" alt="AP aging report"><figcaption>Aging buckets, by vendor and by cost centre, with the MSMED view on top.</figcaption></figure>
+  <p>Open invoices fall into Current, 1-30, 31-60, 61-90 and 90+ days past due. If an invoice has no due date, the suite assumes 30 days from the invoice date, or 45 for an MSME vendor.</p>
+  <p>The MSMED view lists open invoices from MSME vendors against the 45-day maximum in section 15 of the MSMED Act, counted from the invoice date. They are flagged <em>Approaching</em> from day 30 and <em>Past 45 days</em> after that. If you have a different date of acceptance or a shorter agreed period, allow for it.</p>
+</section>
+
+<section id="s11">
+  <h2>11. Variance analysis</h2>
+  <p>Enter budgets on the <strong>Budgets</strong> page: one amount per cost centre per month. Then open <strong>Variance analysis</strong> and choose a month.</p>
+  <figure><img src="screenshots/variance.png" alt="Variance analysis"><figcaption>Budget against actual, commentary and period comparison.</figcaption></figure>
+  <h3>Traffic lights</h3>
+  <table>
+    <tr><th>Light</th><th>Meaning</th></tr>
+    <tr><td>Green</td><td>Within 5% of budget, or under budget</td></tr>
+    <tr><td>Amber</td><td>5% to 15% over budget</td></tr>
+    <tr><td>Red</td><td>More than 15% over budget, or spend with no budget</td></tr>
+  </table>
+  <h3>Actuals exclude GST</h3>
+  <p>Actuals use taxable value, because GST is normally recoverable as input credit. If GST on a type of spend is blocked, budget for it accordingly.</p>
+  <h3>Commentary</h3>
+  <p>The suite writes a short note on the three largest overspends, naming the largest vendor and category behind each. It is produced by rules from your invoice data. It identifies <em>where</em> the money went, not <em>why</em>, so confirm the reason before passing it on.</p>
+  <h3>Period comparison</h3>
+  <p>A second table compares this month with last month, and this quarter with the same quarter last year, using Indian financial-year quarters.</p>
+</section>
+
+<section id="s12">
+  <h2>12. Excel &amp; Tally export</h2>
+  <table>
+    <tr><th>Export</th><th>Where</th><th>Contents</th></tr>
+    <tr><td>Dashboard Excel, PDF</td><td>Dashboard</td><td>KPIs, trend, categories, top vendors</td></tr>
+    <tr><td>Invoice register</td><td>Invoices</td><td>Every invoice with tax split and status</td></tr>
+    <tr><td>Cost centre, Variance, Aging</td><td>Each report</td><td>The report as shown, including the MSMED sheet</td></tr>
+    <tr><td>Tally CSV</td><td>Dashboard</td><td>Approved and paid invoices for this month</td></tr>
+  </table>
+  <p>Excel files use navy headers, bold totals and Indian digit grouping.</p>
+  <h3>Tally CSV layout</h3>
+  <pre>Date,Ledger,Debit,Credit,Narration
+05-11-2026,Rent - Office,100000.00,,Being office rent...
+05-11-2026,Input CGST,9000.00,,Being office rent...
+05-11-2026,Input SGST,9000.00,,Being office rent...
+05-11-2026,Sunrise Estates,,108000.00,Being office rent...
+05-11-2026,TDS Payable - 194I,,10000.00,Being office rent...</pre>
+  <p>Debits equal credits for each invoice. The expense ledger is the GL account from the review screen, or the category if that is blank. Ledger names must match those in your Tally company, so create or map them before importing. Try a test company first.</p>
+  <div class="note">Text that could run as a spreadsheet formula, such as a vendor name starting with "=", is neutralised in all exports.</div>
+</section>
+
+<section id="s13">
+  <h2>13. Mobile app (PWA installation)</h2>
+  <div class="warn"><strong>Phones need HTTPS.</strong> Browsers allow app installation and offline mode only on <code>https://</code> or on the computer itself (localhost). On a plain <code>http://192.168...</code> address a phone can use every online feature, but it cannot install the app or work offline. Start the server with <code>python run.py --https</code> and open the <code>https://</code> LAN address. It uses a self-signed certificate, so the phone warns the first time; on iOS, install and trust the certificate for the app to install.</div>
+  <h3>Android (Chrome)</h3>
+  <ol>
+    <li>Open the server's <code>https://</code> address and sign in.</li>
+    <li>Open the ⋮ menu and tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+  </ol>
+  <h3>iPhone or iPad (Safari)</h3>
+  <p>The suite shows these steps on your first visit:</p>
+  <ol>
+    <li>Tap the Share button.</li>
+    <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+    <li>Tap <strong>Add</strong>.</li>
+  </ol>
+  <div style="display:flex;flex-wrap:wrap;gap:14px">
+    <figure class="phone"><img src="screenshots/ios_install.png" alt="iOS install guide"><figcaption>The iOS install guide.</figcaption></figure>
+    <figure class="phone"><img src="screenshots/mobile_dashboard.png" alt="Dashboard on a phone"><figcaption>The dashboard on a phone.</figcaption></figure>
+  </div>
+  <h3>Alerts</h3>
+  <p>Tap <strong>Enable alerts</strong> on the Pending page. While the app is open, it checks every minute and notifies you of new approvals. There is no background push when the app is closed, because that would need an internet service.</p>
+</section>
+
+<section id="s14">
+  <h2>14. Offline mode &amp; sync</h2>
+  <p>Away from the office network, the installed app opens its offline page. Sign in once while connected first, so the device holds your client list and pending approvals.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:14px">
+    <figure class="phone"><img src="screenshots/mobile_offline.png" alt="Offline capture page"><figcaption>Capture while offline.</figcaption></figure>
+    <figure class="phone"><img src="screenshots/mobile_offline_queue.png" alt="Offline queue"><figcaption>The queue waiting to sync.</figcaption></figure>
+  </div>
+  <h3>What you can do offline</h3>
+  <ul>
+    <li><strong>Capture:</strong> photograph an invoice and add the vendor, amount and a note.</li>
+    <li><strong>Approvals:</strong> approve or reject from the last snapshot.</li>
+    <li><strong>Queue:</strong> see what is waiting.</li>
+  </ul>
+  <h3>When you reconnect</h3>
+  <p>Queued items sync automatically, or with <strong>Sync now</strong>. The server runs OCR on captured photos and applies your decisions. A message confirms the result, such as "3 items synced, 1 conflict". If your session has expired, you are asked to sign in first and the items wait.</p>
+  <h3>Conflicts</h3>
+  <p>If an invoice changed while you were offline, for example because a manager approved it, your decision is <em>not</em> applied. It is marked as a conflict on your device and listed for managers on the Pending page to review and mark as resolved.</p>
+  <div class="note">Signed-in pages are not stored in the browser cache. The device keeps only your client names, your pending approvals and your queued items. Signing out removes the cached names and approvals. Queued items stay so unsynced work is not lost.</div>
+</section>
+
+<section id="s15">
+  <h2>15. Administration</h2>
+  <h3>Users and roles</h3>
+  <figure><img src="screenshots/users.png" alt="Users page"><figcaption>Create users with a temporary password; they must change it at first sign-in.</figcaption></figure>
+  <table>
+    <tr><th>Role</th><th>Can do</th></tr>
+    <tr><td>Admin</td><td>Everything, including users, email settings and backups</td></tr>
+    <tr><td>Manager</td><td>All clients, approvals, approval rules, reports, audit log</td></tr>
+    <tr><td>Accountant</td><td>Assigned clients: vendors, review, reports, exports</td></tr>
+    <tr><td>Approver</td><td>Own approval queue only</td></tr>
+    <tr><td>Field staff</td><td>Upload invoices for assigned clients; see own uploads</td></tr>
+  </table>
+  <p>Assign clients to accountants and field staff on their user page. The last active administrator cannot be demoted or deactivated.</p>
+  <h3>Email ingestion</h3>
+  <figure><img src="screenshots/email_config.png" alt="Email settings"><figcaption>IMAP settings for each client, with a connection test and poll status.</figcaption></figure>
+  <ol>
+    <li>For Gmail, turn on 2-Step Verification and create an App Password. Your normal password will not work.</li>
+    <li>Enter <code>imap.gmail.com</code>, port <code>993</code>, the address and the App Password. It is stored encrypted.</li>
+    <li>Press <strong>Test connection</strong>, tick <strong>Listener active</strong>, and save.</li>
+  </ol>
+  <p>A message is marked as read only after its invoices are saved, so a failure does not lose it. Errors show in the status table. The poller is the one feature needing internet access.</p>
+  <h3>Audit log</h3>
+  <figure><img src="screenshots/audit_log.png" alt="Audit log"><figcaption>Searchable by user, entity, details or IP. Times are in IST.</figcaption></figure>
+  <h3>Backup</h3>
+  <figure><img src="screenshots/backup.png" alt="Backup page"><figcaption>Backup Now creates a safe copy of the database while the app runs.</figcaption></figure>
+  <div class="warn">The backup covers the database only. Also copy <code>data/files</code> (your invoices) and <code>instance/secret_key.txt</code> (without it, saved email passwords cannot be read). Keep copies away from the server.</div>
+  <p>To restore: stop the service, replace <code>instance/apsuite.db</code> with the backup file, and start the service.</p>
+</section>
+
+<section id="s16">
+  <h2>16. Troubleshooting</h2>
+  <table>
+    <tr><th>Problem</th><th>What to do</th></tr>
+    <tr><td>"Tesseract OCR is not installed" on the upload page</td><td>Install Tesseract 5 and restart, or set the <code>TESSERACT_CMD</code> environment variable to the full path of <code>tesseract.exe</code>. <strong>Backup &amp; system</strong> shows whether it was found.</td></tr>
+    <tr><td>Fields read poorly</td><td>Retake with better light and a flat page. Scanning at 200-300 DPI works best. Low-confidence fields are marked, so correct them on the review screen.</td></tr>
+    <tr><td>Other devices cannot connect</td><td>Check both are on the same network. Use the server's IP address, not localhost. Allow the port through the firewall. Check that the service is running.</td></tr>
+    <tr><td>Phone will not install the app or has no offline page</td><td>The server must be on HTTPS: see section 13.</td></tr>
+    <tr><td>"No approval rule matches"</td><td>Add a rule covering that amount, category and cost centre. Check that the approver's account is active.</td></tr>
+    <tr><td>Account locked</td><td>Wait 15 minutes, or an administrator presses Unlock on the Users page.</td></tr>
+    <tr><td>"Session expired" on a form</td><td>The page was open a long time. Refresh it and try again.</td></tr>
+    <tr><td>Email not being captured</td><td>See the status table on the Email ingestion page. For Gmail, use an App Password and enable IMAP. Only unread mail with PDF, JPG or PNG attachments is processed.</td></tr>
+    <tr><td>Vendor link does not open for the vendor</td><td>The link works only on your network unless your IT team exposes the server. Have the vendor connect to office Wi-Fi, or capture the details yourself with New vendor. If you expose it to the internet, use HTTPS and take IT advice first.</td></tr>
+    <tr><td>Tally import rejects ledgers</td><td>Create the ledgers in Tally with exactly the same names, or set the GL account on each invoice to match.</td></tr>
+    <tr><td>Saved email password stops working after a restore</td><td>Restore <code>instance/secret_key.txt</code> too, or re-enter the password.</td></tr>
+    <tr><td>Port 5000 already in use</td><td><code>python run.py --port 5050</code>, or choose another port when installing.</td></tr>
+  </table>
+  <p>Logs for the Windows service are in <code>C:\ProgramData\KnowTaxx AP Suite\logs</code>.</p>
+</section>
+
+</main>
+</div>
+</body>
+</html>

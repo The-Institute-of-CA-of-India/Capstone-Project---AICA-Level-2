@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import field, status_badge %}
+{% block title %}Review invoice{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Review invoice</h1>
+    <div class="sub">{{ client.name }} &middot; {{ invoice.original_filename or 'No file' }} &middot; {{ status_badge(invoice.status) }}
+      &middot; OCR confidence <strong>{{ '%d%%'|format((invoice.ocr_confidence_score or 0) * 100) }}</strong></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-secondary" id="accept-all" type="button" data-values='{{ accept_values|tojson }}'>Accept All</button>
+    <a class="btn btn-outline" href="{{ url_for('invoices.detail', invoice_id=invoice.id) }}">Details</a>
+  </div>
+</div>
+
+{% if invoice.notes %}<div class="flash flash-info">{{ invoice.notes }}</div>{% endif %}
+{% for w in warnings %}<div class="flash flash-warning">{{ w }}</div>{% endfor %}
+{% if duplicate_of %}
+<div class="flash flash-danger"><strong>Possible duplicate</strong> of <a href="{{ url_for('invoices.detail', invoice_id=duplicate_of.id) }}" target="_blank" rel="noopener">{{ duplicate_of.display_number }} from {{ duplicate_of.display_vendor }}, {{ duplicate_of.amount|inr }}</a> ({{ duplicate_of.status.replace('_',' ') }}).</div>
+{% endif %}
+{% if unknown_vendor %}
+<div class="flash flash-warning"><strong>Unknown vendor.</strong> No registered vendor has this GSTIN.
+  <a href="{{ url_for('vendors.new_vendor', client_id=client.id, name=invoice.ocr_vendor_name or '', gstin=invoice.ocr_gstin or '') }}" target="_blank" rel="noopener">Register this vendor</a>
+  {% if suggestions %}or link a similar name: {% for v in suggestions %}{{ v.trade_name }}{{ ', ' if not loop.last }}{% endfor %}.{% endif %}
+</div>
+{% elif invoice.vendor and invoice.vendor.status == 'blacklisted' %}
+<div class="flash flash-danger"><strong>Blacklisted vendor:</strong> {{ invoice.vendor.blacklist_reason }}</div>
+{% elif invoice.vendor and invoice.vendor.status == 'pending' %}
+<div class="flash flash-warning">This vendor has not been verified yet.</div>
+{% endif %}
+
+<div class="review-layout">
+  <div class="doc-pane card" style="padding:0" id="doc-viewer">
+    <div class="doc-toolbar">
+      <button class="btn btn-sm btn-outline" type="button" data-zoom-out aria-label="Zoom out">−</button>
+      <span class="small" data-zoom-level>100%</span>
+      <button class="btn btn-sm btn-outline" type="button" data-zoom-in aria-label="Zoom in">+</button>
+      <button class="btn btn-sm btn-outline" type="button" data-zoom-fit>Fit</button>
+      <span data-pager class="actions">
+        <button class="btn btn-sm btn-outline" type="button" data-prev>Prev</button>
+        <span class="small" data-page>Page 1</span>
+        <button class="btn btn-sm btn-outline" type="button" data-next>Next</button>
+      </span>
+      {% if invoice.original_filepath %}<a class="btn btn-sm btn-outline" href="{{ url_for('invoices.original_file', invoice_id=invoice.id) }}">Download</a>{% endif %}
+    </div>
+    <div class="doc-scroll">
+      {% if invoice.original_filepath %}
+      <img src="{{ url_for('invoices.preview', invoice_id=invoice.id) }}" data-src="{{ url_for('invoices.preview', invoice_id=invoice.id) }}" alt="Original invoice">
+      {% else %}<p class="empty">No document attached.</p>{% endif %}
+    </div>
+  </div>
+
+  <form method="post" novalidate id="review-form" class="stack">
+    {{ form.hidden_tag() }}
+    <section class="card">
+      <div class="card-head">
+        <h2>Extracted fields</h2>
+        <div class="legend"><span><i style="background:var(--kt-success)"></i>High</span><span><i style="background:var(--kt-warning)"></i>Check</span><span><i style="background:var(--kt-danger)"></i>Low</span></div>
+      </div>
+      <div class="form-grid cols-2">
+        {{ field(form.final_vendor_name, conf=confidence.get('vendor_name', 0)) }}
+        {{ field(form.vendor_id) }}
+        {{ field(form.final_gstin, conf=confidence.get('gstin', 0)) }}
+        {{ field(form.final_invoice_number, conf=confidence.get('invoice_number', 0)) }}
+        {{ field(form.final_invoice_date, conf=confidence.get('invoice_date', 0)) }}
+        {{ field(form.due_date) }}
+        {{ field(form.final_taxable_amount, conf=confidence.get('taxable_amount', 0)) }}
+        {{ field(form.final_cgst, conf=confidence.get('cgst', 0)) }}
+        {{ field(form.final_sgst, conf=confidence.get('sgst', 0)) }}
+        {{ field(form.final_igst, conf=confidence.get('igst', 0)) }}
+        {{ field(form.final_total_amount, conf=confidence.get('total_amount', 0)) }}
+        <div class="field"><label>Arithmetic check</label><div id="arith-hint" class="arith-hint" aria-live="polite"></div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-bottom:10px">Accounting</h2>
+      <div class="form-grid cols-2">
+        {{ field(form.expense_category) }}
+        {{ field(form.cost_centre_id) }}
+        {{ field(form.gl_account) }}
+        {{ field(form.final_hsn_sac) }}
+        {{ field(form.final_tds_section) }}
+        {{ field(form.final_tds_rate) }}
+        <div class="field span-all help">TDS and category are rule-based suggestions; please confirm them. Section labels use the familiar 1961 Act numbers, now consolidated in s.393 of the Income-tax Act 2025.</div>
+        {{ field(form.final_description, 'span-all') }}
+        {{ field(form.narration, 'span-all') }}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Line items</h2><button class="btn btn-sm btn-outline" id="add-line" type="button">Add line</button></div>
+      <div class="table-wrap"><table id="line-items">
+        <thead><tr><th>Description</th><th>HSN/SAC</th><th>Qty</th><th>Rate</th><th>Taxable</th><th></th></tr></thead>
+        <tbody>
+        {% for li in invoice.line_items %}
+        <tr>
+          <td><input class="line-desc" name="li_description" value="{{ li.description or '' }}" aria-label="Description"></td>
+          <td><input name="li_hsn" value="{{ li.hsn_sac or '' }}" aria-label="HSN or SAC"></td>
+          <td><input name="li_quantity" value="{{ li.quantity if li.quantity is not none else '' }}" aria-label="Quantity" inputmode="decimal"></td>
+          <td><input name="li_unit_price" value="{{ li.unit_price if li.unit_price is not none else '' }}" aria-label="Rate" inputmode="decimal"></td>
+          <td><input name="li_taxable" value="{{ li.taxable_amount if li.taxable_amount is not none else '' }}" aria-label="Taxable" inputmode="decimal"></td>
+          <td><button class="btn btn-sm btn-outline" type="button" data-remove-line aria-label="Remove line">×</button></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <template id="line-template">
+        <tr>
+          <td><input class="line-desc" name="li_description" aria-label="Description"></td>
+          <td><input name="li_hsn" aria-label="HSN or SAC"></td>
+          <td><input name="li_quantity" aria-label="Quantity" inputmode="decimal"></td>
+          <td><input name="li_unit_price" aria-label="Rate" inputmode="decimal"></td>
+          <td><input name="li_taxable" aria-label="Taxable" inputmode="decimal"></td>
+          <td><button class="btn btn-sm btn-outline" type="button" data-remove-line aria-label="Remove line">×</button></td>
+        </tr>
+      </template>
+    </section>
+
+    <section class="card">
+      {% if duplicate_of %}<label class="check"><input type="checkbox" name="confirm_not_duplicate" value="1"> I have compared the documents. This is not a duplicate.</label>{% endif %}
+      <div class="actions">
+        {{ form.submit_approval(class='btn btn-primary') }}
+        {{ form.save(class='btn btn-outline') }}
+      </div>
+    </section>
+
+    <details class="card">
+      <summary>Raw OCR text (audit copy)</summary>
+      <div class="raw-text" style="margin-top:10px">{{ invoice.ocr_raw_text or 'No text was extracted.' }}</div>
+    </details>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/ocr-preview.js') }}"></script>{% endblock %}

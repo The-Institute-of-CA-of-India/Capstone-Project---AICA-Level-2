@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import field %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Budgets</h1><div class="sub">{{ client.name }}. One amount per cost centre per month, used in variance analysis.</div></div>
+  <div class="actions"><a class="btn btn-outline" href="{{ url_for('reports.variance', client_id=client.id) }}">Variance analysis</a></div>
+</div>
+<div class="grid cols-2">
+  <div class="card card-accent">
+    <h2 style="margin-bottom:10px">Set a budget</h2>
+    <form method="post" novalidate class="form-grid cols-2">
+      {{ form.hidden_tag() }}
+      {{ field(form.cost_centre_id, 'span-all') }}
+      {{ field(form.period_year) }}
+      {{ field(form.period_month) }}
+      {{ field(form.budget_amount) }}
+      {{ field(form.gl_account) }}
+      {{ field(form.notes, 'span-all') }}
+      <div>{{ form.submit(class='btn btn-primary') }}</div>
+    </form>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:10px">Saved budgets</h2>
+    {% if rows %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Period</th><th>Cost centre</th><th class="num">Budget</th></tr></thead>
+      <tbody>{% for b in rows %}
+        <tr><td>{{ '%02d'|format(b.period_month) }}/{{ b.period_year }}</td><td>{{ b.cost_centre.name }}</td><td class="num">{{ b.budget_amount|inr }}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No budgets yet.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

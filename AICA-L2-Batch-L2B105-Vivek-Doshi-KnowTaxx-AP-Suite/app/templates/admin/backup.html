@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Backup and system{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Backup &amp; system</h1>
+  <form method="post" action="{{ url_for('admin.run_backup') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-secondary" type="submit">Backup Now</button></form>
+</div>
+<div class="grid cols-2">
+  <div class="card">
+    <h2 style="margin-bottom:10px">Recent backups</h2>
+    {% if backups %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>File</th><th>Created</th><th class="num">Size</th><th></th></tr></thead>
+      <tbody>{% for b in backups %}<tr><td class="mono small">{{ b.name }}</td><td>{{ b.when }}</td><td class="num">{{ b.size }}</td><td class="right"><a class="btn btn-sm btn-outline" href="{{ url_for('admin.download_backup', name=b.name) }}">Download</a></td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<p class="empty">No backups yet.</p>{% endif %}
+    <p class="small muted" style="margin:10px 0 0">A backup covers the database. Also back up the uploaded files in <code>data/files</code>, and <code>instance/secret_key.txt</code> so that saved email passwords stay readable.</p>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:10px">System</h2>
+    <dl class="facts">
+      <div><dt>Version</dt><dd>{{ info.version }}</dd></div>
+      <div><dt>Uptime</dt><dd>{{ info.uptime }}</dd></div>
+      <div><dt>Database size</dt><dd>{{ info.db_size }}</dd></div>
+      <div><dt>File storage</dt><dd>{{ info.file_size }}</dd></div>
+      <div><dt>Python</dt><dd>{{ info.python }}</dd></div>
+      <div><dt>Tesseract OCR</dt><dd>{% if info.ocr.available %}<span class="badge badge-success">Found</span>{% else %}<span class="badge badge-danger">Not found</span>{% endif %}</dd></div>
+      <div><dt>Backup folder</dt><dd class="mono small">{{ info.backup_dir }}</dd></div>
+    </dl>
+  </div>
+</div>
+{% endblock %}

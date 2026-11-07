@@ -1,0 +1,76 @@
+{% from 'components/_macros.html' import logo, icon %}
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <div class="brand">
+    <a href="{{ url_for('main.index') }}">{{ logo(190) }}<span class="tagline">Knowledge Backed Innovative Solutions</span></a>
+  </div>
+  {% set ep = request.endpoint or '' %}
+  {% set role = current_user.role %}
+  {% set office = role in ('admin','manager','accountant') %}
+
+  {% if office %}
+  <div class="nav-group">
+    <div class="nav-title">Practice</div>
+    <a class="nav-link {{ 'active' if ep in ('clients.list_clients','clients.new_client') }}" href="{{ url_for('clients.list_clients') }}">{{ icon('building') }} Clients</a>
+  </div>
+  {% endif %}
+
+  {% if active_client %}
+  {% set cid = active_client.id %}
+  <div class="nav-group">
+    <div class="nav-title">{{ active_client.code }} &middot; {{ active_client.name|truncate(24, true, '…') }}</div>
+    {% if office %}
+    <a class="nav-link {{ 'active' if ep == 'clients.detail' }}" href="{{ url_for('clients.detail', client_id=cid) }}">{{ icon('home') }} Overview</a>
+    <a class="nav-link {{ 'active' if ep == 'reports.dashboard' }}" href="{{ url_for('reports.dashboard', client_id=cid) }}">{{ icon('chart') }} Dashboard</a>
+    <a class="nav-link {{ 'active' if ep.startswith('vendors.') }}" href="{{ url_for('vendors.list_vendors', client_id=cid) }}">{{ icon('users') }} Vendors{% if pending_vendor_count %}<span class="count">{{ pending_vendor_count }}</span>{% endif %}</a>
+    {% endif %}
+    {% if office or role == 'field_staff' %}
+    <a class="nav-link {{ 'active' if ep == 'invoices.upload' }}" href="{{ url_for('invoices.upload', client_id=cid) }}">{{ icon('upload') }} Upload invoice</a>
+    <a class="nav-link {{ 'active' if ep in ('invoices.list_invoices','invoices.review','invoices.detail') }}" href="{{ url_for('invoices.list_invoices', client_id=cid) }}">{{ icon('file') }} Invoices{% if review_count %}<span class="count">{{ review_count }}</span>{% endif %}</a>
+    {% endif %}
+    {% if office %}
+    <a class="nav-link {{ 'active' if ep == 'clients.cost_centres' }}" href="{{ url_for('clients.cost_centres', client_id=cid) }}">{{ icon('tree') }} Cost centres</a>
+    <a class="nav-link {{ 'active' if ep == 'clients.budgets' }}" href="{{ url_for('clients.budgets', client_id=cid) }}">{{ icon('wallet') }} Budgets</a>
+    {% endif %}
+    {% if role in ('admin','manager') %}
+    <a class="nav-link {{ 'active' if ep == 'approvals.matrix' }}" href="{{ url_for('approvals.matrix', client_id=cid) }}">{{ icon('rules') }} Approval matrix</a>
+    {% endif %}
+  </div>
+  {% if office %}
+  <div class="nav-group">
+    <div class="nav-title">Reports</div>
+    <a class="nav-link {{ 'active' if ep == 'reports.cost_centre' }}" href="{{ url_for('reports.cost_centre', client_id=cid) }}">{{ icon('tree') }} Cost centre spend</a>
+    <a class="nav-link {{ 'active' if ep == 'reports.variance' }}" href="{{ url_for('reports.variance', client_id=cid) }}">{{ icon('scale') }} Variance analysis</a>
+    <a class="nav-link {{ 'active' if ep == 'reports.aging' }}" href="{{ url_for('reports.aging', client_id=cid) }}">{{ icon('calendar') }} AP aging &amp; MSMED</a>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {% if role != 'field_staff' %}
+  <div class="nav-group">
+    <div class="nav-title">Approvals</div>
+    <a class="nav-link {{ 'active' if ep == 'approvals.pending' }}" href="{{ url_for('approvals.pending') }}">{{ icon('check') }} Pending{% if pending_count %}<span class="count">{{ pending_count }}</span>{% endif %}</a>
+    <a class="nav-link {{ 'active' if ep == 'approvals.history' }}" href="{{ url_for('approvals.history') }}">{{ icon('clock') }} History</a>
+  </div>
+  {% endif %}
+
+  {% if role in ('admin','manager') %}
+  <div class="nav-group">
+    <div class="nav-title">Administration</div>
+    {% if role == 'admin' %}
+    <a class="nav-link {{ 'active' if ep in ('admin.users','admin.new_user','admin.edit_user') }}" href="{{ url_for('admin.users') }}">{{ icon('users') }} Users</a>
+    <a class="nav-link {{ 'active' if ep == 'admin.roles' }}" href="{{ url_for('admin.roles') }}">{{ icon('shield') }} Roles</a>
+    <a class="nav-link {{ 'active' if ep == 'admin.email_config' }}" href="{{ url_for('admin.email_config') }}">{{ icon('mail') }} Email ingestion</a>
+    <a class="nav-link {{ 'active' if ep == 'admin.backup' }}" href="{{ url_for('admin.backup') }}">{{ icon('db') }} Backup &amp; system</a>
+    {% endif %}
+    <a class="nav-link {{ 'active' if ep == 'admin.audit_log' }}" href="{{ url_for('admin.audit_log') }}">{{ icon('log') }} Audit log</a>
+  </div>
+  {% endif %}
+
+  <div class="nav-group">
+    <div class="nav-title">Device</div>
+    <a class="nav-link" href="{{ url_for('main.offline') }}">{{ icon('offline') }} Offline capture</a>
+    <a class="nav-link {{ 'active' if ep == 'auth.change_password' }}" href="{{ url_for('auth.change_password') }}">{{ icon('key') }} Change password</a>
+  </div>
+  <div class="sidebar-foot">KnowTaxx AP Suite v{{ app_version }}</div>
+</aside>
+<div id="sidebar-scrim"></div>

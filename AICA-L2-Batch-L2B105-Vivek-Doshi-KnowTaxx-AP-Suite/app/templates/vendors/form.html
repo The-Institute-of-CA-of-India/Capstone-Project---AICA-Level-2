@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% from 'components/_macros.html' import field %}
+{% block title %}{{ 'Edit vendor' if vendor else 'New vendor' }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ 'Edit ' + vendor.trade_name if vendor else 'New vendor' }}</h1><div class="sub">{{ client.name }}</div></div></div>
+{% if duplicates %}
+<div class="flash flash-warning">
+  <strong>Possible duplicates found:</strong>
+  <ul style="margin:6px 0 0;padding-left:18px">
+    {% for v, why in duplicates %}<li><a href="{{ url_for('vendors.detail', client_id=client.id, vendor_id=v.id) }}" target="_blank" rel="noopener">{{ v.code }} {{ v.trade_name }}</a>: {{ why }}</li>{% endfor %}
+  </ul>
+  <div style="margin-top:6px">Tick the confirmation at the end of the form to save anyway.</div>
+</div>
+{% endif %}
+<div class="card">
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="form-grid cols-3">
+      {{ field(form.trade_name) }}
+      {{ field(form.legal_name) }}
+      {{ field(form.category) }}
+      {{ field(form.pan) }}
+      {{ field(form.gstin) }}
+      {{ field(form.msme_registered) }}
+      {{ field(form.udyam_number) }}
+      {{ field(form.bank_account_no) }}
+      {{ field(form.bank_ifsc) }}
+      {{ field(form.bank_branch) }}
+      {{ field(form.contact_person) }}
+      {{ field(form.contact_email) }}
+      {{ field(form.contact_phone) }}
+      {{ field(form.address, 'span-all') }}
+      {{ field(form.notes, 'span-all') }}
+      {% if duplicates %}{{ field(form.confirm_duplicate, 'span-all') }}{% endif %}
+    </div>
+    <div class="actions" style="margin-top:14px">
+      {{ form.submit(class='btn btn-primary') }}
+      <a class="btn btn-outline" href="{{ url_for('vendors.detail', client_id=client.id, vendor_id=vendor.id) if vendor else url_for('vendors.list_vendors', client_id=client.id) }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

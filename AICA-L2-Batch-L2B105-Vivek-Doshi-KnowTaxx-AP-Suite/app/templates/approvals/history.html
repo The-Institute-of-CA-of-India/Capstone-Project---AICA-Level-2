@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% from 'components/_pagination.html' import pager %}
+{% block title %}Approval history{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Approval history</h1></div>
+<div class="card">
+  {% if page.items %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>When</th><th>Action</th><th>Invoice</th><th>Client</th><th>Vendor</th><th class="num">Amount</th><th>By</th><th>Comment</th></tr></thead>
+    <tbody>{% for l in page.items %}
+      {% set kinds = {'approved':'success','rejected':'danger','queried':'warning','submitted':'info'} %}
+      <tr><td>{{ l.acted_at|ist }}</td><td><span class="badge badge-{{ kinds.get(l.action,'') }}">{{ l.action|title }}{% if l.level %} L{{ l.level }}{% endif %}</span></td>
+      <td><a href="{{ url_for('invoices.detail', invoice_id=l.invoice_id) }}">{{ l.invoice.display_number }}</a></td><td>{{ l.invoice.client.code }}</td>
+      <td>{{ l.invoice.display_vendor }}</td><td class="num">{{ l.invoice.amount|inr }}</td><td>{{ l.actor.full_name }}</td><td>{{ l.comments or '-' }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {{ pager(page, 'approvals.history') }}
+  {% else %}<p class="empty">No approval activity yet.</p>{% endif %}
+</div>
+{% endblock %}
