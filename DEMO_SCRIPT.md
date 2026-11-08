@@ -1,106 +1,82 @@
-# Demo Script: Presenting and Recording
+# BG Tracker: 5-Minute Video Script
 
-Total time about 7 minutes. Each scene gives what to **do** on screen and what to **say**. Read the "say" lines in your own words.
+**Before you record**
+1. Open the app and go to **Settings → Reset demo data** so every date is fresh relative to today.
+2. Don't read numbers from this script. Read them off the screen, because they depend on the day you record.
+3. Browser zoom around 90–100%, notifications off, desktop width.
+4. If you need to re-record, click **Reset demo data** again. Running the daily check uses up the pending drafts.
 
-## Setup before you record
-
-1. Open a terminal in the project folder and run:
-   ```
-   python prepare_demo.py --launch
-   ```
-   This builds a clean `demo_workspace` folder with the fictional data and opens the tool. You can repeat this command to reset everything for another take.
-2. Keep the demo folder open in File Explorer in a second window (to pick files and show the checked output).
-3. Passkey for the demo: `Demo@1234`.
-4. Recording: on Windows press **Win + G** (Xbox Game Bar) or use OBS Studio. Record at 1080p with the microphone on, close notifications and other windows, and zoom the screen to 125 percent if text looks small.
-5. Optional second window: a terminal ready to run `python tests/test_vendor_name_matching.py` for the closing scene.
+Total speaking time is about 4:45. Pace is roughly 130 words per minute.
 
 ---
 
-## Scene 1: The problem (0:00 to 0:45)
+## 0:00 – 0:35 | The problem (Dashboard on screen, don't click yet)
 
-**Do:** Show the tool window, still empty.
+"I'm a Chartered Accountant, and one task that quietly goes wrong in many offices is tracking bank guarantees. Two things happen. A guarantee lapses before it's renewed, which puts a contract at risk. Or the contract ends, but nobody follows up on getting the original back, so the bank keeps our client's margin or FDR blocked and keeps charging commission. Nothing 'expires' on the second one, so it's easy to miss. This is BG Tracker, a tool I built for my Level 2 AI training to fix that."
 
-**Say:** "Before a bulk payment goes out, someone has to confirm that every account number really belongs to the vendor on the payment. Done by eye, this is slow, and the dangerous error is easy to miss: a valid account that belongs to the wrong party. This tool, Vendor Name Matching, does that check in seconds and leaves a record."
+## 0:35 – 1:35 | Dashboard
 
-## Scene 2: Tour of the window (0:45 to 1:15)
+"This is the dashboard. These cards show total exposure, the margin and FDR blocked with banks, guarantees expiring in the next 30 days, overdue releases, and commission falling due in 15 days. Hover over the info icon on a card to see exactly how it's calculated."
 
-**Do:** Point to the four buttons and the three cards.
+*(Point at "Needs attention".)*
 
-**Say:** "There are four actions: check a payment file, reset, edit the vendor master, and open the output folder. The cards show total, matched and not matched. Everything runs on a master vendor list kept in one folder."
+"This table is the day's to-do list. Red means expired but the original hasn't come back. Amber means expiring soon. The top one is well past its expiry, and even the claim period is over, so that is the one to chase first."
 
-## Scene 3: A mixed payment file (1:15 to 3:00)
+*(Scroll to heat strip, then charts.)*
 
-**Do:** Click **Select Payment File and Check**, choose `Payment_Demo_Mixed.xlsx` from the demo folder. Wait for the popup, then click OK.
+"This strip shows the next 90 days, one box per day, so I can see clusters of expiries at a glance. Below are exposure by bank, status mix, expiry timeline for the next twelve months and the split by guarantee type."
 
-**Say:** "Twelve payments. Five matched, seven not matched." Then walk down the rows:
+## 1:35 – 2:35 | BG Register
 
-- **Rows 1 to 5 (green):** "These matched even though the data is written differently: 'Private Limited' instead of 'Pvt Ltd', capital letters, 'and' instead of an ampersand, a lower case IFSC, spaces and hyphens inside the account number, and an account number starting with zeros. The tool cleans all of this before comparing."
-- **Rows 6 and 7:** "A wrong last digit in the account number, and a wrong IFSC. Neither is in the master."
-- **Rows 8 and 9, the important ones:** "Here the bank details are valid but they belong to a different vendor. Row 9 uses Nova Safety's account under Kaveri Aggregates' name. The remark shows the registered name, so the reviewer sees the problem immediately. A name only check would have passed this."
-- **Rows 10 to 12:** "Missing IFSC, missing name, missing account number."
+*(Click BG Register.)*
 
-**Do:** Click **Open Output Folder**, open the new `Payment_Demo_Mixed_Checked_...xlsx` in Excel.
+"Here is the full register. I can search by BG number, client or beneficiary, and filter by bank, type, status or expiry window."
 
-**Say:** "The result is saved as a new file with Status and Remarks added. The original is never changed, and every run is a separate record."
+*(Filter: Expiry ≤ 30 days, then clear it.)*
 
-## Scene 4: A clean file (3:00 to 3:30)
+*(Click a row to open the drawer.)*
 
-**Do:** Click **Reset**. Check `Payment_Demo_AllMatched.xlsx`.
+"Clicking a guarantee opens everything about it: amount, margin, FDR number, commission, the lifecycle timeline, any extensions, linked reminders and the audit trail. From here I can record an extension, mark the original as returned, request release, or mark it discharged."
 
-**Say:** "Reset clears the screen for the next file. This file is clean: five out of five matched."
+*(Click Record extension, show the dialog, fill a new expiry, save.)*
 
-**Print check (optional, 30 seconds):** Click **Print Verified PDF**. Say: "Every line is matched, so the PDF is created with all the columns from the original file." Click **No** when asked to open it, or **Yes** to show it. To show the control, Reset, check `Payment_Demo_Mixed.xlsx` and click **Print Verified PDF**: "Seven lines are not matched, so printing is refused and no PDF is created."
+"Recording an extension saves the amendment history, updates the expiry and the claim period, and writes to the audit log. There's also an Add BG form with validation: for example expiry must be after issue date, and the BG number must be unique."
 
-## Scene 5: A vendor that is not yet in the master (3:30 to 4:00)
+## 2:35 – 4:10 | Reminders, the core of the tool
 
-**Do:** Click **Reset**. Check `Payment_Demo_NewVendors.xlsx`.
+*(Click Reminders.)*
 
-**Say:** "Three new vendors, none of them in the master yet, so all three are flagged. Now I will add them the proper way." Click **Reset**.
+"This is the heart of the tool. The system works out what needs to be said, to whom and when, using five simple rules."
 
-## Scene 6: Admin access to the master (4:00 to 4:30)
+*(Click Run daily check.)*
 
-**Do:** Click **Edit Vendor Master**. Set the passkey `Demo@1234` twice.
+"I click Run daily check, which simulates the job that would run every morning. It creates a batch of draft emails. The rules are: 60, 30, 15 and 7 days before expiry, it writes to my team and the client. On expiry day, it writes to the client. After expiry, if the original hasn't come back, it politely asks the beneficiary to return it or issue a release letter. Once the release letter is in, it drafts a formal request to the bank to cancel the guarantee, release the margin or FDR lien and confirm closure. And if the claim period is about to end with the original still outstanding, it escalates to my team."
 
-**Say:** "The master is the control point of the whole process, so editing it needs an admin passkey. It is set on first use, stored only as a salted hash, and three wrong attempts lock the editor for a minute."
+*(Open one draft with View & edit.)*
 
-## Scene 7: Duplicates are not allowed (4:30 to 5:10)
+"Each draft is a complete, professionally worded email with the guarantee details filled in. Nothing goes out automatically. I read it, edit it if needed, and then approve or dismiss."
 
-**Do:** Click **Add Row**. Type the name `Sunrise Cement Pvt Ltd`, the IFSC `HDFC0001234` and the account number `50100123456789`. A warning appears. Click OK. Then click **Save Master**.
+*(Click Approve & send.)*
 
-**Say:** "I am entering a vendor that already exists. The tool warns me at once, highlights both rows in red, and refuses to save. The same account and IFSC can never be in the master twice, even if the spacing or the vendor name is different. Otherwise a payment could match against either name." Select the new row and click **Delete Selected Row(s)**.
+"In this demo, sending is simulated, and the app says so. In production the same approval would send a real email."
 
-## Scene 8: Bulk upload (5:10 to 6:00)
+*(Click Dismiss on another, then show the Sent and Dismissed tabs.)*
 
-**Do:** Click **Bulk Upload**, choose `Bulk_Upload_Demo.xlsx`, click **Add to Existing**. Read the summary.
+## 4:10 – 4:35 | Audit Log
 
-**Say:** "This file has its columns in a different order and an extra column, and the tool still reads it, because it matches columns by name. Three vendors added. Two duplicates skipped. One row skipped because the account already belongs to another vendor under a different name. One incomplete row skipped. Nothing is saved yet, so I can review."
+*(Click Audit Log.)*
 
-**Do:** Click **Save Master**, then OK. Point to the backup path in the message.
+"Every action lands in the audit log: the daily check, each approval, each dismissal and each extension. For a professional practice, that trail matters."
 
-**Say:** "Saving makes an automatic backup of the previous master first."
+## 4:35 – 5:00 | Wrap-up
 
-**Do (optional, 15 seconds):** Click **Download Master** and show the Excel export. Click **Close**.
-
-## Scene 9: Proof that the master drives the result (6:00 to 6:30)
-
-**Do:** Check `Payment_Demo_NewVendors.xlsx` again.
-
-**Say:** "The same file that failed earlier now shows three out of three matched, because the master was updated. That is the point: the check is only as good as the master, and the master is protected."
-
-## Scene 10: Quality and close (6:30 to 7:00)
-
-**Do:** Switch to the terminal and run `python tests/test_vendor_name_matching.py`. Let it finish with `OK`.
-
-**Say:** "The tool is backed by 43 automated tests covering matching, duplicates, the passkey, bulk upload and the editor window, plus demo data with the correct answer for every row. It is limited to Excel files and uses strict name matching on purpose. Next steps would be CSV support and review suggestions for near matches. Thank you."
+"To summarise: one dashboard for exposure and deadlines, a register with full history, and reminders that are drafted for me but approved by a human. It's built with Lovable and Supabase, with tests for the reminder rules. Next steps are running the daily check on a schedule with n8n, sending real emails, and reading BG documents with AI. Everything here uses fictional data, and any real use would need login and access controls. Thank you."
 
 ---
 
-## Checklist for the reviewer demo
+## Tips for a clean recording
 
-- [ ] Mixed file: 12 rows, 5 Matched, 7 Not Matched
-- [ ] Rows 8 and 9 show the registered vendor name in Remarks
-- [ ] Duplicate entry is blocked and Save is refused
-- [ ] Bulk upload summary: 3 added, 2 duplicates, 1 name conflict, 1 incomplete
-- [ ] New vendors file: 0 Matched before, 3 Matched after
-- [ ] Print Verified PDF is refused for the mixed file and creates a PDF for the all matched file
-- [ ] All 43 tests pass
+- Rehearse once with Reset demo data between takes.
+- If you want to show the AI angle, add one line: "The email drafting follows rule-based templates today; the roadmap adds LLM-based extraction of BG documents."
+- Keep the cursor still while you talk, and move it only when you click.
+- End on the Dashboard so the final frame is the strongest visual.
