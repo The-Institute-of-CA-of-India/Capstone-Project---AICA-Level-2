@@ -1,0 +1,169 @@
+rules_version = '2';
+
+/*
+ * Firestore security rules - these, not the app's buttons, are what protect patient data.
+ * Roles live in /users/{uid}.role: owner | doctor | reception | none, with status active | pending | disabled.
+ * Read docs/SECURITY.md before changing anything.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers
+    function signedIn() { return request.auth != null; }
+    function userPath(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function hasProfile() { return signedIn() && exists(userPath(request.auth.uid)); }
+    function me() { return get(userPath(request.auth.uid)).data; }
+    function isActive() { return hasProfile() && me().status == 'active'; }
+    function isOwner() { return isActive() && me().role == 'owner'; }
+    function isClinician() { return isActive() && me().role in ['owner', 'doctor']; }
+    function isStaff() { return isActive() && me().role in ['owner', 'doctor', 'reception']; }
+    function initialised() { return exists(/databases/$(database)/documents/meta/init); }
+    function byMe() { return request.resource.data.createdBy == request.auth.uid; }
+    function unchanged(f) { return request.resource.data[f] == resource.data[f]; }
+
+    // An invitation is keyed by the person's VERIFIED e-mail (lower-case) or phone number (E.164).
+    function inviteKeys() {
+      return (('email' in request.auth.token) && request.auth.token.email_verified == true
+                ? [request.auth.token.email.lower()] : [])
+           .concat(('phone_number' in request.auth.token) ? [request.auth.token.phone_number] : []);
+    }
+    function inviteMine(key) { return key in inviteKeys(); }
+    function inviteRole(key) { return get(/databases/$(database)/documents/invites/$(key)).data.role; }
+    function invitedAs(role) {
+      return ('email' in request.auth.token) && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/invites/$(request.auth.token.email.lower()))
+        && inviteRole(request.auth.token.email.lower()) == role;
+    }
+    function invitedByPhone(role) {
+      return ('phone_number' in request.auth.token)
+        && exists(/databases/$(database)/documents/invites/$(request.auth.token.phone_number))
+        && inviteRole(request.auth.token.phone_number) == role;
+    }
+
+    // ---------- first-run marker: created once, in the same batch as the first owner
+    match /meta/{doc} {
+      allow get: if signedIn();
+      allow create: if doc == 'init' && signedIn() && !initialised()
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && existsAfter(userPath(request.auth.uid))
+                    && getAfter(userPath(request.auth.uid)).data.role == 'owner';
+      allow update, delete: if false;
+    }
+
+    // ---------- users
+    match /users/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isOwner());
+      allow list: if isOwner();
+
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasOnly(['uid','displayName','email','phone','role','status','createdAt','lastLoginAt'])
+        && (
+          // 1. the very first user becomes the owner (and must create /meta/init in the same batch)
+          (!initialised() && request.resource.data.role == 'owner' && request.resource.data.status == 'active'
+              && existsAfter(/databases/$(database)/documents/meta/init))
+          // 2. an invited person gets exactly the invited role
+          || (request.resource.data.status == 'active' && request.resource.data.role in ['doctor','reception','owner']
+              && initialised() && (invitedAs(request.resource.data.role) || invitedByPhone(request.resource.data.role)))
+          // 3. everyone else can only ask for access
+          || (initialised() && request.resource.data.role == 'none' && request.resource.data.status == 'pending')
+        );
+
+      // owner manages others (never their own role/status, so the clinic cannot lock itself out);
+      // everyone may refresh their own last-sign-in time.
+      allow update: if (isOwner() && uid != request.auth.uid)
+        || (request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt','displayName']));
+      allow delete: if false;
+    }
+
+    match /invites/{key} {
+      allow get: if isOwner() || (signedIn() && inviteMine(key));
+      allow list: if isOwner();
+      allow create, update: if isOwner() && request.resource.data.role in ['doctor','reception','owner'];
+      allow delete: if isOwner();
+    }
+
+    // ---------- clinic settings (price list, branding, tax)
+    match /settings/{doc} {
+      allow read: if isStaff();
+      allow create: if doc == 'clinic' && (isOwner()
+          || (!initialised() && existsAfter(userPath(request.auth.uid)) && getAfter(userPath(request.auth.uid)).data.role == 'owner'));
+      allow update: if isOwner();
+      allow delete: if false;
+    }
+    match /services/{id} {
+      allow read: if isStaff();
+      allow write: if isOwner();
+    }
+
+    // ---------- sequential numbers: may only go up by exactly one
+    match /counters/{id} {
+      allow read: if isStaff();
+      allow create: if isStaff() && request.resource.data.next == 2;
+      allow update: if isStaff() && request.resource.data.next == resource.data.next + 1;
+      allow delete: if false;
+    }
+
+    // ---------- patients (records are never deleted from the app - see docs/SECURITY.md)
+    match /patients/{id} {
+      allow read: if isStaff();
+      allow create: if isStaff() && byMe() && request.resource.data.name is string && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() < 200;
+      allow update: if isStaff() && request.resource.data.name is string && request.resource.data.name.size() > 0
+                    && unchanged('createdBy') && unchanged('createdAt');
+      allow delete: if false;
+
+      match /files/{fid} {
+        allow read: if isStaff();
+        allow create: if isStaff() && request.resource.data.uploadedBy == request.auth.uid;
+        allow delete: if isClinician();
+        allow update: if false;
+      }
+    }
+
+    // ---------- visits / invoices
+    match /visits/{id} {
+      allow read: if isStaff();
+      allow create: if isStaff() && byMe() && request.resource.data.patientId is string;
+      allow update: if isStaff()
+        && unchanged('invoiceNo') && unchanged('shareKey') && unchanged('patientId') && unchanged('createdBy')
+        // a void invoice can only be touched by the owner, and only the owner can void / restore
+        && (resource.data.get('void', false) == false || isOwner())
+        && (request.resource.data.get('void', false) == resource.data.get('void', false) || isOwner());
+      allow delete: if false;
+    }
+
+    match /appointments/{id} {
+      allow read: if isStaff();
+      allow create: if isStaff() && byMe();
+      allow update: if isStaff() && unchanged('createdBy');
+      allow delete: if isOwner();
+    }
+
+    // only doctors / owner write prescriptions
+    match /prescriptions/{id} {
+      allow read: if isStaff();
+      allow create, update: if isClinician() && request.resource.data.visitId == id;
+      allow delete: if isClinician();
+    }
+
+    // The patient-facing invoice behind a WhatsApp / e-mail link. Anyone holding the 40-character
+    // random key can GET that one document; nobody can list or search them.
+    match /publicInvoices/{key} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isStaff() && request.resource.data.key == key;
+      allow delete: if false;
+    }
+
+    // append-only audit trail
+    match /activityLog/{id} {
+      allow read: if isOwner();
+      allow create: if isStaff() && request.resource.data.by == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
