@@ -1,0 +1,26 @@
+Dear Participants,
+
+Greetings from the AI Committee of ICAI!
+
+This is to inform you that, due to certain technical reasons, we have changed the GitHub repository for AICA Level-2 Capstone Project submissions.
+
+✅ Participants who have not yet submitted their Capstone Projects are requested to follow the steps below:
+
+Step 1: Submit your Capstone Project on the New GitHub Repository:
+🔗 https://github.com/The-Institute-of-CA-of-India/Capstone-Project---AICA-Level-2
+
+Step 2: After submitting your project on GitHub, fill out the Google Form:
+📝 https://forms.gle/P9TdhPRs9VZaXuzr6
+
+📌 Important Notes:
+
+The Google Form link remains unchanged.
+
+Participants who have already completed their Capstone Project submission need not submit again.
+
+Participants with pending submissions should use the new GitHub repository only.
+
+We regret any inconvenience caused and appreciate your cooperation.
+
+Best Regards,
+AI Committee of ICAI
