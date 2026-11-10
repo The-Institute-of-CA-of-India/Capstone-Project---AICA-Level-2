@@ -1,0 +1,9 @@
+{
+  "apiKey": "PASTE_YOUR_API_KEY",
+  "authDomain": "YOUR-PROJECT-ID.firebaseapp.com",
+  "projectId": "YOUR-PROJECT-ID",
+  "storageBucket": "YOUR-PROJECT-ID.firebasestorage.app",
+  "messagingSenderId": "PASTE_SENDER_ID",
+  "appId": "PASTE_APP_ID",
+  "firestoreDatabaseId": ""
+}

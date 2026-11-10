@@ -1,0 +1,37 @@
+rules_version = '2';
+
+/*
+ * Cloud Storage rules.
+ *  - branding/  : the clinic logo. Anyone can read it (it appears on the public invoice page); only the owner can change it.
+ *  - patients/  : scans and reports. Active staff only. Images and PDFs, up to 10 MB.
+ * Roles are looked up in Firestore (/users/{uid}), so these rules need the one-time cross-service permission
+ * described in README step 7.
+ */
+service firebase.storage {
+  match /b/{bucket}/o {
+    function userDoc() { return /databases/(default)/documents/users/$(request.auth.uid); }
+    function active() {
+      return request.auth != null && firestore.exists(userDoc()) && firestore.get(userDoc()).data.status == 'active';
+    }
+    function role() { return firestore.get(userDoc()).data.role; }
+    function isOwner() { return active() && role() == 'owner'; }
+    function isStaff() { return active() && role() in ['owner', 'doctor', 'reception']; }
+    function isClinician() { return active() && role() in ['owner', 'doctor']; }
+
+    match /branding/{file} {
+      allow read: if true;
+      allow write: if isOwner() && request.resource.size < 2 * 1024 * 1024 && request.resource.contentType.matches('image/(png|jpeg|webp)');
+      allow delete: if isOwner();
+    }
+
+    match /patients/{patientId}/{file} {
+      allow read: if isStaff();
+      allow create: if isStaff() && request.resource.size < 10 * 1024 * 1024
+                    && request.resource.contentType.matches('(image/(png|jpeg|webp|heic|heif)|application/pdf)');
+      allow update: if false;
+      allow delete: if isClinician();
+    }
+
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}
