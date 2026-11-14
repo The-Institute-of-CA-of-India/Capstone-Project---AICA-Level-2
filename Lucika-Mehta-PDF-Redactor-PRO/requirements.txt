@@ -1,0 +1,13 @@
+# PyMuPDF 2.0 moves neighbouring text when redacting; 1.28.2 is verified.
+pymupdf==1.28.2
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+numpy>=2.4
+Pillow>=10.0
+# 4.13 ships the face-detection model and allows NumPy 2.4+ (older NumPy fails to import on some Windows PCs)
+opencv-python-headless==4.13.0.92
+openpyxl>=3.1
+python-docx>=1.1
+xlrd>=2.0
+reportlab>=4.0
