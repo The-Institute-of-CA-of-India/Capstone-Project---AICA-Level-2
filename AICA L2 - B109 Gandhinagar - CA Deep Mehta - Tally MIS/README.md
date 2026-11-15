@@ -32,7 +32,8 @@ screens, custom KPI formulas, ledger-mapping editor, CSV/Excel export.
 ## Install and run
 
 ### Option A — the EXE (easiest)
-1. Build it once (see *Build the EXE* below). The 68 MB `TallyMIS.exe` is not stored in this repository.
+1. Use the ready-made `dist/TallyMIS.exe` (68 MB, included in this repository), or build it yourself (see *Build the EXE* below).
+   SHA-256 of the included file: `0B5B4DB82A5A986C1DCE3C8E51F0CF7ED1B8B29173CCBAB9234DEEB9285BC783`. Windows SmartScreen may warn because the file is not code-signed: choose *More info → Run anyway*.
 2. Double-click `TallyMIS.exe`. A window opens. Needs **Windows 10/11 with the Edge WebView2 runtime** (already on Windows 11).
 3. **Data sources → Load demo company** to explore immediately, or keep TallyPrime open and use **Sync from Tally**.
 
