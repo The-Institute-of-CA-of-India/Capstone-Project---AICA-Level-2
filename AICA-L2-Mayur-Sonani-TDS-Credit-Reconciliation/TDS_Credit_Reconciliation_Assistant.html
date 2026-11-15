@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TDS Credit Reconciliation Assistant</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#fff; --ink:#1b2430; --muted:#5f6b7a; --line:#dde3ea;
+    --brand:#1f4e79; --brand2:#2f6ea8; --ok:#1e7d4f; --okbg:#e6f4ec; --warn:#9a6200; --warnbg:#fff4dc;
+    --bad:#b42318; --badbg:#fde8e6; --info:#1f4e79; --infobg:#e7eff8; --grey:#eef1f4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{background:var(--brand);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  header h1{margin:0;font-size:20px;font-weight:600}
+  header .tag{font-size:12.5px;opacity:.85;margin-top:3px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .badge.local{background:#dff3e8;color:#0f5132}
+  .badge.cloud{background:#fff0d1;color:#7a4b00}
+  .badge.off{background:#e9edf2;color:#3d4a5a}
+  nav{display:flex;gap:4px;padding:0 28px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}
+  nav button{background:none;border:none;border-bottom:3px solid transparent;padding:13px 14px;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap}
+  nav button.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+  nav button .cnt{background:var(--grey);color:var(--ink);border-radius:999px;padding:1px 7px;font-size:11px;margin-left:5px}
+  main{padding:22px 28px 60px;max-width:1400px;margin:0 auto}
+  .tab{display:none}.tab.active{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 4px}
+  .card .sub{color:var(--muted);font-size:12.5px;margin-bottom:12px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .kpi .l{font-size:12px;color:var(--muted)} .kpi .v{font-size:20px;font-weight:650;margin-top:4px;font-variant-numeric:tabular-nums}
+  .kpi.bad .v{color:var(--bad)} .kpi.ok .v{color:var(--ok)}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:0 0 4px}
+  input[type=text],input[type=number],input[type=password],input[type=email],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font:inherit;background:#fff;color:var(--ink)}
+  textarea{min-height:260px;font-family:inherit;font-size:13px;line-height:1.5}
+  .drop{border:1.5px dashed #b8c4d2;border-radius:9px;padding:14px;background:#fafbfd}
+  .drop .t{font-weight:600;margin-bottom:3px}.drop .h{font-size:12px;color:var(--muted);margin-bottom:9px}
+  .drop .f{font-size:12px;color:var(--ok);margin-top:7px;min-height:16px}
+  button.btn{background:var(--brand);color:#fff;border:none;border-radius:7px;padding:9px 15px;font:inherit;font-weight:600;cursor:pointer}
+  button.btn:hover{background:var(--brand2)}
+  button.btn:disabled{background:#a9b4c0;cursor:not-allowed}
+  button.sec{background:#fff;color:var(--brand);border:1px solid #b9c8d8}
+  button.sec:hover{background:var(--infobg)}
+  button.ai{background:#5b3fb3}button.ai:hover{background:#6c51c7}
+  button.sm{padding:6px 10px;font-size:12.5px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .spacer{flex:1}
+  table{border-collapse:collapse;width:100%;font-size:12.8px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+  th{background:#f2f5f8;font-weight:600;position:sticky;top:0;z-index:1;white-space:nowrap}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tblwrap{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:8px}
+  .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;margin:1px 3px 1px 0;white-space:nowrap}
+  .c-ok{background:var(--okbg);color:var(--ok)} .c-bad{background:var(--badbg);color:var(--bad)}
+  .c-warn{background:var(--warnbg);color:var(--warn)} .c-info{background:var(--infobg);color:var(--info)} .c-grey{background:var(--grey);color:#3d4a5a}
+  .c-ai{background:#efe9fb;color:#4a2f9c}
+  .neg{color:var(--bad)}
+  .muted{color:var(--muted)} .small{font-size:12px}
+  .note{background:var(--infobg);border-left:4px solid var(--brand);padding:10px 12px;border-radius:6px;font-size:12.8px;margin:8px 0}
+  .note.warn{background:var(--warnbg);border-left-color:var(--warn)}
+  .note.bad{background:var(--badbg);border-left-color:var(--bad)}
+  .aibox{background:#f7f4fe;border:1px solid #dcd2f5;border-radius:8px;padding:10px 12px;margin-top:6px;font-size:12.8px}
+  .aibox .h{font-weight:600;color:#4a2f9c;font-size:12px;margin-bottom:3px}
+  .fu{border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:14px}
+  .fu .hd{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .fu .bd{padding:14px 16px;display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:16px}
+  @media(max-width:900px){.fu .bd{grid-template-columns:1fr}}
+  .fu h3{margin:0;font-size:14.5px}
+  .log{font-family:Consolas,monospace;font-size:12px;background:#0f1720;color:#cfe3f7;border-radius:8px;padding:10px 12px;max-height:180px;overflow:auto;white-space:pre-wrap}
+  .progress{height:6px;background:var(--grey);border-radius:99px;overflow:hidden;margin:8px 0}
+  .progress div{height:100%;background:var(--brand2);width:0;transition:width .2s}
+  details summary{cursor:pointer;font-weight:600;color:var(--brand)}
+  .pill-filter button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+  .pill-filter button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .empty{color:var(--muted);padding:26px;text-align:center}
+  footer{color:var(--muted);font-size:12px;text-align:center;padding:20px}
+  .toast{position:fixed;bottom:20px;right:20px;background:#1b2430;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:420px;z-index:50}
+  .toast.show{opacity:.95}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>TDS Credit Reconciliation Assistant</h1>
+    <div class="tag">Form 16A + Form 26AS + Books &nbsp;·&nbsp; Rules calculate · AI reads &amp; drafts · CA decides</div>
+  </div>
+  <span id="privacyBadge" class="badge off">AI off · all data stays on this computer</span>
+</header>
+<nav id="nav">
+  <button data-tab="setup" class="active">1. Setup &amp; Upload</button>
+  <button data-tab="certs">2. Form 16A Extract <span class="cnt" id="cntCerts">0</span></button>
+  <button data-tab="recon">3. Reconciliation <span class="cnt" id="cntExc">0</span></button>
+  <button data-tab="follow">4. Follow-ups <span class="cnt" id="cntFu">0</span></button>
+  <button data-tab="ai">5. AI Settings &amp; Insights</button>
+</nav>
+
+<main>
+<!-- ============ TAB 1: SETUP ============ -->
+<section class="tab active" id="tab-setup">
+  <div class="grid g2">
+    <div class="card">
+      <h2>Deductee and reconciliation settings</h2>
+      <div class="sub">Name and PAN are picked up from Form 26AS automatically. Change them here if needed.</div>
+      <div class="grid g2">
+        <div><label>Deductee name (your client)</label><input type="text" id="sDeductee" placeholder="Auto from 26AS"></div>
+        <div><label>Deductee PAN</label><input type="text" id="sPan" placeholder="Auto from 26AS"></div>
+        <div><label>Tolerance for differences (₹)</label><input type="number" id="sTol" value="10" min="0"></div>
+        <div><label>Reminder after (days)</label><input type="number" id="sRemind" value="7" min="1"></div>
+        <div><label>Reply requested within (days)</label><input type="number" id="sReply" value="15" min="1"></div>
+        <div><label>CC on emails (optional)</label><input type="text" id="sCc" placeholder="partner@yourfirm.com"></div>
+      </div>
+      <div style="margin-top:12px"><label>Email signature</label>
+        <textarea id="sSign" style="min-height:84px;font-family:inherit">Regards,
+Accounts Team
+[Your name / firm name]
+[Phone]</textarea></div>
+    </div>
+
+    <div class="card">
+      <h2>Upload files</h2>
+      <div class="sub">Files are read inside this browser tab and never uploaded anywhere.</div>
+      <div class="grid" style="gap:10px">
+        <div class="drop"><div class="t">① Form 16A certificates (PDF, TRACES)</div>
+          <div class="h">Select all certificates for the year. You can pick many at once.</div>
+          <input type="file" id="fPdf" accept=".pdf" multiple><div class="f" id="fPdfInfo"></div></div>
+        <div class="drop"><div class="t">② Form 26AS</div>
+          <div class="h">TRACES text export (.txt, caret ^ separated) or Excel/CSV with columns: Deductor Name, TAN, Section, Transaction Date, Status of Booking, Amount Paid, Tax Deducted, TDS Deposited.</div>
+          <input type="file" id="f26" accept=".txt,.xlsx,.xls,.csv"><div class="f" id="f26Info"></div></div>
+        <div class="drop"><div class="t">③ Books + customer master (Excel)</div>
+          <div class="h">Sheet <b>Books</b>: Customer Name, TAN, Invoice No, Invoice Date, Section, Taxable Amount, GST, Amount Received, TDS Expected, Quarter (optional). <i>Amount Received</i> lets the tool see how much TDS the customer actually withheld.<br>Sheet <b>Customers</b>: Customer Name, TAN, PAN, Contact Person, Email.</div>
+          <input type="file" id="fBooks" accept=".xlsx,.xls,.csv"><div class="f" id="fBooksInfo"></div></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="btnRun">Run reconciliation</button>
+        <button class="btn sec" id="btnTemplate">Download blank Books template</button>
+      </div>
+      <div class="progress"><div id="prog"></div></div>
+      <div class="log" id="log">Ready. Upload the three inputs and click "Run reconciliation".</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>How it works</h2>
+    <div class="grid g3 small">
+      <div><b>1. Extract.</b> Form 16A PDFs are read with fixed rules (certificate no., TAN, period, TDS). If a field can't be read, AI can fill it, but only with values found word-for-word in the PDF.</div>
+      <div><b>2. Reconcile.</b> Books vs 26AS vs Form 16A for each deductor (TAN) and quarter. All totals and differences are calculated by rules, never by AI.</div>
+      <div><b>3. Explain &amp; draft.</b> AI explains each exception and drafts deductor follow-up emails. Every amount in a draft is checked against the reconciliation.</div>
+      <div><b>4. Follow up.</b> Open emails in Outlook/Gmail or download them as Outlook drafts, then track sent / reply / resolved status and reminders.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 2: CERTS ============ -->
+<section class="tab" id="tab-certs">
+  <div class="card">
+    <div class="row"><div><h2>Form 16A extraction</h2><div class="sub">One row per certificate. Rows with missing fields are flagged. Use AI to fill them, or check the PDF and correct the source file.</div></div>
+      <div class="spacer"></div>
+      <button class="btn ai sm" id="btnAiFixAll">AI: fill missing fields</button></div>
+    <div class="tblwrap"><table id="tblCerts"></table></div>
+  </div>
+</section>
+
+<!-- ============ TAB 3: RECON ============ -->
+<section class="tab" id="tab-recon">
+  <div class="kpis" id="kpis"></div>
+  <div class="card">
+    <div class="row">
+      <div><h2>Three-way reconciliation (Books · 26AS · Form 16A)</h2><div class="sub">By deductor TAN and quarter. Differences above the tolerance are flagged.</div></div>
+      <div class="spacer"></div>
+      <button class="btn ai sm" id="btnAiExplain">AI: explain exceptions</button>
+      <button class="btn sec sm" id="btnExport">Export to Excel</button>
+    </div>
+    <div class="row pill-filter" id="filters" style="margin:6px 0 10px"></div>
+    <div id="unmappedBox"></div>
+    <div class="tblwrap"><table id="tblRecon"></table></div>
+  </div>
+  <div class="card small">
+    <b>Status guide:</b>
+    <span class="chip c-ok">Matched</span> all three agree ·
+    <span class="chip c-bad">Not in 26AS</span> booked, but deductor hasn't reported it ·
+    <span class="chip c-bad">Short in 26AS</span> 26AS credit lower than books ·
+    <span class="chip c-warn">Form 16A pending</span> 26AS shows credit, certificate not received ·
+    <span class="chip c-warn">16A ≠ 26AS</span> certificate and 26AS differ ·
+    <span class="chip c-warn">Section mismatch</span> deducted under a different section ·
+    <span class="chip c-warn">Booking status U/P/O</span> challan not matched in 26AS ·
+    <span class="chip c-info">Not in books</span> / <span class="chip c-info">Excess in 26AS</span> internal review ·
+    <span class="chip c-grey">Timing difference</span> quarters differ, but the year agrees ·
+    <span class="chip c-bad">Withheld, not deposited</span> customer paid us less for TDS, but 26AS doesn't show it ·
+    <span class="chip c-bad">Rate differs</span> e.g. books 10% (194J), customer reported 2% (194C) ·
+    <span class="chip c-warn">Deducted at 20% (206AA)</span> PAN treated as missing/inoperative ·
+    <span class="chip c-warn">TDS on amount incl. GST</span> excess deduction ·
+    <span class="chip c-info">Correct TDS in books</span> customer deducted what it reported; books expected more ·
+    <span class="chip c-grey">Check next FY 26AS</span> March invoice, TDS may fall in next year
+  </div>
+</section>
+
+<!-- ============ TAB 4: FOLLOW-UPS ============ -->
+<section class="tab" id="tab-follow">
+  <div class="card">
+    <div class="row">
+      <div><h2>Deductor follow-ups</h2><div class="sub">One email per deductor covering all their open items. Edit freely before sending. Nothing is sent without your click.</div></div>
+      <div class="spacer"></div>
+      <button class="btn ai sm" id="btnAiDraftAll">AI: polish all drafts</button>
+      <button class="btn sec sm" id="btnEml">Download all as Outlook drafts (.zip)</button>
+    </div>
+    <div class="row pill-filter" id="fuFilters" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <div class="row">
+      <div><h2>Inbox sync: automatic reply tracking</h2><div class="sub">Every subject carries a reference such as <code>[Ref TDS/PAN/TAN/FY]</code>. Sync reads your mailbox (Gmail or Outlook, via n8n or Google Apps Script) for mails with that reference. Sent mails become <b>Sent</b>, replies become <b>Reply received</b> (AI reads them), and any Form 16A attached to a reply is extracted and reconciled.</div></div>
+      <div class="spacer"></div>
+      <button class="btn" id="btnSync">Sync inbox now</button>
+    </div>
+    <details id="syncCfg"><summary>Inbox sync settings</summary>
+      <div class="grid g2" style="margin-top:10px">
+        <div style="grid-column:1/-1"><label>Sync URL (n8n webhook or Apps Script web app)</label><input type="text" id="syUrl" placeholder="https://your-n8n/webhook/tds-inbox-sync  or  https://script.google.com/macros/s/…/exec"></div>
+        <div><label>Access key</label><input type="password" id="syKey" placeholder="The private key set in n8n / Apps Script"></div>
+        <div><label>My email address(es), comma separated</label><input type="text" id="syMe" placeholder="you@firm.com, accounts@firm.com"></div>
+        <div><label>Look back (days)</label><input type="number" id="syDays" value="120" min="1"></div>
+        <div style="display:flex;align-items:end"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="syAuto" checked> Sync automatically after each reconciliation</label></div>
+      </div>
+    </details>
+    <div class="small muted" id="syncInfo" style="margin-top:8px">Not synced yet.</div>
+    <div class="tblwrap" style="margin-top:10px;max-height:380px"><table id="tblInbox"></table></div>
+  </div>
+  <div id="fuList"></div>
+</section>
+
+<!-- ============ TAB 5: AI ============ -->
+<section class="tab" id="tab-ai">
+  <div class="grid g2">
+    <div class="card">
+      <h2>AI connection</h2>
+      <div class="sub">Works with any OpenAI-compatible endpoint. For full privacy, run a local model in <b>LM Studio</b> or <b>Ollama</b>. Data then never leaves this computer.</div>
+      <div class="grid g2">
+        <div><label>Preset</label>
+          <select id="aiPreset">
+            <option value="off">AI off (rules only)</option>
+            <option value="lmstudio">LM Studio (local, private)</option>
+            <option value="ollama">Ollama (local, private)</option>
+            <option value="openai">OpenAI (cloud)</option>
+            <option value="gemini">Google Gemini (cloud)</option>
+            <option value="custom">Custom OpenAI-compatible</option>
+          </select></div>
+        <div><label>Model name</label><input type="text" id="aiModel" placeholder="e.g. qwen2.5-7b-instruct"></div>
+        <div style="grid-column:1/-1"><label>Base URL</label><input type="text" id="aiUrl" placeholder="http://localhost:1234/v1"></div>
+        <div style="grid-column:1/-1"><label>API key (not needed for LM Studio / Ollama)</label><input type="password" id="aiKey" placeholder="Kept in memory only, unless you tick 'remember'"></div>
+      </div>
+      <div class="row small" style="margin-top:8px">
+        <label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="aiRemember"> Remember settings on this computer</label>
+        <label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="aiMask" checked> Mask PAN/TAN before sending to AI</label>
+      </div>
+      <div id="cloudWarn" class="note warn" style="display:none">This is a <b>cloud</b> AI service. Deductor names and amounts will be sent to it. Use it only if your client has agreed to this.
+        <label style="display:flex;gap:6px;align-items:center;margin:6px 0 0"><input type="checkbox" id="aiCloudOk"> I confirm data may be sent to this cloud AI service</label></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sec" id="btnAiTest">Test connection</button>
+        <span id="aiTestRes" class="small muted"></span>
+      </div>
+      <div class="note small" style="margin-top:12px"><b>LM Studio setup:</b> load a model (e.g. Qwen 2.5 7B Instruct or Llama 3.1 8B Instruct), open the <i>Developer</i> tab, click <i>Start Server</i>, and turn on <i>Enable CORS</i>. The default URL is <code>http://localhost:1234/v1</code>.</div>
+    </div>
+    <div class="card">
+      <div class="row"><div><h2>AI review summary</h2><div class="sub">A short note on the reconciliation for the partner or client.</div></div><div class="spacer"></div>
+        <button class="btn ai sm" id="btnAiSummary">AI: write summary</button></div>
+      <div id="aiSummary" class="empty">Run the reconciliation, then generate a summary.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Where AI is used and how it is controlled</h2>
+    <table>
+      <tr><th>Task</th><th>Who does it</th><th>Guardrail</th></tr>
+      <tr><td>Totals, differences, matching, status</td><td>Rules (JavaScript)</td><td>Deterministic and repeatable. AI never calculates.</td></tr>
+      <tr><td>Reading certificates the rules can't parse</td><td>AI</td><td>A value is accepted only if it appears word-for-word in the PDF text.</td></tr>
+      <tr><td>Matching customer names in books to TANs</td><td>AI suggests</td><td>The CA accepts or rejects each suggestion.</td></tr>
+      <tr><td>Explaining exceptions</td><td>AI</td><td>Gets only the computed figures and is told not to make up numbers. Marked "AI draft".</td></tr>
+      <tr><td>Follow-up email wording</td><td>AI polishes the rule-based draft</td><td>Every amount must match the reconciliation, or the draft is rejected and the rule-based text kept.</td></tr>
+      <tr><td>Sending emails</td><td>CA</td><td>Emails open in your mail app as drafts. The tool never sends anything itself.</td></tr>
+    </table>
+  </div>
+</section>
+</main>
+<footer>TDS Credit Reconciliation Assistant · AICA Level 2 capstone · Runs entirely in your browser · Not a substitute for professional judgement</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const S = {
+  certs: [],        // extracted Form 16A rows
+  as26: [],         // 26AS transactions
+  as26Meta: {},
+  books: [],        // books rows
+  customers: [],    // customer master
+  recon: [],        // reconciliation rows
+  fus: [],          // follow-up groups
+  aiNotes: {},      // key -> {explanation, likely_cause, next_step}
+  mapSuggest: [],   // AI customer->TAN suggestions
+  manualMap: {},    // normalised name -> TAN
+  tracker: {},      // TAN -> {status, sentOn, sentDates, reminders, replies, notes, draft, subject, aiPolished, seen}
+  inboxLog: [], lastSync: null,
+  filter: 'All', fuFilter: 'All'
+};
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* =====================================================================
+   SMALL HELPERS
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inr = v => (v == null || isNaN(v)) ? '' : '₹' + Number(v).toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+const num = v => (v == null || isNaN(v)) ? '' : Number(v).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const round2 = v => Math.round((Number(v) || 0) * 100) / 100;
+const PAN_RE = /[A-Z]{5}\d{4}[A-Z]/, TAN_RE = /[A-Z]{4}\d{5}[A-Z]/;
+const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function log(msg){ const el=$('log'); el.textContent += '\n' + msg; el.scrollTop = el.scrollHeight; }
+function prog(p){ $('prog').style.width = Math.round(p*100) + '%'; }
+function toast(m, ms=3200){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'), ms); }
+function parseAmount(s){ if (s == null || s === '') return null; if (typeof s === 'number') return s; const v = parseFloat(String(s).replace(/[,₹\s]/g,'')); return isNaN(v) ? null : v; }
+function parseDate(v){
+  if (v == null || v === '') return null;
+  if (v instanceof Date) return isNaN(v) ? null : new Date(v.getFullYear(), v.getMonth(), v.getDate());
+  if (typeof v === 'number') { const d = XLSX.SSF.parse_date_code(v); return d ? new Date(d.y, d.m-1, d.d) : null; }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{1,2})[-\/ ]([A-Za-z]{3})[A-Za-z]*[-\/ ](\d{4})$/);
+  if (m && MONTHS[m[2].toLowerCase()] != null) return new Date(+m[3], MONTHS[m[2].toLowerCase()], +m[1]);
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  return null;
+}
+const fmtDate = d => d ? `${String(d.getDate()).padStart(2,'0')}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${d.getFullYear()}` : '';
+function fyq(d){
+  if (!d) return {fy:'', q:''};
+  const y = d.getFullYear(), m = d.getMonth();
+  const start = m >= 3 ? y : y - 1;
+  const fy = `${start}-${String((start+1)%100).padStart(2,'0')}`;
+  const q = m>=3&&m<=5 ? 'Q1' : m>=6&&m<=8 ? 'Q2' : m>=9&&m<=11 ? 'Q3' : 'Q4';
+  return {fy, q};
+}
+function normName(s){
+  return String(s||'').toUpperCase().replace(/&/g,' AND ').replace(/\(.*?\)/g,' ')
+    .replace(/\b(PRIVATE|PVT|LIMITED|LTD|LLP|CO|COMPANY|THE|INDIA)\b\.?/g,' ').replace(/[^A-Z0-9]/g,'');
+}
+function readFile(file, as){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; as === 'text' ? r.readAsText(file) : r.readAsArrayBuffer(file); }); }
+function sheetRows(wb, nameHints){
+  let name = wb.SheetNames.find(n => nameHints.some(h => n.toLowerCase().includes(h)));
+  if (!name) return null;
+  return XLSX.utils.sheet_to_json(wb.Sheets[name], {defval:'', raw:true});
+}
+function pick(row, ...hints){
+  const keys = Object.keys(row);
+  for (const h of hints){ const k = keys.find(k => k.toLowerCase().replace(/[^a-z0-9]/g,'').includes(h)); if (k !== undefined && row[k] !== '') return row[k]; }
+  return '';
+}
+
+/* =====================================================================
+   1. FORM 16A EXTRACTION (rules)
+   ===================================================================== */
+// Rebuild text lines from pdf.js items, keeping column segments (x positions)
+async function pdfToLines(buf){
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const lines = [];
+  for (let p = 1; p <= pdf.numPages; p++){
+    const page = await pdf.getPage(p);
+    const vp = page.getViewport({scale:1});
+    const tc = await page.getTextContent();
+    const items = tc.items.filter(i => i.str && i.str.trim()).map(i => ({x:i.transform[4], y:i.transform[5], w:i.width, s:i.str}));
+    items.sort((a,b) => b.y - a.y || a.x - b.x);
+    const rows = [];
+    for (const it of items){
+      const r = rows.find(r => Math.abs(r.y - it.y) < 3);
+      r ? r.items.push(it) : rows.push({y:it.y, items:[it]});
+    }
+    rows.sort((a,b) => b.y - a.y);
+    for (const r of rows){
+      r.items.sort((a,b) => a.x - b.x);
+      const segs = [];
+      for (const it of r.items){
+        const last = segs[segs.length-1];
+        if (last && it.x - (last.x + last.w) < 12){ last.s += (it.x - (last.x + last.w) > 1.5 ? ' ' : '') + it.s; last.w = it.x + it.w - last.x; }
+        else segs.push({x:it.x, w:it.w, s:it.s});
+      }
+      lines.push({page:p, mid: vp.width/2, segs: segs.map(s => ({x:s.x, s:s.s.replace(/\s+/g,' ').trim()}))});
+    }
+  }
+  return lines;
+}
+const lineText = l => l.segs.map(s => s.s).join(' ');
+
+function parseForm16A(lines){
+  const text = lines.map(lineText).join('\n');
+  const r = {missing: [], source: 'Rules'};
+  const m1 = (re, t=text) => { const m = t.match(re); return m ? m[1].trim() : null; };
+
+  r.certificateNo = m1(/Certificate No\.?\s*:?\s*([A-Z0-9]{5,10})\b/);
+  r.lastUpdatedOn = parseDate(m1(/Last updated on\s*:?\s*(\d{2}-[A-Za-z]{3}-\d{4})/));
+
+  // Deductor name: the left-column text on the line after the label (handles names with brackets)
+  const li = lines.findIndex(l => /Name and address of the deductor/i.test(lineText(l)));
+  if (li >= 0){
+    const lab = lines[li].segs.find(s => /deductee/i.test(s.s));
+    const split = lab ? lab.x - 5 : lines[li].mid;
+    for (let k = li+1; k < Math.min(li+4, lines.length) && !r.deductorName; k++){
+      const seg = lines[k].segs.filter(s => s.x < split).map(s => s.s).join(' ').trim();
+      if (seg && !/PAN of the/i.test(seg)) r.deductorName = seg;
+    }
+  }
+  if (!r.deductorName) r.deductorName = m1(/([A-Z][A-Z0-9 .&,()'\-]*?(?:PRIVATE LIMITED|LIMITED|LTD\.?|LLP))/);
+
+  const tri = text.match(/PAN of the deductor\s+TAN of the deductor\s+PAN of the deductee\s*([A-Z]{5}\d{4}[A-Z])\s+([A-Z]{4}\d{5}[A-Z])\s+([A-Z]{5}\d{4}[A-Z])/);
+  if (tri){ [r.panDeductor, r.tanDeductor, r.panDeductee] = [tri[1], tri[2], tri[3]]; }
+  else {
+    r.panDeductor = m1(/PAN of the deductor\s*:?\s*([A-Z]{5}\d{4}[A-Z])/);
+    r.tanDeductor = m1(/TAN of the deductor\s*:?\s*([A-Z]{4}\d{5}[A-Z])/) || m1(/\b([A-Z]{4}\d{5}[A-Z])\b/);
+    r.panDeductee = m1(/PAN of the deductee\s*:?\s*([A-Z]{5}\d{4}[A-Z])/);
+  }
+  r.assessmentYear = m1(/Assessment Year[\s\S]{0,200}?\b(\d{4}-\d{2})\b/) || m1(/\b(20\d{2}-\d{2})\b/);
+  const per = text.match(/(\d{2}-[A-Za-z]{3}-\d{4})\s+(\d{2}-[A-Za-z]{3}-\d{4})/);
+  if (per){ r.from = parseDate(per[1]); r.to = parseDate(per[2]); }
+
+  const sec = (a, b) => { const lo = text.toLowerCase(); const i = lo.indexOf(a.toLowerCase()); if (i < 0) return ''; const j = b ? lo.indexOf(b.toLowerCase(), i+a.length) : -1; return text.substring(i+a.length, j < 0 ? undefined : j); };
+  const paySec = sec('Summary of payment', 'Summary of tax deducted');
+  r.amountPaid = parseAmount(m1(/Total \(Rs\.\)\s*([\d,]+\.\d{2})/, paySec));
+  r.sections = [...new Set([...paySec.matchAll(/\b(19[2-6][A-Z]{0,3}(?:\([a-z0-9]+\))?)\b/g)].map(m => m[1]))].join(', ');
+  const dedSec = sec('Summary of tax deducted', 'DETAILS OF TAX DEDUCTED');
+  r.tdsDeducted = parseAmount(m1(/Total \(Rs\.\)\s*([\d,]+\.\d{2})/, dedSec));
+  // Proven rule: the LAST "Total (Rs.)" figure in the document is the TDS deposited (challan / book adjustment)
+  const all = [...text.matchAll(/Total \(Rs\.\)\s*([\d,]+\.\d{2})/g)];
+  r.tdsDeposited = all.length > 1 ? parseAmount(all[all.length-1][1]) : null;
+  if (r.tdsDeposited == null) r.tdsDeposited = r.tdsDeducted;
+
+  const p = r.from ? fyq(r.from) : {fy:'', q:''};
+  r.fy = p.fy; r.quarter = p.q;
+  for (const [k, lab] of [['certificateNo','Certificate No.'],['deductorName','Deductor name'],['tanDeductor','TAN'],['from','Period'],['tdsDeposited','TDS amount']])
+    if (r[k] == null || r[k] === '') r.missing.push(lab);
+  r.text = text;
+  return r;
+}
+
+async function extractCerts(files){
+  S.certs = [];
+  let i = 0;
+  for (const f of files){
+    try {
+      const lines = await pdfToLines(await readFile(f));
+      const r = parseForm16A(lines);
+      r.file = f.name;
+      S.certs.push(r);
+      log(`  ✓ ${f.name}: ${r.certificateNo||'?'} · ${r.tanDeductor||'?'} · ${r.quarter||'?'} · TDS ${num(r.tdsDeposited)}${r.missing.length ? ' · MISSING: ' + r.missing.join(', ') : ''}`);
+    } catch(e){
+      S.certs.push({file:f.name, missing:['Unreadable PDF'], error:e.message, source:'Rules', text:''});
+      log(`  ✗ ${f.name}: ${e.message}`);
+    }
+    prog(0.1 + 0.6 * (++i / files.length));
+  }
+}
+
+/* =====================================================================
+   2. FORM 26AS PARSING
+   ===================================================================== */
+function parse26ASText(txt){
+  const out = [], meta = {};
+  let part = '', cur = null;
+  const lines = txt.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++){
+    const f = lines[i].split('^').map(s => s.trim());
+    const first = f[0] || '';
+    if (/^PART[- ]?[IVX]+/i.test(first)){ part = first.match(/^PART[- ]?([IVX]+)/i)[1].toUpperCase(); cur = null; continue; }
+    if (/Permanent Account Number/i.test(first) && lines[i+1]){
+      const n = lines[i+1].split('^').map(s=>s.trim());
+      if (PAN_RE.test(n[0])) meta.pan = n[0];
+      if (/^\d{4}-\d{2}$/.test(n[2])) meta.fy = n[2];
+      if (/^\d{4}-\d{2}$/.test(n[3])) meta.ay = n[3];
+    }
+    if (/Name of Assessee/i.test(first) && f[1]) meta.name = f[1];
+    if (part !== 'I') continue;
+    if (/^\d+$/.test(first) && /^[A-Z]{4}\d{5}[A-Z]$/.test(f[2] || '')){ cur = {name: f[1], tan: f[2]}; continue; }
+    if (first === '' && /^\d+$/.test(f[1] || '') && cur && parseDate(f[3])){
+      out.push({tan: cur.tan, name: cur.name, section: (f[2]||'').trim(), date: parseDate(f[3]), status: (f[4]||'').trim().toUpperCase(),
+        bookingDate: f[5], paid: parseAmount(f[7]) || 0, deducted: parseAmount(f[8]) || 0, deposited: parseAmount(f[9]) || 0});
+    }
+  }
+  return {rows: out, meta};
+}
+function parse26ASSheet(buf){
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:'', raw:true});
+  return {rows: rows.map(r => ({
+    tan: String(pick(r,'tan')).trim().toUpperCase(), name: String(pick(r,'deductorname','nameofdeductor','name')).trim(),
+    section: String(pick(r,'section')).trim(), date: parseDate(pick(r,'transactiondate','date')),
+    status: String(pick(r,'statusofbooking','status')).trim().toUpperCase() || 'F',
+    paid: parseAmount(pick(r,'amountpaid','paid')) || 0, deducted: parseAmount(pick(r,'taxdeducted','deducted')) || 0,
+    deposited: parseAmount(pick(r,'tdsdeposited','deposited')) || parseAmount(pick(r,'taxdeducted')) || 0
+  })).filter(r => r.tan && r.date), meta:{}};
+}
+
+/* =====================================================================
+   3. BOOKS + CUSTOMERS
+   ===================================================================== */
+function parseBooks(buf){
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  const b = sheetRows(wb, ['book','ledger','sales']) || XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:'', raw:true});
+  const c = sheetRows(wb, ['customer','master','party']) || [];
+  const customers = c.map(r => ({name: String(pick(r,'customername','name')).trim(), tan: String(pick(r,'tan')).trim().toUpperCase(),
+    pan: String(pick(r,'pan')).trim().toUpperCase(), contact: String(pick(r,'contact')).trim(), email: String(pick(r,'email','mail')).trim()})).filter(r => r.name || r.tan);
+  const books = b.map(r => {
+    const d = parseDate(pick(r,'invoicedate','date'));
+    const qo = String(pick(r,'quarter')).trim().toUpperCase();
+    const p = fyq(d);
+    return {name: String(pick(r,'customername','customer','party','name')).trim(), tan: String(pick(r,'tan')).trim().toUpperCase(),
+      invoice: String(pick(r,'invoiceno','invoice','voucher')).trim(), date: d, section: String(pick(r,'section')).trim(),
+      amount: parseAmount(pick(r,'taxable','amount','invoicevalue','value')) || 0, gst: parseAmount(pick(r,'gst','tax')) || 0,
+      received: (v => v === '' ? null : parseAmount(v))(pick(r,'amountreceived','received','receipt')), tds: parseAmount(pick(r,'tdsexpected','tds')) || 0,
+      fy: p.fy, quarter: /^Q[1-4]$/.test(qo) ? qo : p.q};
+  }).filter(r => (r.name || r.tan) && (r.tds || r.amount));
+  return {books, customers};
+}
+
+/* =====================================================================
+   4. RECONCILIATION ENGINE (rules only - no AI)
+   ===================================================================== */
+const ISSUE = {
+  NOT_IN_26AS:   {label:'Not in 26AS', cls:'c-bad', who:'deductor'},
+  SHORT_26AS:    {label:'Short in 26AS', cls:'c-bad', who:'deductor'},
+  CERT_PENDING:  {label:'Form 16A pending', cls:'c-warn', who:'deductor'},
+  CERT_DIFF:     {label:'16A ≠ 26AS', cls:'c-warn', who:'deductor'},
+  SECTION:       {label:'Section mismatch', cls:'c-warn', who:'deductor'},
+  BOOKING:       {label:'Booking status U/P/O', cls:'c-warn', who:'deductor'},
+  NOT_IN_BOOKS:  {label:'Not in books', cls:'c-info', who:'internal'},
+  EXCESS_26AS:   {label:'Excess in 26AS', cls:'c-info', who:'internal'},
+  TIMING:        {label:'Timing difference', cls:'c-grey', who:'internal'},
+  NO_TAN:        {label:'TAN not mapped', cls:'c-warn', who:'internal'},
+  RATE:          {label:'Rate differs', cls:'c-bad', who:'deductor'},
+  HIGH_RATE:     {label:'Deducted at 20% (206AA)', cls:'c-warn', who:'deductor'},
+  BASE_GST:      {label:'TDS on amount incl. GST', cls:'c-warn', who:'deductor'},
+  WITHHELD:      {label:'Withheld, not deposited', cls:'c-bad', who:'deductor'},
+  BOOKS_FIX:     {label:'Correct TDS in books', cls:'c-info', who:'internal'},
+  YEAR_END:      {label:'Check next FY 26AS', cls:'c-grey', who:'internal'},
+};
+const pct = v => (v == null || !isFinite(v)) ? '' : (Math.round(v * 1000) / 10) + '%';
+function resolveTan(name, tan){
+  if (tan && TAN_RE.test(tan)) return tan;
+  const n = normName(name);
+  if (S.manualMap[n]) return S.manualMap[n];
+  const c = S.customers.find(c => normName(c.name) === n && c.tan); if (c) return c.tan;
+  const a = S.as26.find(a => normName(a.name) === n); if (a) return a.tan;
+  const k = S.certs.find(k => normName(k.deductorName) === n && k.tanDeductor); if (k) return k.tanDeductor;
+  return '';
+}
+function reconcile(){
+  const tol = Number($('sTol').value) || 0;
+  const map = new Map();
+  const get = (tan, fy, q) => { const k = `${tan}|${fy}|${q}`; if (!map.has(k)) map.set(k, {key:k, tan, fy, q, booksTds:0, booksAmt:0, bSec:new Set(), invoices:[], bookNames:new Set(),
+    booksGst:0, withheld:0, rcptLines:0, yearEnd:false, asDed:0, asDep:0, asPaid:0, aSec:new Set(), aStatus:new Set(), asCount:0, certTds:0, certCount:0, certNos:[], cSec:new Set(), names:new Set()}); return map.get(k); };
+  for (const b of S.books){
+    const tan = resolveTan(b.name, b.tan) || ('UNMAPPED:' + b.name);
+    b.resolvedTan = tan;
+    const r = get(tan, b.fy, b.quarter);
+    r.booksTds += b.tds; r.booksAmt += b.amount; r.booksGst += b.gst || 0; if (b.section) r.bSec.add(b.section.toUpperCase()); r.invoices.push(b.invoice); r.bookNames.add(b.name);
+    if (b.received != null){ r.withheld += (b.amount + (b.gst || 0)) - b.received; r.rcptLines++; }
+    if (b.date && b.date.getMonth() === 2) r.yearEnd = true;
+  }
+  for (const a of S.as26){
+    const p = fyq(a.date); const r = get(a.tan, p.fy, p.q);
+    r.asDed += a.deducted; r.asDep += a.deposited; r.asPaid += a.paid; r.asCount++; if (a.section) r.aSec.add(a.section.toUpperCase()); r.aStatus.add(a.status||'F'); r.names.add(a.name);
+  }
+  for (const c of S.certs){
+    if (!c.tanDeductor || !c.quarter) continue;
+    const r = get(c.tanDeductor, c.fy, c.quarter);
+    r.certTds += c.tdsDeposited || 0; r.certCount++; r.certNos.push(c.certificateNo); (c.sections||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(s => r.cSec.add(s.toUpperCase())); if (c.deductorName) r.names.add(c.deductorName);
+  }
+  const rows = [...map.values()];
+  for (const r of rows){
+    r.booksTds = round2(r.booksTds); r.asDep = round2(r.asDep); r.asDed = round2(r.asDed); r.certTds = round2(r.certTds);
+    const cm = S.customers.find(c => c.tan === r.tan);
+    r.name = cm?.name || [...r.names][0] || [...r.bookNames][0] || r.tan;
+    r.diffBooks26 = round2(r.booksTds - r.asDep);
+    r.diffCert26 = r.certCount ? round2(r.certTds - r.asDep) : null;
+    const is = [];
+    if (r.tan.startsWith('UNMAPPED:')) is.push('NO_TAN');
+    else {
+      if (r.booksTds > 0 && r.asCount === 0) is.push('NOT_IN_26AS');
+      if (r.booksTds > 0 && r.asCount > 0 && r.diffBooks26 > tol) is.push('SHORT_26AS');
+      if (r.booksTds > 0 && r.asCount > 0 && -r.diffBooks26 > tol) is.push('EXCESS_26AS');
+      if (r.booksTds === 0 && r.asCount > 0) is.push('NOT_IN_BOOKS');
+      if (r.asCount > 0 && r.certCount === 0) is.push('CERT_PENDING');
+      if (r.certCount > 0 && Math.abs(r.certTds - r.asDep) > tol && r.asCount > 0) is.push('CERT_DIFF');
+      if ([...r.aStatus].some(s => s && s !== 'F')) is.push('BOOKING');
+      const bs = [...r.bSec], as = [...r.aSec];
+      if (bs.length && as.length && !bs.some(s => as.includes(s))) is.push('SECTION');
+      // Rates and base
+      r.bRate = r.booksAmt > 0 && r.booksTds > 0 ? r.booksTds / r.booksAmt : null;
+      r.aRate = r.asPaid > 0 && r.asDed > 0 ? r.asDed / r.asPaid : null;
+      r.withheld = round2(r.withheld);
+      const hasRcpt = r.rcptLines > 0 && r.rcptLines === r.invoices.length;
+      if (r.aRate != null && r.aRate >= 0.195){ is.push('HIGH_RATE'); }
+      else if (r.bRate != null && r.aRate != null && Math.abs(r.bRate - r.aRate) > 0.005){
+        // Who is wrong? If the customer withheld what the books expect, the customer under-reported; if it withheld what it reported, the books are wrong.
+        if (hasRcpt && Math.abs(r.withheld - r.asDed) <= tol) is.push('BOOKS_FIX'); else is.push('RATE');
+      } else if (r.asPaid > 0 && r.booksAmt > 0 && r.booksGst > 0 && Math.abs(r.asPaid - (r.booksAmt + r.booksGst)) <= Math.max(tol, r.booksAmt * 0.005)){
+        is.push('BASE_GST');
+      }
+      if (hasRcpt && r.booksTds > 0){
+        if (r.asCount === 0 && r.withheld > tol) is.push('WITHHELD');
+        if (r.asCount === 0 && Math.abs(r.withheld) <= tol) is.push('BOOKS_FIX');
+        if (r.asCount > 0 && r.withheld - r.asDed > tol && !is.includes('RATE')) is.push('WITHHELD');
+      }
+      if (is.includes('NOT_IN_26AS') && r.yearEnd) is.push('YEAR_END');
+      // Explained differences: don't double-flag
+      const drop = new Set();
+      if (is.includes('HIGH_RATE') || is.includes('BASE_GST')) drop.add('EXCESS_26AS');
+      if (is.includes('BOOKS_FIX')) { drop.add('SHORT_26AS'); drop.add('NOT_IN_26AS'); drop.add('RATE'); drop.add('SECTION'); drop.add('YEAR_END'); }
+      if (is.includes('WITHHELD')) { drop.add('NOT_IN_26AS'); drop.add('SHORT_26AS'); }
+      if (is.includes('RATE')) { drop.add('SHORT_26AS'); drop.add('SECTION'); }
+      for (let k = is.length - 1; k >= 0; k--) if (drop.has(is[k])) is.splice(k, 1);
+    }
+    r.issues = is;
+  }
+  // Timing: same deductor & FY agrees in total, but quarters differ
+  const byTanFy = {};
+  rows.forEach(r => (byTanFy[r.tan + '|' + r.fy] ??= []).push(r));
+  for (const grp of Object.values(byTanFy)){
+    const b = grp.reduce((s,r)=>s+r.booksTds,0), a = grp.reduce((s,r)=>s+r.asDep,0);
+    if (grp.length > 1 && Math.abs(b - a) <= tol && b > 0){
+      for (const r of grp){
+        const AMT = ['NOT_IN_26AS','SHORT_26AS','EXCESS_26AS','NOT_IN_BOOKS','WITHHELD','YEAR_END'];
+        const had = r.issues.some(i => AMT.includes(i));
+        r.issues = r.issues.filter(i => !AMT.includes(i));
+        if (had) r.issues.push('TIMING');
+      }
+    }
+  }
+  rows.forEach(r => r.status = r.issues.length ? (r.issues.some(i => ISSUE[i].who === 'deductor') ? 'Deductor action' : 'Internal review') : 'Matched');
+  rows.sort((a,b) => a.name.localeCompare(b.name) || a.fy.localeCompare(b.fy) || a.q.localeCompare(b.q));
+  S.recon = rows;
+  buildFollowUps();
+}
+
+/* =====================================================================
+   5. FOLLOW-UP EMAILS (rule-based drafts)
+   ===================================================================== */
+function trackerKey(){ return `tdsrecon:${($('sPan').value||'NA').toUpperCase()}`; }
+function loadTracker(){
+  try { S.tracker = JSON.parse(localStorage.getItem(trackerKey()) || '{}'); } catch(e){ S.tracker = {}; }
+  try { S.inboxLog = JSON.parse(localStorage.getItem(trackerKey() + ':inbox') || '[]'); S.lastSync = JSON.parse(localStorage.getItem(trackerKey() + ':lastSync') || 'null'); } catch(e){ S.inboxLog = []; S.lastSync = null; }
+}
+function saveTracker(){ try { localStorage.setItem(trackerKey(), JSON.stringify(S.tracker)); } catch(e){} }
+function qLabel(q, fy){ return `${q} FY ${fy}`; }
+
+function itemText(r, code){
+  const f = `As per our books: ${inr(r.booksTds)}${r.bSec.size ? ' (u/s ' + [...r.bSec].join('/') + (r.bRate ? ' @ ' + pct(r.bRate) : '') + ')' : ''}${r.rcptLines && r.withheld > 0 ? ' | Deducted from our payment: ' + inr(r.withheld) : ''} | Form 26AS: ${r.asCount ? inr(r.asDep) : 'not reflecting'}${r.aSec.size ? ' (u/s ' + [...r.aSec].join('/') + (r.aRate ? ' @ ' + pct(r.aRate) : '') + ')' : ''} | Form 16A: ${r.certCount ? inr(r.certTds) + ' (Cert. ' + r.certNos.join(', ') + ')' : 'not received'}`;
+  const pan = $('sPan').value || '';
+  const T = {
+    NOT_IN_26AS: ['TDS not reflecting in Form 26AS', `TDS deducted on our invoice(s) ${r.invoices.join(', ')} is not appearing in our Form 26AS. Please confirm whether the TDS return for ${r.q} has been filed with our PAN ${$('sPan').value||''}. If it was reported under a different PAN or left out, please file a correction statement.`],
+    SHORT_26AS:  ['TDS short reflected in Form 26AS', `Form 26AS shows ${inr(r.diffBooks26)} less than the TDS expected as per our books. Please check whether TDS on the balance was deducted and deposited, and file a correction statement if it was reported short or under another PAN.`],
+    CERT_PENDING:['Form 16A not received', `Form 26AS shows TDS of ${inr(r.asDep)} for this quarter, but we have not received the Form 16A. Please share the TRACES-generated certificate.`],
+    CERT_DIFF:   ['Form 16A does not match Form 26AS', `The Form 16A shows ${inr(r.certTds)} while Form 26AS shows ${inr(r.asDep)} (difference ${inr(Math.abs(r.certTds - r.asDep))}). If your TDS return was revised, please share a fresh Form 16A downloaded from TRACES.`],
+    SECTION:     ['TDS deducted under a different section', `TDS has been reported under section ${[...r.aSec].join('/')} whereas the payment is for services covered under section ${[...r.bSec].join('/')}. Please confirm the correct section and revise the TDS return if needed.`],
+    WITHHELD:    ['TDS deducted from our payment but not deposited / reported', `You have paid us ${inr(r.withheld)} less against invoice(s) ${r.invoices.join(', ')} on account of TDS, but Form 26AS shows ${r.asCount ? 'only ' + inr(r.asDep) : 'no credit'} for ${r.q}. Please deposit the TDS (if not yet deposited) and file / revise the TDS return with our PAN ${pan}, so that the credit of ${inr(r.withheld - (r.asCount ? r.asDed : 0))} reflects in our Form 26AS.`],
+    RATE:        ['TDS reported at a lower rate / different section', `Our invoice(s) ${r.invoices.join(', ')} attract TDS u/s ${[...r.bSec].join('/')} at ${pct(r.bRate)}${r.rcptLines && r.withheld > 0 ? `, and ${inr(r.withheld)} was deducted from our payment` : ''}, but Form 26AS shows TDS at ${pct(r.aRate)} u/s ${[...r.aSec].join('/') || 'unknown section'} (${inr(r.asDed)}). Please revise the TDS return to report the full TDS of ${inr(r.booksTds)} under the correct section.`],
+    HIGH_RATE:   ['TDS deducted at 20% (higher rate u/s 206AA)', `Form 26AS shows TDS at ${pct(r.aRate)} (${inr(r.asDed)}) instead of ${r.bRate ? pct(r.bRate) : 'the normal rate'}. This usually happens when the PAN is not available or shown as inoperative in your records. Our PAN ${pan} is valid and operative. The extra ${inr(round2(r.asDed - r.booksTds))} will be claimed as TDS credit in our return, but it blocks our cash flow. Please update our PAN in your records and deduct at the normal rate from now on.`],
+    BASE_GST:    ['TDS deducted on the amount including GST', `TDS of ${inr(r.asDed)} has been deducted on ${inr(r.asPaid)}, which includes GST of ${inr(r.booksGst)}. Where GST is shown separately on the invoice, TDS applies to the amount excluding GST (CBDT Circular No. 23/2017). The extra ${inr(round2(r.asDed - r.booksTds))} will be claimed as TDS credit in our return, but please deduct TDS on the amount excluding GST (${inr(r.booksAmt)}) from now on.`],
+    BOOKING:     ['Challan not matched in Form 26AS', `Form 26AS shows the booking status as '${[...r.aStatus].filter(s=>s!=='F').join('/')}' (not 'F' – final). The credit may not be available until the challan details are corrected. Please verify the challan details (BSR code, date, serial no., amount) and file a correction statement.`]
+  };
+  const [title, ask] = T[code];
+  return {title, facts: f, ask};
+}
+
+function buildFollowUps(){
+  const groups = {};
+  for (const r of S.recon){
+    const codes = r.issues.filter(i => ISSUE[i].who === 'deductor');
+    if (!codes.length) continue;
+    (groups[r.tan] ??= {tan: r.tan, name: r.name, fy: r.fy, items: [], rows: []});
+    groups[r.tan].rows.push(r);
+    // If NOT_IN_26AS, CERT_PENDING can't apply; keep the most specific asks
+    for (const c of codes) groups[r.tan].items.push({r, code: c, ...itemText(r, c)});
+  }
+  // Deductors already followed up whose items have now cleared (e.g. revised 26AS / Form 16A by email)
+  for (const [tan, t] of Object.entries(S.tracker)){
+    if (groups[tan] || !t || !t.status || t.status === 'Not sent') continue;
+    const r = S.recon.find(x => x.tan === tan);
+    if (!r) continue;
+    groups[tan] = {tan, name: r.name, fy: r.fy, items: [], rows: S.recon.filter(x => x.tan === tan)};
+    if (t.status !== 'Resolved'){ t.status = 'Resolved'; t.autoResolved = Date.now(); t.notes = ((t.notes ? t.notes + ' | ' : '') + `Auto-resolved ${fmtDate(new Date())}: all items now match`); }
+  }
+  S.fus = Object.values(groups).map(g => {
+    const cm = S.customers.find(c => c.tan === g.tan) || {};
+    g.email = cm.email || ''; g.contact = cm.contact || '';
+    g.type = !g.items.length ? 'Cleared' : g.items.every(i => i.code === 'CERT_PENDING') ? 'Form 16A request' : 'TDS credit query';
+    g.amountAtRisk = round2(g.rows.reduce((s, r) => s + Math.max(0, r.booksTds - r.asDep), 0));
+    const t = S.tracker[g.tan] || {};
+    if (!t.status) t.status = 'Not sent';
+    S.tracker[g.tan] = t;
+    g.ruleDraft = ruleDraft(g, false);
+    return g;
+  });
+  saveTracker();
+}
+
+const refTag = g => `[Ref TDS/${($('sPan').value || '').toUpperCase()}/${g.tan}/${g.fy}]`;
+function ensureRef(subject, g){ return /\[Ref TDS\/[A-Z0-9]+\/[A-Z0-9]+\/\d{4}-\d{2}\]/.test(subject || '') ? subject : `${(subject || '').trim()} ${refTag(g)}`; }
+function ruleDraft(g, reminder){
+  const ded = $('sDeductee').value || 'our firm', pan = $('sPan').value || '';
+  const fy = g.fy;
+  const due = new Date(Date.now() + (Number($('sReply').value)||15) * 864e5);
+  const subject = (reminder ? 'Reminder: ' : '') + (g.type === 'Form 16A request'
+    ? `Request for Form 16A – ${ded} (PAN ${pan}) – FY ${fy}`
+    : `TDS credit query – ${ded} (PAN ${pan}) – FY ${fy}`) + ' ' + refTag(g);
+  const t = S.tracker[g.tan] || {};
+  let body = `Dear ${g.contact || 'Sir/Madam'},\n\n`;
+  if (reminder) body += `This is a gentle reminder on our email dated ${t.sentOn ? fmtDate(new Date(t.sentOn)) : 'earlier'}, which is still pending.\n\n`;
+  body += g.type === 'Form 16A request'
+    ? `We are reconciling the TDS credit of ${ded} (PAN: ${pan}) for FY ${fy}. Please share the following TDS certificate(s):\n\n`
+    : `We are reconciling the TDS credit of ${ded} (PAN: ${pan}) for FY ${fy} with Form 26AS and the TDS certificates (Form 16A) for payments made by ${g.name}. We noticed the following and need your help:\n\n`;
+  g.items.forEach((it, i) => {
+    body += `${i+1}. ${qLabel(it.r.q, it.r.fy)} – ${it.title}\n   ${it.facts}\n   Request: ${it.ask}\n\n`;
+  });
+  body += `We would appreciate your response by ${fmtDate(due)} so that we can claim the correct TDS credit in our return of income.\n\n${$('sSign').value}`;
+  return {subject, body};
+}
+
+/* =====================================================================
+   6. AI LAYER (OpenAI-compatible: LM Studio / Ollama / OpenAI / Gemini)
+   ===================================================================== */
+const PRESETS = {
+  off: {url:'', model:''},
+  lmstudio: {url:'http://localhost:1234/v1', model:'qwen2.5-7b-instruct'},
+  ollama: {url:'http://localhost:11434/v1', model:'llama3.1:8b'},
+  openai: {url:'https://api.openai.com/v1', model:'gpt-4o-mini'},
+  gemini: {url:'https://generativelanguage.googleapis.com/v1beta/openai', model:'gemini-2.0-flash'},
+  custom: {url:'', model:''}
+};
+const aiOn = () => $('aiPreset').value !== 'off' && $('aiUrl').value.trim();
+const isLocal = u => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(u || '');
+function updateBadge(){
+  const b = $('privacyBadge'), u = $('aiUrl').value.trim();
+  if (!aiOn()){ b.className = 'badge off'; b.textContent = 'AI off · all data stays on this computer'; }
+  else if (isLocal(u)){ b.className = 'badge local'; b.textContent = 'Local AI · all data stays on this computer'; }
+  else { b.className = 'badge cloud'; b.textContent = 'Cloud AI · data is sent to ' + (u.replace(/^https?:\/\//,'').split('/')[0]); }
+  $('cloudWarn').style.display = aiOn() && !isLocal(u) ? 'block' : 'none';
+  saveSettings();
+}
+// PAN/TAN masking for prompts; restored in responses
+function masker(){
+  const fwd = {}, back = {}; let n = 0;
+  const mask = s => !$('aiMask').checked ? s : String(s).replace(/\b([A-Z]{5}\d{4}[A-Z]|[A-Z]{4}\d{5}[A-Z])\b/g, m => { if (!fwd[m]){ const t = `ID${++n}`; fwd[m] = t; back[t] = m; } return fwd[m]; });
+  const unmask = s => !$('aiMask').checked ? s : String(s).replace(/\bID(\d+)\b/g, m => back[m] || m);
+  return {mask, unmask};
+}
+async function callAI(system, user, {maxTokens = 1500} = {}){
+  if (!aiOn()) throw new Error('AI is off. Choose a model in tab 5 (AI Settings).');
+  const url = $('aiUrl').value.trim().replace(/\/+$/,'') + '/chat/completions';
+  if (!isLocal(url) && !$('aiCloudOk').checked) throw new Error('Please confirm in tab 5 that data may be sent to the cloud AI service.');
+  const headers = {'Content-Type':'application/json'};
+  if ($('aiKey').value.trim()) headers.Authorization = 'Bearer ' + $('aiKey').value.trim();
+  const res = await fetch(url, {method:'POST', headers, body: JSON.stringify({model: $('aiModel').value.trim(), temperature: 0.2, max_tokens: maxTokens,
+    messages: [{role:'system', content: system}, {role:'user', content: user}]})});
+  if (!res.ok) throw new Error(`AI returned ${res.status}: ${(await res.text()).slice(0,200)}`);
+  const j = await res.json();
+  return j.choices?.[0]?.message?.content || '';
+}
+function parseJSON(s){
+  s = String(s).replace(/```json|```/g,'');
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a < 0 || b < 0) throw new Error('AI did not return JSON');
+  return JSON.parse(s.slice(a, b+1));
+}
+const SYS = 'You are an assistant to an Indian Chartered Accountant reconciling TDS credit (Form 16A, Form 26AS, books) under the Income-tax Act. ' +
+  'Be precise, concise and professional. NEVER invent, compute or change any amount; use only figures given to you. Reply in valid JSON only when asked for JSON.';
+
+// 6a. Fill missing certificate fields - accepted only if the value appears verbatim in the PDF text
+async function aiFixCert(c){
+  const {mask, unmask} = masker();
+  const prompt = `Extract these fields from the Form 16A text below. Return JSON: {"certificateNo":"","deductorName":"","tanDeductor":"","periodFrom":"dd-Mon-yyyy","periodTo":"dd-Mon-yyyy","tdsDeposited":"amount exactly as printed"}. Use "" if not present. Copy values exactly as they appear.\n\nTEXT:\n${mask(c.text.slice(0, 6000))}`;
+  const j = parseJSON(unmask(await callAI(SYS, prompt, {maxTokens: 400})));
+  const inText = v => v && c.text.replace(/\s+/g,' ').includes(String(v).trim());
+  const filled = [];
+  const set = (k, v, conv = x => x) => { if ((c[k] == null || c[k] === '') && inText(v)){ c[k] = conv(v); filled.push(k); } };
+  set('certificateNo', j.certificateNo); set('deductorName', j.deductorName); set('tanDeductor', j.tanDeductor);
+  set('from', j.periodFrom, parseDate); set('to', j.periodTo, parseDate);
+  if (c.tdsDeposited == null && j.tdsDeposited && inText(j.tdsDeposited)){ c.tdsDeposited = parseAmount(j.tdsDeposited); filled.push('tdsDeposited'); }
+  if (c.from){ const p = fyq(c.from); c.fy = p.fy; c.quarter = p.q; }
+  c.missing = [['certificateNo','Certificate No.'],['deductorName','Deductor name'],['tanDeductor','TAN'],['from','Period'],['tdsDeposited','TDS amount']].filter(([k]) => c[k] == null || c[k] === '').map(x => x[1]);
+  if (filled.length) c.source = 'Rules + AI (verified)';
+  return filled;
+}
+
+// 6b. Explain exceptions
+async function aiExplain(){
+  const exc = S.recon.filter(r => r.issues.length);
+  if (!exc.length) return toast('No exceptions to explain.');
+  const {mask, unmask} = masker();
+  const data = exc.map(r => ({key: r.key, deductor: r.name, tan: r.tan, quarter: qLabel(r.q, r.fy), books_tds: r.booksTds, books_section: [...r.bSec].join('/'),
+    form26as_tds: r.asCount ? r.asDep : null, form26as_section: [...r.aSec].join('/'), form26as_booking_status: [...r.aStatus].join('/'),
+    form16a_tds: r.certCount ? r.certTds : null, flags: r.issues.map(i => ISSUE[i].label)}));
+  const prompt = `For each exception below, explain in plain English for a CA: "explanation" (1-2 sentences on what the numbers show), "likely_cause" (most probable reason in Indian TDS practice) and "next_step" (one concrete action). Do not compute new amounts. Return JSON {"items":[{"key":"","explanation":"","likely_cause":"","next_step":""}]} with the same keys.\n\nDATA:\n${mask(JSON.stringify(data))}`;
+  const j = parseJSON(unmask(await callAI(SYS, prompt, {maxTokens: 2500})));
+  (j.items || []).forEach(it => { if (it.key) S.aiNotes[it.key] = it; });
+  return (j.items || []).length;
+}
+
+// 6c. Polish an email draft - every amount must match the rule draft
+function amountsIn(s){ return new Set([...String(s).matchAll(/(?:₹|Rs\.?\s?|INR\s?)\s?([\d,]+(?:\.\d{1,2})?)/gi)].map(m => round2(parseAmount(m[1])))); }
+async function aiPolish(g){
+  const t = S.tracker[g.tan];
+  const base = ruleDraft(g, t.status === 'Sent' && reminderDue(t));
+  const {mask, unmask} = masker();
+  const prompt = `Rewrite this email to a customer's accounts team so it is polite, clear and professional (Indian business English). Keep EVERY amount, quarter, certificate number, section and invoice number exactly as given. Do not add any new amounts. Keep the numbered list of items and the signature. Return JSON {"subject":"","body":""}.\n\nSUBJECT: ${mask(base.subject)}\n\nBODY:\n${mask(base.body)}`;
+  const j = parseJSON(unmask(await callAI(SYS, prompt, {maxTokens: 1800})));
+  const want = amountsIn(base.body), got = amountsIn(j.body || '');
+  const missingAmt = [...want].filter(a => !got.has(a)), extra = [...got].filter(a => !want.has(a));
+  if (!j.body || missingAmt.length || extra.length){
+    return {ok:false, reason: `Amounts didn't match the reconciliation (missing: ${missingAmt.map(inr).join(', ')||'none'}; new: ${extra.map(inr).join(', ')||'none'}). Kept the rule-based draft.`};
+  }
+  t.subject = ensureRef(j.subject || base.subject, g); t.draft = j.body; t.aiPolished = true; saveTracker();
+  return {ok:true};
+}
+
+// 6d. Map unmapped customer names to TANs
+async function aiMap(){
+  const un = [...new Set(S.books.filter(b => String(b.resolvedTan).startsWith('UNMAPPED:')).map(b => b.name))];
+  if (!un.length) return 0;
+  const known = [...new Map([...S.as26.map(a => [a.tan, a.name]), ...S.customers.filter(c=>c.tan).map(c => [c.tan, c.name]), ...S.certs.filter(c=>c.tanDeductor).map(c => [c.tanDeductor, c.deductorName])]).entries()].map(([tan, name]) => ({tan, name}));
+  const prompt = `Match each customer name from the books to the most likely deductor in the KNOWN list (same company, allowing abbreviations, spelling and suffix differences). Only suggest a match if you are reasonably confident. Return JSON {"matches":[{"book_name":"","tan":"","known_name":"","confidence":"high|medium|low","reason":""}]}.\n\nBOOK NAMES: ${JSON.stringify(un)}\n\nKNOWN: ${JSON.stringify(known)}`;
+  const j = parseJSON(await callAI(SYS, prompt, {maxTokens: 1200}));
+  S.mapSuggest = (j.matches || []).filter(m => m.tan && known.some(k => k.tan === m.tan) && un.includes(m.book_name));
+  return S.mapSuggest.length;
+}
+
+// 6e. Summary note
+async function aiSummary(){
+  const {mask, unmask} = masker();
+  const k = kpiData();
+  const exc = S.recon.filter(r => r.issues.length).map(r => `${r.name} ${qLabel(r.q,r.fy)}: books ${r.booksTds}, 26AS ${r.asCount ? r.asDep : 'nil'}, 16A ${r.certCount ? r.certTds : 'nil'} – ${r.issues.map(i=>ISSUE[i].label).join(', ')}`);
+  const prompt = `Write a short review note (max 220 words, plain text with short headings and bullets) for the engagement partner on this TDS credit reconciliation of ${$('sDeductee').value} for FY ${S.recon[0]?.fy||''}. Cover: overall position, key risks (amount of credit at risk), top items to chase, and any internal items to review. Use only the figures given.\n\nTOTALS: books TDS ${k.books}, 26AS TDS ${k.as26}, Form 16A TDS ${k.cert}, credit at risk ${k.risk}, matched lines ${k.matched} of ${k.lines}.\nEXCEPTIONS:\n${mask(exc.join('\n'))}`;
+  return unmask(await callAI(SYS, prompt, {maxTokens: 900}));
+}
+
+/* =====================================================================
+   7. RENDERING
+   ===================================================================== */
+function renderCerts(){
+  $('cntCerts').textContent = S.certs.length;
+  if (!S.certs.length){ $('tblCerts').innerHTML = '<tr><td class="empty">No certificates loaded yet.</td></tr>'; return; }
+  let h = '<tr><th>File</th><th>Cert. No.</th><th>Last updated</th><th>Deductor</th><th>TAN</th><th>PAN (deductee)</th><th>AY</th><th>Quarter</th><th>Section</th><th class="n">Amount paid</th><th class="n">TDS deposited</th><th>Source / notes</th></tr>';
+  S.certs.forEach((c, i) => {
+    const miss = c.missing?.length;
+    h += `<tr><td class="small">${esc(c.file)}</td><td>${esc(c.certificateNo)}</td><td>${fmtDate(c.lastUpdatedOn)}</td><td>${esc(c.deductorName)}</td><td>${esc(c.tanDeductor)}</td><td>${esc(c.panDeductee)}</td><td>${esc(c.assessmentYear)}</td><td>${esc(c.quarter)} ${esc(c.fy)}</td><td>${esc(c.sections)}</td><td class="n">${num(c.amountPaid)}</td><td class="n">${num(c.tdsDeposited)}</td>
+      <td>${miss ? `<span class="chip c-bad">Missing: ${esc(c.missing.join(', '))}</span> <button class="btn ai sm" data-fix="${i}">AI fix</button>` : `<span class="chip ${c.source.includes('AI') ? 'c-ai' : 'c-ok'}">${esc(c.source)}</span>`}
+      ${c.panDeductee && $('sPan').value && c.panDeductee !== $('sPan').value.toUpperCase() ? '<span class="chip c-bad">Different deductee PAN</span>' : ''}</td></tr>`;
+  });
+  $('tblCerts').innerHTML = h;
+}
+
+function kpiData(){
+  const s = k => round2(S.recon.reduce((a, r) => a + (r[k]||0), 0));
+  return {books: s('booksTds'), as26: s('asDep'), cert: s('certTds'),
+    risk: round2(S.recon.filter(r => !r.issues.includes('TIMING') && !r.issues.includes('BOOKS_FIX')).reduce((a, r) => a + Math.max(0, r.booksTds - r.asDep), 0)),
+    matched: S.recon.filter(r => !r.issues.length).length, lines: S.recon.length, exc: S.recon.filter(r => r.issues.length).length};
+}
+function renderRecon(){
+  const k = kpiData();
+  $('cntExc').textContent = k.exc;
+  $('kpis').innerHTML = `
+    <div class="kpi"><div class="l">TDS as per books</div><div class="v">${inr(k.books)}</div></div>
+    <div class="kpi"><div class="l">TDS as per Form 26AS</div><div class="v">${inr(k.as26)}</div></div>
+    <div class="kpi"><div class="l">TDS as per Form 16A</div><div class="v">${inr(k.cert)}</div></div>
+    <div class="kpi ${k.risk > 0 ? 'bad' : 'ok'}"><div class="l">Credit at risk (books > 26AS)</div><div class="v">${inr(k.risk)}</div></div>
+    <div class="kpi ok"><div class="l">Matched lines</div><div class="v">${k.matched} / ${k.lines}</div></div>
+    <div class="kpi"><div class="l">Deductors to follow up</div><div class="v">${S.fus.length}</div></div>`;
+  const cats = ['All', 'Deductor action', 'Internal review', 'Matched'];
+  $('filters').innerHTML = cats.map(c => `<button data-f="${c}" class="${S.filter === c ? 'on' : ''}">${c} (${c === 'All' ? S.recon.length : S.recon.filter(r => r.status === c).length})</button>`).join('');
+  // Unmapped customers
+  const un = [...new Set(S.books.filter(b => String(b.resolvedTan).startsWith('UNMAPPED:')).map(b => b.name))];
+  let ub = '';
+  if (un.length){
+    ub = `<div class="note warn"><b>${un.length} customer name(s) in books could not be matched to a TAN:</b> ${un.map(esc).join('; ')}. Add the TAN in the Customers sheet, or <button class="btn ai sm" id="btnAiMap">AI: suggest matches</button></div>`;
+    if (S.mapSuggest.length) ub += `<div class="aibox"><div class="h">AI suggestions. Accept only the ones you agree with.</div>` + S.mapSuggest.map((m, i) => `<div class="row" style="margin:4px 0"><b>${esc(m.book_name)}</b> → ${esc(m.known_name)} (${esc(m.tan)}) <span class="chip c-ai">${esc(m.confidence)}</span> <span class="muted small">${esc(m.reason)}</span> <button class="btn sec sm" data-accept="${i}">Accept</button></div>`).join('') + '</div>';
+  }
+  $('unmappedBox').innerHTML = ub;
+  const rows = S.recon.filter(r => S.filter === 'All' || r.status === S.filter);
+  if (!rows.length){ $('tblRecon').innerHTML = '<tr><td class="empty">Nothing to show. Run the reconciliation first.</td></tr>'; return; }
+  let h = '<tr><th>Deductor</th><th>TAN</th><th>Quarter</th><th class="n">Books TDS</th><th class="n">26AS TDS</th><th class="n">Form 16A TDS</th><th class="n">Books − 26AS</th><th class="n">16A − 26AS</th><th>Section &amp; rate (books / 26AS)</th><th>Status</th></tr>';
+  for (const r of rows){
+    const ai = S.aiNotes[r.key];
+    h += `<tr><td><b>${esc(r.name)}</b>${r.invoices.length ? `<div class="muted small">${esc(r.invoices.join(', '))}</div>` : ''}</td><td>${esc(r.tan.replace('UNMAPPED:','—'))}</td><td style="white-space:nowrap">${esc(r.q)} ${esc(r.fy)}</td>
+      <td class="n">${num(r.booksTds)}</td><td class="n">${r.asCount ? num(r.asDep) : '<span class="muted">—</span>'}${[...r.aStatus].some(s=>s!=='F') ? ` <span class="chip c-warn">${esc([...r.aStatus].join('/'))}</span>` : ''}</td>
+      <td class="n">${r.certCount ? num(r.certTds) : '<span class="muted">—</span>'}</td>
+      <td class="n ${Math.abs(r.diffBooks26) > 0.009 ? 'neg' : ''}">${num(r.diffBooks26)}</td><td class="n ${r.diffCert26 ? 'neg' : ''}">${r.diffCert26 == null ? '' : num(r.diffCert26)}</td>
+      <td class="small">${esc([...r.bSec].join('/') || '—')}${r.bRate ? ' ' + pct(r.bRate) : ''} / ${esc([...r.aSec].join('/') || '—')}${r.aRate ? ' ' + pct(r.aRate) : ''}${r.rcptLines ? `<div class="muted">Withheld from payment: ${num(r.withheld)}</div>` : ''}</td>
+      <td>${r.issues.length ? r.issues.map(i => `<span class="chip ${ISSUE[i].cls}">${ISSUE[i].label}</span>`).join('') : '<span class="chip c-ok">Matched</span>'}
+      ${ai ? `<div class="aibox"><div class="h">AI draft · review before relying on it</div>${esc(ai.explanation)}<br><b>Likely cause:</b> ${esc(ai.likely_cause)}<br><b>Next step:</b> ${esc(ai.next_step)}</div>` : ''}</td></tr>`;
+  }
+  $('tblRecon').innerHTML = h;
+}
+
+function reminderDue(t){ return !!t && t.status === 'Sent' && t.sentOn && (Date.now() - t.sentOn) / 864e5 >= (Number($('sRemind').value) || 7); }
+function fuStatus(t){ return reminderDue(t) ? 'Reminder due' : t.status; }
+function renderFollow(){
+  $('cntFu').textContent = S.fus.filter(g => !['Resolved'].includes(S.tracker[g.tan]?.status)).length;
+  const cats = ['All', 'Not sent', 'Sent', 'Reminder due', 'Reply received', 'Resolved'];
+  $('fuFilters').innerHTML = cats.map(c => `<button data-fu="${c}" class="${S.fuFilter === c ? 'on' : ''}">${c} (${c === 'All' ? S.fus.length : S.fus.filter(g => fuStatus(S.tracker[g.tan]) === c).length})</button>`).join('');
+  const list = S.fus.filter(g => S.fuFilter === 'All' || fuStatus(S.tracker[g.tan]) === S.fuFilter);
+  if (!S.fus.length){ $('fuList').innerHTML = '<div class="card empty">No follow-ups needed. Run the reconciliation first.</div>'; return; }
+  $('fuList').innerHTML = list.map(g => {
+    const t = S.tracker[g.tan], st = fuStatus(t), rem = reminderDue(t);
+    const d = !g.items.length ? {subject:'', body:''} : t.draft ? {subject: ensureRef(t.subject, g), body: t.draft} : ruleDraft(g, rem);
+    const stCls = {'Not sent':'c-grey', 'Sent':'c-info', 'Reminder due':'c-bad', 'Reply received':'c-warn', 'Resolved':'c-ok'}[st];
+    return `<div class="fu" data-tan="${esc(g.tan)}">
+      <div class="hd"><h3>${esc(g.name)}</h3><span class="muted small">${esc(g.tan)}</span><span class="chip c-info">${esc(g.type)}</span>
+        <span class="chip ${stCls}">${esc(st)}</span>${t.aiPolished ? '<span class="chip c-ai">AI-polished · amounts verified</span>' : ''}
+        ${g.amountAtRisk ? `<span class="chip c-bad">Credit at risk ${inr(g.amountAtRisk)}</span>` : ''}<div class="spacer"></div>
+        <select class="sm" data-st="${esc(g.tan)}" style="width:auto">${['Not sent','Sent','Reply received','Resolved'].map(s => `<option ${t.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+      <div class="bd">
+        <div>
+          <div class="small"><b>Open items</b></div>
+          ${g.items.length ? `<ul class="small" style="padding-left:18px;margin:6px 0">${g.items.map(it => `<li><b>${esc(qLabel(it.r.q, it.r.fy))}:</b> ${esc(it.title)}</li>`).join('')}</ul>` : '<div class="note small">All items now match. Nothing more to chase.</div>'}
+          ${replyPanel(g, t)}
+          <label style="margin-top:10px">To</label><input type="email" data-to="${esc(g.tan)}" value="${esc(t.to ?? g.email)}" placeholder="Customer email">
+          <div class="small muted" style="margin-top:8px">${t.sentOn ? 'Sent on ' + fmtDate(new Date(t.sentOn)) : 'Not sent yet'}${t.reminders ? ' · reminders: ' + t.reminders : ''}</div>
+          <label style="margin-top:10px">Notes</label><input type="text" data-notes="${esc(g.tan)}" value="${esc(t.notes || '')}" placeholder="e.g. Revised return filed on…">
+        </div>
+        ${!g.items.length ? '<div class="empty">No email needed: this deductor is cleared.</div>' : `<div>
+          <label>Subject</label><input type="text" data-subj="${esc(g.tan)}" value="${esc(d.subject)}">
+          <label style="margin-top:8px">Email</label><textarea data-body="${esc(g.tan)}">${esc(d.body)}</textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn sm" data-mail="${esc(g.tan)}">Open in email app</button>
+            <button class="btn sec sm" data-copy="${esc(g.tan)}">Copy</button>
+            <button class="btn sec sm" data-one="${esc(g.tan)}">Outlook draft (.eml)</button>
+            <button class="btn ai sm" data-polish="${esc(g.tan)}">AI: polish</button>
+            <button class="btn sec sm" data-reset="${esc(g.tan)}">${rem ? 'Make reminder' : 'Reset to rule draft'}</button>
+            <div class="spacer"></div>
+            <button class="btn sec sm" data-sent="${esc(g.tan)}">Mark as sent</button>
+          </div>
+        </div>`}
+      </div></div>`;
+  }).join('');
+}
+function replyPanel(g, t){
+  const reps = t.replies || [];
+  if (!reps.length) return t.sentDates?.length ? `<div class="small muted" style="margin-top:8px">Sent ${t.sentDates.length} time(s) (from mailbox). No reply yet.</div>` : '';
+  const r = reps[reps.length - 1], a = r.ai;
+  return `<div class="aibox" style="margin-top:10px;background:#fffdf5;border-color:#f0dfa8">
+    <div class="h" style="color:#7a5b00">Latest reply · ${esc(fmtDate(new Date(r.date)))} · ${esc(r.fromName || r.from)}${reps.length > 1 ? ` · ${reps.length} replies` : ''}</div>
+    ${a ? `<div><b>AI summary:</b> ${esc(a.summary)}</div>${a.promised_action ? `<div><b>Promised:</b> ${esc(a.promised_action)}${a.promised_date ? ' by ' + esc(a.promised_date) : ''}</div>` : ''}
+      <div class="small muted">AI reading: ${esc((a.position||'').replace(/_/g,' '))}${a.suggested_status ? ' · suggests: ' + esc(a.suggested_status) : ''}</div>
+      ${a.suggested_status === 'Resolved' && t.status !== 'Resolved' ? `<button class="btn sec sm" data-accept-res="${esc(g.tan)}" style="margin-top:6px">Accept: mark Resolved</button>` : ''}`
+      : `<div style="white-space:pre-wrap">${esc((r.body || '').slice(0, 400))}${(r.body || '').length > 400 ? '…' : ''}</div>`}
+    ${r.certsAdded?.length ? `<div style="margin-top:4px"><span class="chip c-ok">Form 16A picked up: ${esc(r.certsAdded.join(', '))}</span></div>` : ''}
+    ${r.attachments?.length && !r.certsAdded?.length ? `<div class="small muted">Attachments: ${esc(r.attachments.join(', '))}</div>` : ''}
+  </div>`;
+}
+
+function inboxLogKey(){ return trackerKey() + ':inbox'; }
+function loadInboxLog(){ try { S.inboxLog = JSON.parse(localStorage.getItem(inboxLogKey()) || '[]'); } catch(e){ S.inboxLog = []; } }
+function saveInboxLog(){ try { localStorage.setItem(inboxLogKey(), JSON.stringify(S.inboxLog.slice(-500))); } catch(e){} }
+function b64ToBuf(b64){ const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; }
+
+async function aiReadReply(g, r){
+  const {mask, unmask} = masker();
+  const open = (g.items || []).map(it => `${qLabel(it.r.q, it.r.fy)}: ${it.title} (${it.facts})`).join('\n') || 'none';
+  const prompt = `A deductor replied to our TDS follow-up. Read the reply and return JSON {"summary":"one sentence","position":"agreed_to_correct|certificate_sent|already_corrected|disputes|needs_information|other","promised_action":"","promised_date":"dd-Mon-yyyy or empty","suggested_status":"Reply received|Resolved"}. Suggest "Resolved" only if the reply says the issue is already fully fixed or the certificate is attached. Do not invent amounts or dates that are not in the reply.\n\nOUR OPEN ITEMS:\n${mask(open)}\n\nREPLY FROM ${mask(r.from)}:\n${mask((r.body || '').slice(0, 3000))}${r.attachments?.length ? '\nATTACHMENTS: ' + r.attachments.join(', ') : ''}`;
+  const j = parseJSON(unmask(await callAI(SYS, prompt, {maxTokens: 400})));
+  if (j.promised_date && !(r.body || '').includes(String(j.promised_date).slice(0, 2))) j.promised_date = '';
+  return j;
+}
+
+async function syncInbox({silent = false} = {}){
+  const base = $('syUrl').value.trim(), key = $('syKey').value.trim(), pan = ($('sPan').value || '').toUpperCase();
+  if (!base || !key){ if (!silent) toast('Add the sync URL and access key under "Inbox sync settings" first.', 5000); $('syncCfg').open = true; return; }
+  if (!PAN_RE.test(pan)) throw new Error('Deductee PAN is missing. Run the reconciliation first.');
+  $('syncInfo').textContent = 'Syncing…';
+  const u = new URL(base);
+  u.searchParams.set('key', key); u.searchParams.set('pan', pan); u.searchParams.set('days', $('syDays').value || '120'); u.searchParams.set('me', $('syMe').value.trim());
+  let j;
+  try { const res = await fetch(u.toString(), {method:'GET', redirect:'follow'}); const txt = await res.text(); j = JSON.parse(txt || '{}'); }
+  catch(e){ throw new Error('Could not reach the sync service (' + e.message + '). Check the URL, that the n8n workflow is active / Apps Script is deployed, and the key.'); }
+  if (!j.ok) throw new Error('Sync service said: ' + (j.error || 'no data. Check the access key.'));
+  const fy = S.recon[0]?.fy;
+  const msgs = (j.messages || []).filter(m => m.refPan === pan && (!fy || m.refFy === fy));
+  let nSent = 0, nRep = 0, nCert = 0; const newReplies = [];
+  for (const m of msgs){
+    const t = (S.tracker[m.refTan] ??= {status:'Not sent'});
+    t.seen ??= []; if (t.seen.includes(m.id)) continue; t.seen.push(m.id);
+    const when = new Date(m.date).getTime() || Date.now();
+    const name = S.recon.find(r => r.tan === m.refTan)?.name || m.refTan;
+    const entry = {id: m.id, date: m.date, tan: m.refTan, name, direction: m.direction, from: m.fromName ? `${m.fromName} <${m.from}>` : m.from, subject: m.subject, provider: m.provider, summary: '', action: ''};
+    if (m.direction === 'sent'){
+      t.sentDates = [...(t.sentDates || []), when].sort();
+      t.reminders = Math.max(0, t.sentDates.length - 1);
+      t.sentOn = Math.max(t.sentOn || 0, when);
+      if (t.status === 'Not sent'){ t.status = 'Sent'; entry.action = 'Marked as Sent'; } else entry.action = t.sentDates.length > 1 ? 'Reminder logged' : 'Logged';
+      entry.summary = (m.body || '').split('\n').find(l => l.trim()) || '';
+      nSent++;
+    } else {
+      const r = {id: m.id, date: m.date, from: m.from, fromName: m.fromName, body: m.body || '', attachments: (m.attachments || []).map(a => a.name), certsAdded: []};
+      for (const a of (m.attachments || [])){
+        if (!a.base64) continue;
+        try {
+          const c = parseForm16A(await pdfToLines(b64ToBuf(a.base64)));
+          if (c.certificateNo && c.tanDeductor && !S.certs.some(x => x.certificateNo === c.certificateNo && x.tanDeductor === c.tanDeductor)){
+            c.file = a.name + ' (email ' + fmtDate(new Date(m.date)) + ')'; c.source = 'Email reply'; S.certs.push(c); r.certsAdded.push(c.certificateNo); nCert++;
+          }
+        } catch(e){ /* not a Form 16A */ }
+      }
+      t.replies = [...(t.replies || []), r]; t.lastReplyOn = when;
+      if (t.status !== 'Resolved'){ t.status = 'Reply received'; entry.action = 'Marked as Reply received'; }
+      if (r.certsAdded.length) entry.action += (entry.action ? '; ' : '') + 'Form 16A ' + r.certsAdded.join(', ') + ' extracted';
+      entry.summary = r.body.replace(/\s+/g,' ').slice(0, 220);
+      entry.attachments = r.attachments.join(', ');
+      newReplies.push({tan: m.refTan, r, entry});
+      nRep++;
+    }
+    S.inboxLog.push(entry);
+  }
+  if (nCert){ reconcile(); } else buildFollowUps();
+  // AI reads new replies (if connected)
+  if (aiOn() && newReplies.length){
+    for (const x of newReplies){
+      const g = S.fus.find(f => f.tan === x.tan) || {items: []};
+      try { const a = await aiReadReply(g, x.r); x.r.ai = a; x.entry.summary = a.summary; x.entry.promise = [a.promised_action, a.promised_date].filter(Boolean).join(' by '); x.entry.ai = true; }
+      catch(e){ x.entry.aiError = e.message; }
+    }
+  }
+  S.lastSync = {at: Date.now(), count: msgs.length};
+  try { localStorage.setItem(trackerKey() + ':lastSync', JSON.stringify(S.lastSync)); } catch(e){}
+  saveTracker(); saveInboxLog(); renderAll();
+  const msg = `Inbox synced: ${nSent} sent mail(s), ${nRep} new repl${nRep === 1 ? 'y' : 'ies'}${nCert ? `, ${nCert} Form 16A extracted from attachments` : ''}.`;
+  if (!silent || nSent || nRep) toast(msg, 6000);
+  return msg;
+}
+
+function renderInbox(){
+  const ls = S.lastSync;
+  $('syncInfo').textContent = ls ? `Last synced ${fmtDate(new Date(ls.at))} ${new Date(ls.at).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})} · ${ls.count} tagged mail(s) found` : 'Not synced yet.';
+  const rows = [...(S.inboxLog || [])].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if (!rows.length){ $('tblInbox').innerHTML = '<tr><td class="empty">No inbox activity yet. Sent follow-ups and replies will appear here after a sync.</td></tr>'; return; }
+  $('tblInbox').innerHTML = '<tr><th>Date</th><th>Deductor</th><th>Direction</th><th>From</th><th>What it says</th><th>Promised</th><th>Attachments</th><th>Updated in tracker</th></tr>' +
+    rows.map(r => `<tr><td style="white-space:nowrap">${esc(fmtDate(new Date(r.date)))}</td><td><b>${esc(r.name)}</b><div class="muted small">${esc(r.tan)}</div></td>
+      <td>${r.direction === 'sent' ? '<span class="chip c-info">Sent</span>' : '<span class="chip c-warn">Reply</span>'}</td><td class="small">${esc(r.from)}</td>
+      <td class="small">${r.ai ? '<span class="chip c-ai">AI</span> ' : ''}${esc(r.summary)}</td><td class="small">${esc(r.promise || '')}</td><td class="small">${esc(r.attachments || '')}</td><td class="small">${esc(r.action)}</td></tr>`).join('');
+}
+function renderAll(){ renderCerts(); renderRecon(); renderFollow(); renderInbox(); }
+
+/* =====================================================================
+   8. EMAIL OUTPUT (mailto / .eml) and EXCEL EXPORT
+   ===================================================================== */
+function currentDraft(tan){
+  const t = S.tracker[tan], g = S.fus.find(x => x.tan === tan);
+  const fallback = g ? (t.draft ? {subject: t.subject, body: t.draft} : ruleDraft(g, reminderDue(t))) : {subject:'', body:''};
+  const subject = document.querySelector(`[data-subj="${tan}"]`)?.value ?? fallback.subject;
+  return {to: document.querySelector(`[data-to="${tan}"]`)?.value ?? t.to ?? g?.email ?? '', subject: g ? ensureRef(subject, g) : subject,
+    body: document.querySelector(`[data-body="${tan}"]`)?.value ?? fallback.body};
+}
+function emlFor(d){
+  const b64 = s => btoa(unescape(encodeURIComponent(s)));
+  const cc = $('sCc').value.trim();
+  return ['X-Unsent: 1', `To: ${d.to}`, cc ? `Cc: ${cc}` : null, `Subject: =?UTF-8?B?${b64(d.subject)}?=`, 'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '', b64(d.body).replace(/(.{76})/g, '$1\r\n')].filter(x => x !== null).join('\r\n');
+}
+function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+const safe = s => String(s).replace(/[^A-Za-z0-9 _-]/g,'').trim().slice(0,40);
+
+function exportExcel(){
+  if (!S.recon.length) return toast('Run the reconciliation first.');
+  const wb = XLSX.utils.book_new();
+  const k = kpiData();
+  const add = (name, aoa, widths) => { const ws = XLSX.utils.aoa_to_sheet(aoa, {cellDates:true}); if (widths) ws['!cols'] = widths.map(w => ({wch:w})); XLSX.utils.book_append_sheet(wb, ws, name); };
+  add('Summary', [['TDS Credit Reconciliation'], ['Deductee', $('sDeductee').value], ['PAN', $('sPan').value], ['Financial year', S.recon[0]?.fy || ''], ['Prepared on', fmtDate(new Date())], [],
+    ['TDS as per books', k.books], ['TDS as per Form 26AS', k.as26], ['TDS as per Form 16A', k.cert], ['Credit at risk (books > 26AS)', k.risk], ['Matched lines', `${k.matched} of ${k.lines}`], ['Deductors to follow up', S.fus.length], [],
+    ['Method: totals and differences are computed by rules. AI (if used) only explained exceptions and polished email wording; all amounts in AI text were verified against the rules.']], [34, 50]);
+  add('Reconciliation', [['Deductor','TAN','FY','Quarter','Books TDS','Withheld from payment','Books rate','26AS rate','26AS TDS deposited','26AS TDS deducted','Form 16A TDS','Books − 26AS','16A − 26AS','Books section','26AS section','26AS booking status','Certificates','Invoices','Status','Issues','AI explanation','AI likely cause','AI next step'],
+    ...S.recon.map(r => { const a = S.aiNotes[r.key] || {}; return [r.name, r.tan, r.fy, r.q, r.booksTds, r.rcptLines ? r.withheld : null, r.bRate ? pct(r.bRate) : '', r.aRate ? pct(r.aRate) : '', r.asCount ? r.asDep : null, r.asCount ? r.asDed : null, r.certCount ? r.certTds : null, r.diffBooks26, r.diffCert26,
+      [...r.bSec].join('/'), [...r.aSec].join('/'), [...r.aStatus].join('/'), r.certNos.join(', '), r.invoices.join(', '), r.status, r.issues.map(i => ISSUE[i].label).join('; '), a.explanation||'', a.likely_cause||'', a.next_step||'']; })],
+    [36,12,9,8,13,13,9,9,13,13,13,13,12,10,10,10,18,22,16,40,50,40,40]);
+  add('Follow-ups', [['Deductor','TAN','Type','To','Status','Sent on','Reminders','Last reply on','Reply summary','Promised','Credit at risk','Notes','Subject','Email'],
+    ...S.fus.map(g => { const t = S.tracker[g.tan], d = !g.items.length ? {subject:'', body:''} : t.draft ? {subject:ensureRef(t.subject, g), body:t.draft} : ruleDraft(g, reminderDue(t)); const lr = (t.replies || []).slice(-1)[0];
+      return [g.name, g.tan, g.type, t.to ?? g.email, fuStatus(t), t.sentOn ? fmtDate(new Date(t.sentOn)) : '', t.reminders || 0, lr ? fmtDate(new Date(lr.date)) : '', lr ? (lr.ai?.summary || lr.body.slice(0, 300)) : '', lr?.ai ? [lr.ai.promised_action, lr.ai.promised_date].filter(Boolean).join(' by ') : '', g.amountAtRisk, t.notes || '', d.subject, d.body]; })],
+    [34,12,18,30,14,12,10,13,50,30,13,30,50,90]);
+  add('Inbox log', [['Date','Deductor','TAN','Direction','From','Subject','What it says','Promised','Attachments','Updated in tracker'],
+    ...[...(S.inboxLog || [])].sort((a, b) => String(a.date).localeCompare(String(b.date))).map(r => [fmtDate(new Date(r.date)), r.name, r.tan, r.direction, r.from, r.subject, r.summary, r.promise || '', r.attachments || '', r.action])],
+    [12,34,12,10,34,60,60,30,24,30]);
+  add('Form 16A extract', [['File','Certificate No.','Last updated on','Deductor','PAN of deductor','TAN','PAN of deductee','AY','FY','Quarter','From','To','Section','Amount paid','TDS deducted','TDS deposited','Source','Missing fields'],
+    ...S.certs.map(c => [c.file, c.certificateNo, c.lastUpdatedOn, c.deductorName, c.panDeductor, c.tanDeductor, c.panDeductee, c.assessmentYear, c.fy, c.quarter, c.from, c.to, c.sections, c.amountPaid, c.tdsDeducted, c.tdsDeposited, c.source, (c.missing||[]).join(', ')])],
+    [32,14,13,36,13,12,13,9,9,8,12,12,10,13,13,13,18,20]);
+  add('Form 26AS detail', [['Deductor','TAN','Section','Transaction date','FY','Quarter','Booking status','Amount paid','Tax deducted','TDS deposited'],
+    ...S.as26.map(a => { const p = fyq(a.date); return [a.name, a.tan, a.section, a.date, p.fy, p.q, a.status, a.paid, a.deducted, a.deposited]; })], [36,12,9,14,9,8,9,13,13,13]);
+  add('Books', [['Customer','TAN (mapped)','Invoice','Date','FY','Quarter','Section','Taxable amount','GST','Amount received','TDS expected','Withheld from payment'],
+    ...S.books.map(b => [b.name, String(b.resolvedTan).replace('UNMAPPED:','NOT MAPPED'), b.invoice, b.date, b.fy, b.quarter, b.section, b.amount, b.gst, b.received, b.tds, b.received == null ? null : round2(b.amount + (b.gst||0) - b.received)])], [36,14,12,12,9,8,9,13,11,13,13,13]);
+  XLSX.writeFile(wb, `TDS_Reconciliation_${safe($('sPan').value || 'client')}_${S.recon[0]?.fy || ''}.xlsx`);
+}
+
+/* =====================================================================
+   9. SETTINGS PERSISTENCE
+   ===================================================================== */
+const SETTINGS = ['sTol','sRemind','sReply','sCc','sSign','aiPreset','aiModel','aiUrl','syUrl','syKey','syMe','syDays'];
+function saveSettings(){
+  try {
+    const o = {}; SETTINGS.forEach(id => o[id] = $(id).value);
+    o.aiMask = $('aiMask').checked; o.aiRemember = $('aiRemember').checked; o.syAuto = $('syAuto').checked;
+    if ($('aiRemember').checked) o.aiKey = $('aiKey').value;
+    localStorage.setItem('tdsrecon:settings', JSON.stringify(o));
+  } catch(e){}
+}
+function loadSettings(){
+  try {
+    const o = JSON.parse(localStorage.getItem('tdsrecon:settings') || '{}');
+    SETTINGS.forEach(id => { if (o[id] != null) $(id).value = o[id]; });
+    if (o.aiMask != null) $('aiMask').checked = o.aiMask;
+    if (o.syAuto != null) $('syAuto').checked = o.syAuto;
+    if (o.aiRemember){ $('aiRemember').checked = true; $('aiKey').value = o.aiKey || ''; }
+  } catch(e){}
+}
+
+/* =====================================================================
+   10. EVENTS
+   ===================================================================== */
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('active', x === b));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + b.dataset.tab));
+});
+const goTab = t => document.querySelector(`nav button[data-tab="${t}"]`).click();
+$('fPdf').onchange = e => $('fPdfInfo').textContent = e.target.files.length ? `${e.target.files.length} PDF(s) selected` : '';
+$('f26').onchange = e => $('f26Info').textContent = e.target.files[0]?.name || '';
+$('fBooks').onchange = e => $('fBooksInfo').textContent = e.target.files[0]?.name || '';
+
+$('btnRun').onclick = async () => {
+  const pdfs = [...$('fPdf').files], f26 = $('f26').files[0], fb = $('fBooks').files[0];
+  if (!window.pdfjsLib || !window.XLSX){ alert('The PDF/Excel libraries did not load. Please connect to the internet once and reopen this file.'); return; }
+  if (!f26 || !fb){ alert('Please upload at least Form 26AS and the Books file. Form 16A PDFs are recommended.'); return; }
+  $('btnRun').disabled = true; $('log').textContent = 'Starting…'; prog(0.02);
+  try {
+    log('Reading Form 26AS…');
+    const p = /\.txt$/i.test(f26.name) ? parse26ASText(await readFile(f26, 'text')) : parse26ASSheet(await readFile(f26));
+    S.as26 = p.rows; S.as26Meta = p.meta;
+    if (p.meta.pan && !$('sPan').value) $('sPan').value = p.meta.pan;
+    if (p.meta.name && !$('sDeductee').value) $('sDeductee').value = p.meta.name;
+    log(`  ✓ ${S.as26.length} TDS entries from ${new Set(S.as26.map(a=>a.tan)).size} deductors${p.meta.fy ? ' · FY ' + p.meta.fy : ''}`);
+    if (!S.as26.length) log('  ! No Part-I entries found. Check the file format.');
+    prog(0.08);
+    log('Reading Books and Customers…');
+    const bk = parseBooks(await readFile(fb)); S.books = bk.books; S.customers = bk.customers;
+    log(`  ✓ ${S.books.length} invoice lines · ${S.customers.length} customers`);
+    prog(0.1);
+    loadTracker();
+    if (pdfs.length){ log(`Reading ${pdfs.length} Form 16A PDF(s)…`); await extractCerts(pdfs); }
+    log('Reconciling…'); reconcile(); prog(1);
+    const k = kpiData();
+    log(`Done: ${k.lines} lines · ${k.matched} matched · ${k.exc} exceptions · ${S.fus.length} deductor follow-ups · credit at risk ${inr(k.risk)}`);
+    renderAll(); goTab('recon');
+    if ($('syAuto').checked && $('syUrl').value.trim() && $('syKey').value.trim()){
+      log('Syncing inbox…');
+      try { log('  ✓ ' + await syncInbox({silent:true})); } catch(e){ log('  ! Inbox sync: ' + e.message); }
+    }
+  } catch(e){ log('ERROR: ' + e.message); console.error(e); }
+  $('btnRun').disabled = false;
+};
+
+$('btnTemplate').onclick = () => {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Customer Name','TAN','Invoice No','Invoice Date','Section','Taxable Amount','GST','Amount Received','TDS Expected','Quarter (optional)']]), 'Books');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Customer Name','TAN','PAN','Contact Person','Email']]), 'Customers');
+  XLSX.writeFile(wb, 'Books_and_Customers_TEMPLATE.xlsx');
+};
+
+$('filters').onclick = e => { const f = e.target.dataset.f; if (f){ S.filter = f; renderRecon(); } };
+$('fuFilters').onclick = e => { const f = e.target.dataset.fu; if (f){ S.fuFilter = f; renderFollow(); } };
+$('btnExport').onclick = exportExcel;
+
+async function withBusy(btn, fn){ const t = btn.textContent; btn.disabled = true; btn.textContent = 'Working…'; try { await fn(); } catch(e){ toast(e.message, 6000); console.error(e); } btn.disabled = false; btn.textContent = t; }
+
+$('tblCerts').onclick = e => { const i = e.target.dataset.fix; if (i == null) return;
+  withBusy(e.target, async () => { const f = await aiFixCert(S.certs[+i]); toast(f.length ? `AI filled and verified: ${f.join(', ')}` : 'AI could not find the missing values in the PDF text.'); reconcile(); renderAll(); }); };
+$('btnAiFixAll').onclick = e => withBusy(e.target, async () => {
+  const todo = S.certs.filter(c => c.missing?.length && c.text); if (!todo.length) return toast('No certificates with missing fields.');
+  let n = 0; for (const c of todo) n += (await aiFixCert(c)).length; toast(`AI filled ${n} field(s). Each value was checked against the PDF text.`); reconcile(); renderAll(); });
+$('btnAiExplain').onclick = e => withBusy(e.target, async () => { const n = await aiExplain(); if (n) toast(`AI explained ${n} exception(s).`); renderRecon(); });
+$('unmappedBox').onclick = e => {
+  if (e.target.id === 'btnAiMap') return withBusy(e.target, async () => { const n = await aiMap(); toast(n ? `${n} suggestion(s). Please review.` : 'No confident matches found.'); renderRecon(); });
+  const a = e.target.dataset.accept; if (a != null){ const m = S.mapSuggest[+a]; S.manualMap[normName(m.book_name)] = m.tan; S.mapSuggest.splice(+a, 1); reconcile(); renderAll(); toast(`Mapped ${m.book_name} → ${m.tan}`); }
+};
+$('btnAiSummary').onclick = e => withBusy(e.target, async () => { if (!S.recon.length) throw new Error('Run the reconciliation first.'); const s = await aiSummary();
+  $('aiSummary').className = 'aibox'; $('aiSummary').innerHTML = `<div class="h">AI draft · review before sharing</div><div style="white-space:pre-wrap">${esc(s)}</div>`; });
+$('btnAiDraftAll').onclick = e => withBusy(e.target, async () => {
+  let ok = 0, bad = 0; for (const g of S.fus){ if (S.tracker[g.tan].status === 'Resolved') continue; const r = await aiPolish(g); r.ok ? ok++ : bad++; }
+  toast(`AI polished ${ok} draft(s)${bad ? `; ${bad} kept as rule-based drafts because the amounts didn't match` : ''}.`, 6000); renderFollow(); });
+$('btnEml').onclick = async () => {
+  if (!S.fus.length) return toast('No follow-ups yet.');
+  const zip = new JSZip();
+  S.fus.filter(g => S.tracker[g.tan].status !== 'Resolved').forEach(g => zip.file(`${safe(g.name)}_${g.tan}.eml`, emlFor(currentDraft(g.tan))));
+  download(await zip.generateAsync({type:'blob'}), `TDS_followups_${safe($('sPan').value || 'client')}.zip`);
+  toast('Open each .eml file. Outlook shows it as a draft you can review and send.', 5000);
+};
+
+$('fuList').addEventListener('input', e => {
+  const d = e.target.dataset, t = S.tracker[d.body || d.subj || d.to || d.notes]; if (!t) return;
+  if (d.body){ t.draft = e.target.value; t.subject = document.querySelector(`[data-subj="${d.body}"]`).value; }
+  if (d.subj){ t.subject = e.target.value; t.draft = document.querySelector(`[data-body="${d.subj}"]`).value; }
+  if (d.to) t.to = e.target.value; if (d.notes) t.notes = e.target.value;
+  saveTracker();
+});
+$('fuList').addEventListener('change', e => { const tan = e.target.dataset.st; if (!tan) return; const t = S.tracker[tan]; t.status = e.target.value; if (t.status === 'Sent' && !t.sentOn) t.sentOn = Date.now(); saveTracker(); renderFollow(); });
+$('fuList').addEventListener('click', async e => {
+  const d = e.target.dataset;
+  if (d.acceptRes){ const t = S.tracker[d.acceptRes]; t.status = 'Resolved'; t.notes = ((t.notes ? t.notes + ' | ' : '') + 'Resolved on reply (AI suggestion accepted ' + fmtDate(new Date()) + ')'); saveTracker(); renderFollow(); return; }
+  const tan = d.mail || d.copy || d.one || d.polish || d.reset || d.sent; if (!tan) return;
+  const g = S.fus.find(x => x.tan === tan), t = S.tracker[tan], cur = currentDraft(tan);
+  if (d.mail){
+    const cc = $('sCc').value.trim();
+    const href = `mailto:${encodeURIComponent(cur.to)}?${cc ? 'cc=' + encodeURIComponent(cc) + '&' : ''}subject=${encodeURIComponent(cur.subject)}&body=${encodeURIComponent(cur.body)}`;
+    if (href.length > 1900) toast('Long email: if it gets cut off in your mail app, use "Outlook draft (.eml)" instead.', 6000);
+    window.location.href = href;
+  }
+  if (d.copy){ try { await navigator.clipboard.writeText(`Subject: ${cur.subject}\n\n${cur.body}`); toast('Copied to clipboard.'); } catch(err){ toast('Copy failed. Select the text and copy it manually.'); } }
+  if (d.one) download(new Blob([emlFor(cur)], {type:'message/rfc822'}), `${safe(g.name)}_${tan}.eml`);
+  if (d.polish) withBusy(e.target, async () => { const r = await aiPolish(g); toast(r.ok ? 'AI polished the draft. All amounts verified.' : r.reason, 7000); renderFollow(); });
+  if (d.reset){ const rem = reminderDue(t); const rd = ruleDraft(g, rem); t.draft = rd.body; t.subject = rd.subject; t.aiPolished = false; if (rem){ t.reminders = (t.reminders||0); } saveTracker(); renderFollow(); }
+  if (d.sent){ if (t.status === 'Sent' && reminderDue(t)) t.reminders = (t.reminders||0) + 1; t.status = 'Sent'; t.sentOn = Date.now(); saveTracker(); renderFollow(); toast('Marked as sent. A reminder will show after ' + $('sRemind').value + ' days.'); }
+});
+
+$('btnSync').onclick = e => withBusy(e.target, async () => { if (!S.recon.length) throw new Error('Run the reconciliation first.'); await syncInbox(); });
+['syUrl','syKey','syMe','syDays','syAuto'].forEach(id => $(id).addEventListener('change', saveSettings));
+$('aiPreset').onchange = () => { const p = PRESETS[$('aiPreset').value]; $('aiUrl').value = p.url; $('aiModel').value = p.model; $('aiTestRes').textContent = ''; updateBadge(); };
+['aiUrl','aiModel','aiKey','aiMask','aiRemember','aiCloudOk','sTol','sRemind','sReply','sCc','sSign'].forEach(id => $(id).addEventListener('change', () => { updateBadge(); }));
+['sTol'].forEach(id => $(id).addEventListener('change', () => { if (S.recon.length){ reconcile(); renderAll(); } }));
+$('btnAiTest').onclick = e => withBusy(e.target, async () => {
+  $('aiTestRes').textContent = 'Testing…';
+  try { const r = await callAI('Reply with the single word OK.', 'Say OK', {maxTokens: 5}); $('aiTestRes').innerHTML = `<span style="color:var(--ok)">Connected ✓</span> (model replied: ${esc(r.trim().slice(0,30))})`; }
+  catch(err){ $('aiTestRes').innerHTML = `<span style="color:var(--bad)">Failed: ${esc(err.message)}</span>${isLocal($('aiUrl').value) ? ' Check the server is running and CORS is enabled.' : ''}`; }
+});
+
+loadSettings(); updateBadge(); renderAll();
+</script>
+</body>
+</html>

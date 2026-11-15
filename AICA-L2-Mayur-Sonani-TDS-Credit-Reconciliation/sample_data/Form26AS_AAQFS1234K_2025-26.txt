@@ -1,0 +1,47 @@
+File Creation Date^15-11-2025^^^^^^^^
+Permanent Account Number (PAN)^Current Status of PAN^Financial Year^Assessment Year^^^^^^
+AAQFS1234K^Active^2025-26^2026-27^^^^^^
+Name of Assessee^SHREE SAMPLE CONSULTANTS LLP^^^^^^^^
+^^^^^^^^^
+PART-I - Details of Tax Deducted at Source^^^^^^^^^
+Sr. No.^Name of Deductor^TAN of Deductor^^^^^Total Amount Paid / Credited^Total Tax Deducted #^Total TDS Deposited
+1^ALPHA MEDIA SOLUTIONS PRIVATE LIMITED^MUMA10001A^^^^^800000.00^80000.00^80000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^15-May-2025^F^31-Jul-2025^-^500000.00^50000.00^50000.00
+^2^194J^12-Aug-2025^F^31-Oct-2025^-^300000.00^30000.00^30000.00
+2^BRIGHTWAVE (INDIA) PRIVATE LIMITED^MUMB20002B^^^^^250000.00^25000.00^25000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^20-Jun-2025^F^31-Jul-2025^-^250000.00^25000.00^25000.00
+3^CEDAR RETAIL LIMITED^DELC30003C^^^^^400000.00^40000.00^40000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^05-May-2025^F^31-Jul-2025^-^400000.00^40000.00^40000.00
+4^DELTA INFRA PROJECTS LTD^PNED40004D^^^^^450000.00^45000.00^45000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^18-Jun-2025^F^31-Jul-2025^-^450000.00^45000.00^45000.00
+5^FALCON LOGISTICS PRIVATE LIMITED^BLRF60006F^^^^^120000.00^2400.00^2400.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194C^10-Jun-2025^F^31-Jul-2025^-^120000.00^2400.00^2400.00
+6^GALAXY TELECOM LIMITED^MUMG70007G^^^^^150000.00^15000.00^15000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^25-Sep-2025^F^31-Oct-2025^-^150000.00^15000.00^15000.00
+7^HORIZON PHARMA LIMITED^AHMH80008H^^^^^180000.00^18000.00^18000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^09-Sep-2025^F^31-Oct-2025^-^180000.00^18000.00^18000.00
+8^IRIS EDUCATION SERVICES LIMITED^MUMI90009I^^^^^100000.00^10000.00^10000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^02-Jul-2025^F^31-Oct-2025^-^100000.00^10000.00^10000.00
+9^JUPITER HOTELS LIMITED^CHEJ10010J^^^^^80000.00^8000.00^8000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^14-Jul-2025^U^31-Oct-2025^-^80000.00^8000.00^8000.00
+10^KAPPA ENGINEERING WORKS PRIVATE LIMITED^PNEK11011K^^^^^100000.00^20000.00^20000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^04-Aug-2025^F^31-Oct-2025^-^100000.00^20000.00^20000.00
+11^LOTUS FOODS LIMITED^DELL12012L^^^^^118000.00^11800.00^11800.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194J^19-Aug-2025^F^31-Oct-2025^-^118000.00^11800.00^11800.00
+12^MAPLE CONSULTING LLP^MUMM13013M^^^^^100000.00^2000.00^2000.00
+^Sr. No.^Section ^Transaction Date^Status of Booking*^Date of Booking^Remarks**^Amount Paid / Credited^Tax Deducted ##^TDS Deposited
+^1^194C^25-Sep-2025^F^31-Oct-2025^-^100000.00^2000.00^2000.00
+^^^^^^^^^
+PART-II - Details of Tax Deducted at Source for 15G / 15H^^^^^^^^^
+No Transactions Present^^^^^^^^^
