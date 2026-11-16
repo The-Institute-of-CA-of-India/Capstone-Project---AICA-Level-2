@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>PDF Redactor PRO</title>
+  <rect width="256" height="256" rx="56" fill="#2A3A8D"/>
+  <path d="M74 34H156L198 76V210a14 14 0 0 1-14 14H74a14 14 0 0 1-14-14V48a14 14 0 0 1 14-14Z" fill="#FFFFFF"/>
+  <path d="M156 34V64a12 12 0 0 0 12 12H198Z" fill="#C9D3F0"/>
+  <rect x="82" y="96" width="94" height="18" rx="3" fill="#1B2560"/>
+  <rect x="82" y="128" width="62" height="18" rx="3" fill="#1B2560"/>
+  <rect x="82" y="160" width="40" height="18" rx="3" fill="#1B2560"/>
+  <circle cx="186" cy="188" r="44" fill="#2A3A8D"/>
+  <circle cx="186" cy="188" r="35" fill="#298D39"/>
+  <path d="M168 189l12 12 24-26" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

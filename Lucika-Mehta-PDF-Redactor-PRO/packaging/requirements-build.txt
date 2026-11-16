@@ -1,0 +1,2 @@
+# Only needed on the computer that BUILDS the installer (not by the people who install it)
+pyinstaller>=6.10
