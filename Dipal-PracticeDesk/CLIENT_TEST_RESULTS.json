@@ -1,0 +1,18 @@
+{
+  "passed": 12,
+  "checks": [
+    "Save queue serializes updates and preserves the latest edit",
+    "Failed save remains recoverable in memory",
+    "Retry reuses save ID and original revision",
+    "Conflict blocks automatic resubmission",
+    "Email preflight rejects unsaved conflict",
+    "Late polling response cannot overwrite an in-flight local edit",
+    "Demo email is disabled",
+    "Demo persistence creates no Google request",
+    "First-run authorization automatically creates the personal database",
+    "Repeat startup reuses the connected workspace without creating another database",
+    "Disconnected Account exposes setup instead of unusable email checks",
+    "Capstone helper is explicitly declared and its navigation renders"
+  ],
+  "method": "Node VM with simulated DOM and asynchronous google.script.run. Not interactive browser verification."
+}
