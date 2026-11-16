@@ -1,0 +1,31 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import crypto from 'node:crypto';
+const root=new URL('../',import.meta.url),html=fs.readFileSync(new URL('Index.html',root),'utf8');let code=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace('void bootCloud();','');
+const nodes=new Map();function el(s){if(!nodes.has(s))nodes.set(s,{id:'',textContent:'',innerHTML:'',dataset:{},style:{},open:false,hidden:false,classList:{toggle(){}},setAttribute(){},append(){},prepend(){},remove(){},click(){},showModal(){this.open=true},close(){this.open=false}});return nodes.get(s)}
+let behavior=async()=>{throw Error('No handler')},calls=[];
+function runner(success,failure){return new Proxy({},{get(_,name){if(name==='withSuccessHandler')return fn=>runner(fn,failure);if(name==='withFailureHandler')return fn=>runner(success,fn);return (...args)=>{calls.push({name,args});Promise.resolve().then(()=>behavior(name,args)).then(success,failure)}}})}
+const context={console,Date,JSON,Set,Map,Math,Error,String,Array,Number,Boolean,crypto:{randomUUID:()=>crypto.randomUUID()},document:{querySelector:el,querySelectorAll:()=>[],createElement:()=>el(crypto.randomUUID()),addEventListener(){},body:{append(){}},hidden:false},window:{addEventListener(){}},localStorage:{getItem(){return null},setItem(){throw Error('Live storage should not use localStorage')}},google:{script:{run:runner()}},setTimeout,clearTimeout,setInterval(){},alert(){},confirm:()=>true};vm.createContext(context);vm.runInContext(code,context);
+const exec=s=>vm.runInContext(s,context),checks=[];function ok(name,fn){fn();checks.push(name)}
+exec("cloudReady=true;cloudRevision=1;cloudInfo={email:'owner@example.com',emails:[]};state=blank();demo=false;");
+let rev=1;behavior=async(name,args)=>{assert.equal(name,'pdSave');return {revision:++rev,at:new Date().toISOString()}};
+exec("state.settings.firm='First';persist();state.settings.firm='Second';persist();");await exec('flushCloud()');
+ok('Save queue serializes updates and preserves the latest edit',()=>{assert.equal(calls.length,2);assert.equal(calls[1].args[0].settings.firm,'Second');assert.equal(exec('cloudRevision'),3)});
+let fail=true;calls=[];behavior=async()=>{if(fail){fail=false;throw Error('Connection lost after commit')}return {revision:4,at:new Date().toISOString(),replayed:true}};
+exec("state.settings.firm='Retry value';persist();");await new Promise(r=>setTimeout(r,10));ok('Failed save remains recoverable in memory',()=>{assert.ok(exec('cloudCurrent'));assert.ok(exec('cloudError').includes('Connection lost'))});exec("cloudError='';");await exec('drainCloud()');ok('Retry reuses save ID and original revision',()=>{assert.equal(calls.length,2);assert.equal(calls[0].args[2],calls[1].args[2]);assert.equal(calls[0].args[1],calls[1].args[1]);assert.equal(exec('cloudCurrent'),null)});
+behavior=async()=>{throw Error('CONFLICT: Another tab saved newer data')};exec("state.settings.firm='Conflict copy';persist();");await new Promise(r=>setTimeout(r,10));ok('Conflict blocks automatic resubmission',()=>assert.ok(exec('cloudError').includes('CONFLICT')));let flushError;try{await exec('flushCloud()')}catch(e){flushError=e}ok('Email preflight rejects unsaved conflict',()=>assert.match(flushError.message,/CONFLICT/));
+exec("cloudError='';cloudCurrent=null;cloudPending=null;cloudSaving=false;cloudInfo={email:'owner@example.com',emails:[]};cloudReady=true;");let resolvePoll;behavior=(name)=>new Promise(resolve=>{assert.equal(name,'pdBootstrap');resolvePoll=resolve});let polling=exec('pollCloud()');await new Promise(r=>setTimeout(r,0));exec("state.settings.firm='Edit made during refresh';cloudPending=cloneState(state);");resolvePoll({revision:999,state:{version:1,settings:{firm:'Remote older copy',sender:'X'},clients:[],assignments:[],activity:[]},emails:[],email:'owner@example.com'});await polling;ok('Late polling response cannot overwrite an in-flight local edit',()=>assert.equal(exec('state.settings.firm'),'Edit made during refresh'));
+exec("cloudPending=null;demo=true;");let demoError;try{await exec('flushCloud()')}catch(e){demoError=e}ok('Demo email is disabled',()=>assert.match(demoError.message,/demo/));let n=calls.length;exec('persist()');ok('Demo persistence creates no Google request',()=>assert.equal(calls.length,n));
+// Regression checks for incomplete setup and the project-brief startup route.
+exec("demo=false;cloudReady=false;cloudCurrent=null;cloudPending=null;cloudError='';cloudSaving=false;cloudInfo=null;");
+const assessorWorkspace={email:'assessor@example.com',state:{version:1,settings:{firm:'Assessor',sender:'Assessor'},clients:[],assignments:[],activity:[]},revision:1,emails:[],quota:{remaining:10,error:''}};
+let createCount=0;
+behavior=async name=>{if(name==='pdBootstrap')return {email:'assessor@example.com',needsSetup:true,quota:{remaining:10,error:''}};assert.equal(name,'pdCreateWorkspace');createCount++;return assessorWorkspace};
+await exec('bootCloud()');
+ok('First-run authorization automatically creates the personal database',()=>{assert.equal(createCount,1);assert.equal(exec('cloudReady'),true);assert.equal(exec('cloudInfo.email'),'assessor@example.com')});
+behavior=async name=>{assert.equal(name,'pdBootstrap');return assessorWorkspace};
+await exec('bootCloud()');
+ok('Repeat startup reuses the connected workspace without creating another database',()=>{assert.equal(createCount,1);assert.equal(exec('cloudRevision'),1)});
+exec("cloudReady=false;accountModal();");
+ok('Disconnected Account exposes setup instead of unusable email checks',()=>{assert.match(el('#modal').innerHTML,/Create my Google Sheets database/);assert.ok(!el('#modal').innerHTML.includes('data-act="cloud-health"'))});
+exec("cloudReady=true;view='capstone';active=null;render();");
+ok('Capstone helper is explicitly declared and its navigation renders',()=>{assert.match(code,/function capstoneView\s*\(/);assert.match(el('#app').innerHTML,/Google Edition project brief/)});
+fs.writeFileSync(new URL('CLIENT_TEST_RESULTS.json',root),JSON.stringify({passed:checks.length,checks,method:'Node VM with simulated DOM and asynchronous google.script.run. Not interactive browser verification.'},null,2));console.log(JSON.stringify({passed:checks.length,checks},null,2));
