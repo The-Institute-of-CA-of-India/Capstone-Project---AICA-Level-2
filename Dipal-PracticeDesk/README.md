@@ -25,7 +25,9 @@ CA practices collect client documents in stages across engagements. Missing item
 
 Faculty user manual: **[FACULTY_USER_MANUAL.html](FACULTY_USER_MANUAL.html)** — includes startup, the assessment workflow, and remedies for known errors. Open it in a browser; Print / Save as PDF is available.
 
-Open **START.html**, or use the hosted app:
+On Windows, double-click **START_WINDOWS.cmd** from the extracted folder. It requests a fresh temporary browser profile in private mode so your existing Google sessions are not reused. Sign in using one Google account. On other platforms, open **START.html** for the manual single-account launch method.
+
+Hosted app:
 
 https://script.google.com/macros/s/AKfycbxjD5ORkffzmQ92GhTaMXSDEktt-qFmWyF8YPw-yskHHLfIP6ncvc4FT0J_dYa1FD8G/exec
 
@@ -102,7 +104,8 @@ AI assisted requirements analysis, implementation, debugging and test preparatio
 | Index.html | Application interface |
 | appsscript.json | Runtime, OAuth scopes and deployment identity |
 | FACULTY_USER_MANUAL.html | Faculty start guide, workflow, status definitions and troubleshooting |
-| START.html | Faculty launcher for the owner-supplied deployed app |
+| START_WINDOWS.cmd | Windows launcher requesting an isolated private browser profile |
+| START.html | Cross-platform instructions and direct app link |
 | OWNER_UPDATE.html | One-time owner update with full Index.html copy button |
 | SETUP.html | Independent source installation and acceptance instructions |
 | tests/ | Reproducible simulated tests |
@@ -114,3 +117,7 @@ AI assisted requirements analysis, implementation, debugging and test preparatio
 ## Author
 
 Created by Dipal — Chartered Accountant, AICA Level 2 capstone project.
+
+## Google access errors and launcher limits
+
+A Google error before PracticeDesk loads cannot be repaired by the application code. The Windows launcher reduces account-session conflicts; it does not guarantee Google access or mail delivery. Managed browser policy can override profile settings or block private mode. Use organization-approved access and resolve deployment/OAuth issues with the owner. The launcher neither installs a browser nor alters normal profiles, signs users out, changes security policies or requests administrative rights. It leaves a temporary profile folder in Windows TEMP; no automatic recursive cleanup is performed.

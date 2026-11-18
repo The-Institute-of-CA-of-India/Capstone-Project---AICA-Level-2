@@ -1,7 +1,7 @@
 PracticeDesk Google Edition 2.1
 Created by Dipal
 
-FACULTY: See FACULTY_USER_MANUAL.html for the start guide and errors, then open START.html. Sign in with your own Google account and review permissions. Your personal database is created automatically after the owner installs this update.
+FACULTY: See FACULTY_USER_MANUAL.html for the start guide and errors, then double-click START_WINDOWS.cmd on Windows. On other devices, open START.html for the manual method. Sign in with your own Google account and review permissions. Your personal database is created automatically after the owner installs this update.
 
 OWNER: Open OWNER_UPDATE.html. Update Index.html in the existing Apps Script project and update the existing deployment to a new version. Do not create a different deployment URL.
 
