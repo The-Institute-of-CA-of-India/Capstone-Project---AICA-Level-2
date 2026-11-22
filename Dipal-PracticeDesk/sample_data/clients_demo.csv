@@ -1,0 +1,5 @@
+﻿client_name,contact_person,email,phone
+Aravalli Demo LLP,Meera Shah,meera@example.com,
+Narmada Demo Co,Rohan Patel,rohan@example.com,
+  ARAVALLI DEMO LLP  ,Duplicate Contact,duplicate@example.com,
+Invalid Email Demo,Test Contact,not-an-email,
