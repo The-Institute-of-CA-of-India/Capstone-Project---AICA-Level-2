@@ -1,130 +1,226 @@
-# Vendor Name Matching
+# PulseTrack
 
-A desktop tool that checks the bank details in a payment file against an approved vendor master before the payment is released. It answers one question for every payment line: **does this account number and IFSC code really belong to the vendor named on the payment?**
+**Train harder. Sync smarter.**
 
-Built by **Ritesh Dedhia**, Chartered Accountant, as a capstone project for the AICA Level 2 programme.
+PulseTrack is a native Android fitness, workout logging, and daily activity-tracking application built with **Kotlin** and **Jetpack Compose**. Designed with an offline-first architecture, it combines automatic hardware step counting, a **108+ strength and cardio exercise catalog**, live foreground workout and rest timers, **Epley 1RM** personal record tracking, **Android Health Connect** integration, and real-time **Cloud Firestore** synchronization.
 
-![Main window showing results](docs/images/main_window_results.png)
+---
 
-## The problem
+## Table of Contents
 
-Payment files prepared for RTGS or NEFT are checked by eye against vendor records. This is slow, and it misses the most dangerous error: a payment where the bank account is valid but belongs to a different party. Typical causes are a typing mistake, a changed bank account that was never verified, or a fraudulent instruction.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Data Persistence & Cloud Schema](#data-persistence--cloud-schema)
+- [Permissions & Hardware Integration](#permissions--hardware-integration)
+- [Security & Privacy Safeguards](#security--privacy-safeguards)
+- [Getting Started & Build Instructions](#getting-started--build-instructions)
+- [Testing](#testing)
 
-## What the tool does
-
-1. Loads a payment file (.xlsx) chosen by the user.
-2. Looks up each row in the **Unique Vendor Master** using **Beneficiary Account Number + IFSC Code**.
-3. Confirms that the **Beneficiary Account Name** agrees with the vendor registered against that account.
-4. Writes **Status** (`Matched` or `Not Matched`) and **Remarks** (the reason) into a copy of the payment file, shaded green or red.
-5. Never changes the original file. Every run saves a new time stamped file.
-6. **Print Verified PDF:** creates a PDF of the payment file with all its original columns on landscape pages, but only if every line is Matched. If any line is Not Matched, printing is refused.
+---
 
 ## Features
 
-| Area | Feature |
+### 1. Authentication & Onboarding
+- **Google Sign-In** via **Jetpack Credential Manager** (`GetGoogleIdOption` auto-sign-in and `GetSignInWithGoogleOption`) backed by **Firebase Authentication**.
+- Guided onboarding to configure **Metric (`kg · km`)** or **Imperial (`lbs · mi`)** units, daily step targets (`3,000–25,000`), and weekly workout goals (`1–7`).
+
+### 2. Today Dashboard & Daily Step Tracking
+- **Animated Step Goal Ring** displaying daily steps, remaining distance to goal, active workout minutes, and estimated total calories burned.
+- **Hardware Step Sensor (`TYPE_STEP_COUNTER`)**: Reboot-safe and midnight-rollover-aware delta calculation via `StepSensorManager` and `FitnessCalculators.calculateStepSensorDelta`.
+- **Manual Step Logging**: Quick `+500` / `+1,000` buttons plus a custom manual step entry sheet.
+- **7-Day Interactive Calendar Strip & Active Streak**: Switch between recent days with goal-completion indicators and consecutive active-day streak tracking.
+
+### 3. Strength & Cardio Workout Logger (`108+` Built-In Exercises)
+- **108 Built-In Exercises**:
+  - **80 Strength Exercises** across 7 muscle groups (`Chest`, `Back`, `Legs`, `Shoulders`, `Arms`, `Core`, `Full Body`).
+  - **28 Cardio Exercises** across 8 modalities (`Run`, `Cycle`, `Walk`, `HIIT`, `Swim`, `Row`, `Climb`, `Elliptical`) with exercise-specific MET values.
+- **Custom Exercise Creation**: Users can create and save custom strength or cardio exercises scoped to their account.
+- **1-Tap Starter Templates**: Quick-launch *Push Day*, *Pull Day*, *Leg Day*, or *5K Run*.
+- **Live Timers & Foreground Service**: Drift-free `SystemClock.elapsedRealtime()` workout stopwatch persisted across restarts, backed by `ActiveWorkoutService` (`foregroundServiceType="health"`), plus `60s` / `90s` / `120s` rest countdown presets with vibration feedback.
+- **Automatic PR & Tonnage Engine**: Deterministic chronological recalculation of working tonnage and **Epley 1RM** personal records whenever workouts are added, edited, or deleted.
+
+### 4. Progress & Analytics
+- Switchable **7D / 30D / 90D** ranges with summary KPIs (`Avg Steps`, `Sessions`, `Volume`).
+- Custom Jetpack Compose **Canvas Charts**:
+  - **Daily Steps vs. Goal** bar chart with dashed threshold indicator.
+  - **Estimated 1RM Progression** line chart per exercise.
+  - **Muscle Group Balance** progress bars and **All-Time Personal Records** list.
+
+### 5. Health Connect, Backup & Account Management
+- **Two-Way Health Connect Sync**: Reads aggregated daily steps, imports external exercise sessions (with deduplication), and writes logged workouts, calories, and distance.
+- **Granular Sync & Display Toggles**: Independent controls for Steps, Workouts, Calories, units, step goals, and Android 12+ Material You dynamic accents.
+- **Data Portability & Deletion**: Export workouts as **CSV** or full backups as **JSON** via Android share sheet, or permanently delete account and cloud/local data.
+
+---
+
+## Tech Stack
+
+| Category | Technologies |
 |---|---|
-| Matching | Bank details are searched first, then the name is verified, so a valid account under the wrong name is caught |
-| Matching | Tolerates spacing, hyphens, upper or lower case, "&" and "and", "Private Limited" and "Pvt Ltd" |
-| Matching | Account numbers are read as text, so leading zeros are never lost |
-| Results | Summary cards, colour coded table and a reason for every failure |
-| Printing | **Print Verified PDF** is allowed only when every line is Matched, re-checks the master at click time and includes all original columns |
-| Vendor master | Edit inside the tool: add, change, delete, search, paste from Excel |
-| Vendor master | **Bulk upload** from Excel (add to existing, or replace) and **download** to Excel |
-| Vendor master | **Duplicate entries are not allowed**: the same account and IFSC cannot be saved twice |
-| Security | Editing the master needs an **admin passkey** (stored only as a salted hash) with lockout after three wrong attempts |
-| Safety | Automatic backup of the master before every save |
-| Setup | Installs its own libraries on first run, no manual setup needed |
+| **Language** | Kotlin (JVM 11 target) |
+| **UI & Styling** | Jetpack Compose (BOM `2024.09.00`), Material Design 3, Material Icons Extended, Edge-to-Edge, Adaptive `NavigationBar` / `NavigationRail` |
+| **Architecture** | MVVM (`ViewModel`, `StateFlow`, `collectAsStateWithLifecycle`), Repository pattern, Kotlin Coroutines & Flow |
+| **Navigation** | Navigation Compose (`2.8.9`) |
+| **Local Database** | Room (`2.7.0`) with KSP (`2.3.5`) & explicit migrations (`v1 → v2 → v3`) |
+| **Preferences** | Jetpack DataStore Preferences (`1.1.7`) |
+| **Background Work** | WorkManager (`2.10.0`) periodic & immediate offline-to-cloud sync |
+| **Cloud & Auth** | Firebase BoM (`35.1.0`), Firebase Auth, Cloud Firestore (named database), Jetpack Credential Manager (`1.5.0`), Google Identity (`googleid`) |
+| **Health & Sensors** | Android Health Connect SDK (`1.1.0`), `SensorManager` (`TYPE_STEP_COUNTER`), `VibratorManager` |
+| **Testing** | JUnit 4, Kotlinx Coroutines Test, Robolectric (`4.16.1`), Node.js `@firebase/rules-unit-testing` |
+| **Build System** | Gradle (Kotlin DSL), Android Gradle Plugin (`9.1.1`), Version Catalog (`gradle/libs.versions.toml`) |
 
-Printing is allowed only for a fully matched file. This is the PDF made from `Payment_Demo_AllMatched.xlsx`:
+---
 
-![Verified PDF page](docs/images/verified_pdf_page.png)
+## Architecture
 
-![Vendor master editor with a duplicate flagged](docs/images/master_editor_duplicate.png)
-
-## Quick start
-
-**Requirements:** Python 3.8 or newer (IDLE is enough) and an internet connection for the first run only.
-
-### Option 1: run the guided demo (recommended for review)
+PulseTrack follows an **offline-first MVVM + Repository** architecture:
 
 ```
-python prepare_demo.py --launch
+UI Layer (Jetpack Compose Screens + WorkoutLoggerSheet)
+        │
+        ▼
+ViewModel Layer (PulseTrackViewModel, WorkoutLoggerViewModel)
+        │
+        ▼
+Repository Layer (FitnessRepository + FitnessCalculators)
+   ├── Local Cache: Room (PulseTrackDatabase / FitnessDao) + DataStore (UserPreferencesStore)
+   ├── Remote Sync: FirestoreSyncSource + WorkManager (SyncWorker)
+   └── Device APIs: HealthConnectManager + StepSensorManager + ActiveWorkoutService
 ```
 
-This creates a separate `demo_workspace` folder, copies in the fictional demo data and opens the tool on it. Your real working folder is not touched. When the editor asks for a passkey for the first time, you can use `Demo@1234`.
+All user mutations write immediately to **Room** and **DataStore** for zero-latency responsiveness, then synchronize to **Cloud Firestore**. Failed or offline writes remain marked `PENDING` / unsynced and are flushed automatically by `SyncWorker` once network connectivity is restored.
 
-### Option 2: run the tool directly
+---
 
-Open `Vendor_Name_Matching.py` in IDLE and press **F5**, or run:
+## Project Structure
 
+```text
+.
+├── app/
+│   ├── build.gradle.kts                  # App Gradle config, dependencies, ProGuard, Secrets plugin
+│   ├── google-services.json              # Firebase Android app configuration
+│   ├── proguard-rules.pro                # Keep rules for Firestore DTOs, Health Connect, Credential Manager
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml       # Permissions, Health Connect rationale aliases, ActiveWorkoutService
+│       │   ├── java/com/example/
+│       │   │   ├── PulseTrackApplication.kt       # AppContainer DI & periodic WorkManager sync scheduling
+│       │   │   ├── MainActivity.kt                # Auth gate, adaptive NavigationBar/Rail, NavHost
+│       │   │   ├── HealthConnectRationaleActivity.kt # Privacy & Health Connect data disclosure screen
+│       │   │   ├── data/
+│       │   │   │   ├── healthconnect/HealthConnectManager.kt
+│       │   │   │   ├── local/
+│       │   │   │   │   ├── PulseTrackDatabase.kt  # Room DB v3 + MIGRATION_1_2 & MIGRATION_2_3
+│       │   │   │   │   ├── RoomEntities.kt        # DailyMetricEntity, WorkoutEntity, ExerciseSetEntity, CustomExerciseEntity
+│       │   │   │   │   └── FitnessDao.kt          # User-scoped Room queries & transactions
+│       │   │   │   ├── preferences/UserPreferencesStore.kt # DataStore settings, step baseline, timer snapshot
+│       │   │   │   ├── remote/
+│       │   │   │   │   ├── FirestoreModels.kt     # @Keep DTOs & FirestorePayloadMapper
+│       │   │   │   │   ├── FirestoreSyncSource.kt # Auth-checked Firestore streams & writes
+│       │   │   │   │   └── FirestoreErrorHandler.kt # Redacted Firestore diagnostics
+│       │   │   │   ├── repository/FitnessRepository.kt
+│       │   │   │   ├── sensor/StepSensorManager.kt
+│       │   │   │   └── sync/SyncWorker.kt
+│       │   │   ├── domain/
+│       │   │   │   ├── model/FitnessModels.kt     # 108-exercise catalog, templates, enums, domain models
+│       │   │   │   └── util/FitnessCalculators.kt # Epley 1RM, MET burn, step delta, CSV & ID sanitizers
+│       │   │   ├── service/ActiveWorkoutService.kt # Health foreground service for active workout timer
+│       │   │   └── ui/
+│       │   │       ├── auth/                      # AuthHelper, AuthScreen, OnboardingScreen
+│       │   │       ├── screens/                   # TodayScreen, WorkoutsScreen, ProgressScreen, HealthSettingsScreen, WorkoutLoggerSheet
+│       │   │       ├── theme/                     # Color.kt, Theme.kt, Type.kt
+│       │   │       └── viewmodel/                 # PulseTrackViewModel, WorkoutLoggerViewModel
+│       │   └── res/
+│       │       ├── drawable/                      # Adaptive launcher artwork & workout notification icon
+│       │       ├── mipmap-*/                      # Adaptive app launcher icons
+│       │       ├── values/                        # strings.xml, colors.xml, themes.xml
+│       │       └── xml/                           # backup_rules.xml & data_extraction_rules.xml
+│       └── test/java/com/example/
+│           ├── PulseTrackQaSuiteTest.kt           # End-to-end catalog, mapper, & security regression tests
+│           ├── FitnessCalculatorsTest.kt          # Unit tests for 1RM, pace, units, and sensor deltas
+│           ├── ExampleRobolectricTest.kt
+│           └── ExampleUnitTest.kt
+├── firebase-blueprint.json               # Cloud Firestore entity & collection schema
+├── firebase.json                         # Firestore emulator & rules configuration
+├── firestore.rules                       # Zero-trust owner-only Firestore security rules
+├── firestore.test.js                     # Firestore emulator rules test suite (Node.js)
+├── gradle/libs.versions.toml             # Centralized dependency version catalog
+├── build.gradle.kts                      # Root Gradle configuration
+└── settings.gradle.kts                   # Project module settings (`PulseTrack`)
 ```
-python Vendor_Name_Matching.py
+
+---
+
+## Data Persistence & Cloud Schema
+
+### Cloud Firestore Collections
+Configured against a named Firestore database (`R.string.firestore_database_id`) as defined in `firebase-blueprint.json`:
+- `/users/{userId}` — Profile display name, email, unit preference (`METRIC` / `IMPERIAL`), step & workout goals, Health Connect toggles, and onboarding status.
+- `/users/{userId}/dailyMetrics/{dateKey}` — Per-day (`YYYY-MM-DD`) step counts, manual adjustments, active minutes, calories burned, and daily step goal.
+- `/users/{userId}/workouts/{workoutId}` — Workout metadata (`STRENGTH` / `CARDIO`, duration, calories, distance, volume, PR count, notes, source) and up to 100 embedded exercise set maps.
+
+### Local Room Schema (`pulsetrack_offline.db`, Version 3)
+- `daily_metrics` (PK: `userId, dateKey`)
+- `workouts` (PK: `id`, indexed on `userId, dateKey` and `userId, startedAtMs`)
+- `exercise_sets` (PK: `id`, foreign key cascade on `workouts.id`)
+- `custom_exercises` (Composite PK: `userId, name`, migrated via `MIGRATION_2_3`)
+
+---
+
+## Permissions & Hardware Integration
+
+Declared in `app/src/main/AndroidManifest.xml`:
+- **Network**: `INTERNET`, `ACCESS_NETWORK_STATE`
+- **Activity & Background Timer**: `ACTIVITY_RECOGNITION` (runtime requested on Android 10+ / required for Android 14+ `health` foreground service), `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_HEALTH`, `POST_NOTIFICATIONS`, `VIBRATE`
+- **Health Connect**: `health.READ_STEPS`, `health.READ_EXERCISE`, `health.WRITE_EXERCISE`, `health.READ_TOTAL_CALORIES_BURNED`, `health.WRITE_TOTAL_CALORIES_BURNED`, `health.READ_DISTANCE`, `health.WRITE_DISTANCE`
+
+---
+
+## Security & Privacy Safeguards
+
+- **Zero-Trust Firestore Rules**: `firestore.rules` denies all access by default and enforces `request.auth.uid == userId`, strict field allowlists, immutable `userId` and `createdAt`, date/ID format validation, and numeric bounds on every write.
+- **Cross-Account Local Isolation**: Room DAO queries/deletes filter by `userId`, `custom_exercises` uses a composite `(userId, name)` primary key, Health Connect workout IDs are prefixed per user, and sign-out clears DataStore session state and stops active foreground timer services.
+- **CSV Export Hardening**: `FitnessCalculators.sanitizeCsvCell` flattens embedded newlines and neutralizes leading formula characters (`=`, `+`, `-`, `@`, `\t`, `\r`) before quote-escaping.
+- **Redacted Error Logging**: `FirestoreErrorHandler` masks UIDs in logged paths, strips user emails and provider metadata, and restricts verbose error details to debug builds.
+- **Re-Authentication Guard on Account Deletion**: `HealthSettingsScreen` and `FitnessRepository.deleteAccountAndAllData` verify user ownership and a recent Google Sign-In via Credential Manager before erasing cloud or local data.
+- **Backup Exclusions**: `allowBackup="false"` alongside explicit exclusions in `backup_rules.xml` and `data_extraction_rules.xml` prevents Room databases, DataStore preferences, and shared preferences from being included in cloud backups or device-to-device transfers.
+
+---
+
+## Getting Started & Build Instructions
+
+### Prerequisites
+- **Android Studio** (Meerkat or newer recommended) with **Android SDK 36** (`minSdk = 26`, `targetSdk = 36`)
+- **JDK 11+**
+- **Firebase Project** with **Authentication (Google provider enabled)** and **Cloud Firestore** (using the project's `app/google-services.json` and `firestore.rules`)
+- *(Optional)* **Node.js** & **Firebase CLI** if running local Firestore rules tests
+
+### Building the App
+
+Using Gradle directly:
+```bash
+gradle assembleDebug
 ```
 
-By default the tool uses the folder `C:\Day 5` on Windows (and `~/Day 5` on other systems) for the vendor master and the output files. To use another folder, set the environment variable `VENDOR_MATCH_FOLDER` before starting.
-
-### If a library is missing
-
-The tool installs PyQt5, openpyxl and reportlab by itself. If that fails, run this single line:
-
-```
-pip install PyQt5 openpyxl reportlab
+For a release build (uses upload keystore environment variables `KEYSTORE_PATH`, `STORE_PASSWORD`, `KEY_PASSWORD` if configured):
+```bash
+gradle assembleRelease
 ```
 
-## Demo and test data
+---
 
-All data is **fictional**. See [`sample_data/EXPECTED_RESULTS.md`](sample_data/EXPECTED_RESULTS.md) for the correct answer to every row.
+## Testing
 
-| File | Expected result |
-|---|---|
-| `Payment_Demo_Mixed.xlsx` | 12 rows: 5 Matched, 7 Not Matched (covers every scenario) |
-| `Payment_Demo_AllMatched.xlsx` | 5 rows: 5 Matched |
-| `Payment_Demo_NewVendors.xlsx` | 3 Not Matched before the bulk upload, 3 Matched after it |
-| `Sample_Verified_Output.pdf` | What the Print Verified PDF button produces for `Payment_Demo_AllMatched.xlsx` |
-| `Bulk_Upload_Demo.xlsx` | 3 added, 2 duplicates, 1 name conflict and 1 incomplete row skipped |
-
-## Automated tests
-
-43 tests cover the cleaning rules, header handling, matching, backups, passkey, duplicate prevention, bulk upload, download, the editor window and the Print Verified PDF rules. They run without a screen and work only inside a temporary folder. A built-in safety check stops them if the tool ever points anywhere else, so real vendor masters, passkeys and backups (for example in `C:\Day 5`) are never touched.
-
-```
-python tests/test_vendor_name_matching.py
+### 1. Android JVM Unit & QA Tests
+Run the calculator, catalog, schema mapping, and security regression suites:
+```bash
+gradle :app:testDebugUnitTest --tests com.example.FitnessCalculatorsTest --tests com.example.PulseTrackQaSuiteTest --tests com.example.ExampleUnitTest
 ```
 
-In IDLE, open the test file and press **F5**. The test file finds the tool automatically, whether it is saved in the `tests` folder or next to `Vendor_Name_Matching.py`, and it builds the demo data itself if the `sample_data` folder is missing.
-
-## Project structure
-
+### 2. Firestore Security Rules Tests
+Start the Firestore emulator on port `8085` (per `firebase.json`) and run `firestore.test.js`:
+```bash
+FIRESTORE_EMULATOR_HOST="127.0.0.1:8085" node --test firestore.test.js
 ```
-Ritesh-Dedhia-Vendor-Name-Matching/
-  README.md                       this file
-  Vendor_Name_Matching.py         the application (single file)
-  requirements.txt                libraries (PyQt5, openpyxl)
-  prepare_demo.py                 builds a clean demo folder, optional launch
-  sample_data/                    fictional master, payment files, bulk upload file, expected results
-  tests/                          automated test suite
-  docs/
-    TOOL_OVERVIEW.md              how the tool works (for the reviewer)
-    USER_GUIDE.md                 step by step usage
-    DEMO_SCRIPT.md                timed script for presenting and recording the demo
-    Capstone_Presentation.pptx    5 slide presentation
-    images/                       screenshots
-```
-
-## Documentation
-
-- [Tool overview](docs/TOOL_OVERVIEW.md)
-- [User guide](docs/USER_GUIDE.md)
-- [Demo script](docs/DEMO_SCRIPT.md)
-- [Presentation](docs/Capstone_Presentation.pptx)
-
-## Limitations
-
-- Excel `.xlsx` files only, with headers in row 1 and data from row 2. Only the first sheet is read.
-- Name matching is strict after normalisation. A near match such as "Sharma Traders" and "Sharma Trading Co" is deliberately reported as Not Matched, because payments should not pass on a guess.
-- The admin passkey protects the editor inside the tool. It does not encrypt the Excel file, so folder permissions should also restrict who can change the master file.
-- The tool supports one vendor master at a time.
-
-## Author
-
-Ritesh Dedhia, Chartered Accountant. Capstone project for AICA Level 2.
