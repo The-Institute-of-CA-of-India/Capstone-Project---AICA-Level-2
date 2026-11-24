@@ -1,0 +1,24 @@
+# CashSense - Python dependencies (all free / open source). Python 3.11 or newer.
+#   python -m pip install -r requirements.txt
+
+# Data, workbooks, statements
+openpyxl>=3.1
+pdfplumber>=0.11
+pypdf>=4.0
+reportlab>=4.0
+pillow>=10.0
+numpy>=1.26
+
+# App, API, dashboard
+fastapi>=0.110
+uvicorn>=0.29
+httpx>=0.27            # used by the automated tests (FastAPI TestClient)
+python-dotenv>=1.0
+requests>=2.31
+truststore>=0.9        # use the Windows certificate store (works behind antivirus HTTPS scanning)
+
+# Optional features
+playwright>=1.44       # offline browser agent (uses the Microsoft Edge already on Windows)
+imageio-ffmpeg>=0.5    # voice replies (OGG for Telegram)
+
+# Not Python (install separately, optional): Node.js 20+ and n8n for the scheduled workflows

@@ -1,0 +1,68 @@
+{
+  "name": "CashSense - Statement drop folder (data/inbox/drop)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "seconds", "secondsInterval": 30 } ] }
+      },
+      "name": "Every 30 seconds",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [ 0, 0 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/inbox/scan",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": { "timeout": 600000 }
+      },
+      "name": "Import new files (read, verify, categorise, reconcile)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 260, 0 ],
+      "credentials": { "httpHeaderAuth": { "id": "cashsenseApiKey01", "name": "CashSense API key" } },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [
+            { "leftValue": "={{ ($json.imported || []).length + ($json.failed || []).length }}",
+              "rightValue": 0, "operator": { "type": "number", "operation": "gt" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Any files processed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [ 520, 0 ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "imported", "value": "={{ ($json.imported || []).map(i => i.file).join(', ') }}", "type": "string" },
+            { "id": "f2", "name": "failed", "value": "={{ ($json.failed || []).map(i => i.file).join(', ') }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Log files",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [ 780, -80 ]
+    }
+  ],
+  "connections": {
+    "Every 30 seconds": { "main": [ [ { "node": "Import new files (read, verify, categorise, reconcile)", "type": "main", "index": 0 } ] ] },
+    "Import new files (read, verify, categorise, reconcile)": { "main": [ [ { "node": "Any files processed?", "type": "main", "index": 0 } ] ] },
+    "Any files processed?": { "main": [ [ { "node": "Log files", "type": "main", "index": 0 } ], [] ] }
+  },
+  "settings": { "executionOrder": "v1", "saveDataSuccessExecution": "none", "timezone": "Asia/Kolkata" },
+  "active": false
+}
