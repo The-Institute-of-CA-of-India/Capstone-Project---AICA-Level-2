@@ -1,0 +1,83 @@
+{
+  "name": "CashSense - Daily treasury run (08:00 IST)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [ { "field": "cronExpression", "expression": "0 8 * * *" } ] }
+      },
+      "name": "Every day 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [ 0, 0 ]
+    },
+    {
+      "parameters": {},
+      "name": "Run now (demo)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [ 0, 200 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/run/daily",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"browser\": true, \"notify\": true }",
+        "options": { "timeout": 600000 }
+      },
+      "name": "Reconcile + risk scan + approvals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 260, 100 ],
+      "credentials": { "httpHeaderAuth": { "id": "cashsenseApiKey01", "name": "CashSense API key" } }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [
+            { "leftValue": "={{ $json.high_risks }}", "rightValue": 0, "operator": { "type": "number", "operation": "gt" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "High-risk flags open?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [ 520, 100 ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8765/api/notify/escalation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "name": "Send URGENT alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [ 780, 0 ],
+      "credentials": { "httpHeaderAuth": { "id": "cashsenseApiKey01", "name": "CashSense API key" } }
+    },
+    {
+      "parameters": {},
+      "name": "All clear",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [ 780, 200 ]
+    }
+  ],
+  "connections": {
+    "Every day 08:00": { "main": [ [ { "node": "Reconcile + risk scan + approvals", "type": "main", "index": 0 } ] ] },
+    "Run now (demo)": { "main": [ [ { "node": "Reconcile + risk scan + approvals", "type": "main", "index": 0 } ] ] },
+    "Reconcile + risk scan + approvals": { "main": [ [ { "node": "High-risk flags open?", "type": "main", "index": 0 } ] ] },
+    "High-risk flags open?": { "main": [ [ { "node": "Send URGENT alert", "type": "main", "index": 0 } ], [ { "node": "All clear", "type": "main", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1", "timezone": "Asia/Kolkata" },
+  "active": false
+}

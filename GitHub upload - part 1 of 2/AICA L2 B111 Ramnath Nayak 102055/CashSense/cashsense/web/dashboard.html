@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f3d5e">
+<title>CashSense</title>
+<style>
+:root { --bg:#f4f6f9; --card:#fff; --ink:#18212b; --muted:#5d6b7a; --line:#dde3ea; --brand:#0f3d5e;
+        --ok:#1f8a4c; --warn:#c77700; --bad:#c62828; --s1:#0f6fbf; --s2:#c77700; --s3:#c62828; --s4:#6a4fb3; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#10161d; --card:#1a232d; --ink:#e7edf3; --muted:#9aa8b6; --line:#2b3744; --brand:#7fb7e0;
+          --ok:#4cc483; --warn:#f0a83a; --bad:#ff6b6b; --s1:#5aa9f0; --s2:#f0a83a; --s3:#ff6b6b; --s4:#a890f0; }
+}
+* { box-sizing: border-box; }
+body { margin:0; font:15px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; background:var(--bg); color:var(--ink); }
+header { background:#0f3d5e; color:#fff; padding:14px 16px; position:sticky; top:0; z-index:5;
+         display:flex; justify-content:space-between; align-items:center; }
+header h1 { font-size:18px; margin:0; } header small { opacity:.85; }
+header a { color:#fff; font-size:13px; }
+main { max-width:960px; margin:0 auto; padding:12px 16px 90px; }
+.sample { background:var(--bad); color:#fff; font-size:12px; text-align:center; padding:3px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-top:12px; }
+.kpi .label { color:var(--muted); font-size:12px; } .kpi .value { font-size:18px; font-weight:600; margin-top:2px; }
+.bar { height:8px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:6px; }
+.bar > div { height:100%; } h2 { font-size:16px; margin:0 0 8px; }
+.chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+.chip { border:1px solid var(--line); background:var(--card); color:var(--ink); padding:6px 10px; border-radius:16px; font-size:13px; cursor:pointer; }
+.chip.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+svg text { fill:var(--muted); font-size:10px; }
+table { width:100%; border-collapse:collapse; font-size:13px; } td, th { padding:5px 4px; border-bottom:1px solid var(--line); text-align:right; }
+td:first-child, th:first-child { text-align:left; } .tag { font-size:11px; padding:2px 6px; border-radius:8px; color:#fff; }
+.high { background:var(--bad); } .medium { background:var(--warn); } .low { background:var(--muted); }
+.ok { color:var(--ok); font-weight:600; } .bad { color:var(--bad); font-weight:600; }
+.risk { padding:8px 0; border-bottom:1px solid var(--line); } .risk:last-child { border-bottom:0; }
+.muted { color:var(--muted); font-size:13px; }
+#ask { position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--line); padding:10px 12px; }
+#ask form { max-width:960px; margin:0 auto; display:flex; gap:8px; }
+#q { flex:1; font-size:15px; padding:10px; border:1px solid var(--line); border-radius:20px; background:var(--bg); color:var(--ink); }
+.btn { border:0; border-radius:20px; padding:0 14px; font-size:15px; background:var(--brand); color:#fff; cursor:pointer; min-width:44px; min-height:42px; }
+.btn.rec { background:var(--bad); }
+#answer { white-space:pre-wrap; } details summary { cursor:pointer; color:var(--brand); font-size:13px; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="sample">SAMPLE DATA - fictitious company - CashSense capstone</div>
+<header><div><h1>CashSense</h1><small id="asof"></small></div><a href="/logout">Sign out</a></header>
+<main>
+  <section class="grid" id="kpis"></section>
+
+  <section class="card" id="answerCard" hidden>
+    <h2>Answer</h2><div id="answer"></div>
+    <div class="muted" id="answerMeta"></div>
+    <button class="btn" id="gemVoice" style="margin-top:8px">🔊 Gemini voice</button>
+  </section>
+
+  <section class="card">
+    <h2>13-week cash-credit utilisation</h2>
+    <div class="chips" id="chips"></div>
+    <svg id="chart" viewBox="0 0 640 230" width="100%" role="img" aria-label="CC utilisation forecast"></svg>
+    <div class="muted" id="scenNote"></div>
+    <details><summary>Weekly figures</summary><table id="weeks"></table></details>
+  </section>
+
+  <section class="card"><h2>Treasury commentary (Gemini)</h2><div id="comm" class="muted">Not generated yet.</div>
+    <button class="chip" id="refreshComm" style="margin-top:8px">Refresh commentary</button></section>
+
+  <section class="card"><h2>Bank reconciliation</h2><table id="recon"></table></section>
+  <section class="card"><h2>Risk flags</h2><div id="risks"></div></section>
+</main>
+
+<div id="ask"><form id="askForm">
+  <button type="button" class="btn" id="mic" title="Speak your question" aria-label="Speak your question">🎤</button>
+  <input id="q" placeholder="Ask: cash position, forecast, overdue MSME bills..." autocomplete="off">
+  <button class="btn" type="submit">Ask</button>
+</form></div>
+
+<script>
+const COLORS = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)"];
+let data = null, current = "base", lastAnswer = "";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const pct = (x) => Math.round(x * 100) + "%";
+
+async function api(path, body) {
+  const r = await fetch(path, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {});
+  if (r.status === 401) { location.href = "/login"; throw new Error("signed out"); }
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  return r;
+}
+
+function kpis() {
+  const k = data.kpis, u = k.cc_util;
+  const col = u > 1 ? "var(--bad)" : u > .85 ? "var(--warn)" : "var(--ok)";
+  $("kpis").innerHTML = `
+    <div class="card kpi"><div class="label">Cash in current + collections</div><div class="value">${esc(k.cash)}</div></div>
+    <div class="card kpi"><div class="label">CC drawn (limit ${esc(k.cc_limit)})</div><div class="value">${esc(k.cc_drawn)}</div>
+      <div class="bar"><div style="width:${Math.min(100, u*100)}%;background:${col}"></div></div><div class="muted">${pct(u)} used</div></div>
+    <div class="card kpi"><div class="label">EEFC (USD)</div><div class="value">${esc(k.eefc)}</div><div class="muted">≈ ${esc(k.eefc_inr)}</div></div>
+    <div class="card kpi"><div class="label">Risks open or escalated</div><div class="value">${k.open_risks}</div><div class="muted">${k.high_risks} high</div></div>
+    <div class="card kpi"><div class="label">Approvals waiting</div><div class="value">${k.pending}</div><div class="muted">approve in Telegram</div></div>`;
+}
+
+function chart() {
+  const W = 640, H = 230, L = 36, R = 10, T = 10, B = 26, n = 13;
+  const max = Math.max(1.1, ...data.scenarios.map(s => Math.max(...s.util))) ;
+  const x = i => L + i * (W - L - R) / (n - 1), y = v => T + (1 - v / max) * (H - T - B);
+  let g = "";
+  [0, .5, .85, 1].forEach(v => {
+    const dash = v === .85 || v === 1 ? 'stroke-dasharray="5 4"' : "";
+    const c = v === 1 ? "var(--bad)" : v === .85 ? "var(--warn)" : "var(--line)";
+    g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" ${dash}/><text x="2" y="${y(v)+3}">${pct(v)}</text>`;
+  });
+  for (let i = 0; i < n; i++) if (i % 2 === 0) g += `<text x="${x(i)-6}" y="${H-8}">W${i+1}</text>`;
+  data.scenarios.forEach((s, k) => {
+    const on = s.code === current;
+    const pts = s.util.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+    g += `<polyline points="${pts}" fill="none" stroke="${COLORS[k]}" stroke-width="${on ? 3 : 1.2}" opacity="${on ? 1 : .35}"/>`;
+    if (on) s.util.forEach((v, i) => { if (v > .85) g += `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="var(--bad)"/>`; });
+  });
+  $("chart").innerHTML = g;
+  const s = data.scenarios.find(s => s.code === current);
+  $("scenNote").textContent = `${s.label}: peak ${pct(s.peak_util)} (${s.peak_drawn}) in week ${s.peak_week}; ` +
+    (s.first_alert_week ? `85% alert first in week ${s.first_alert_week}.` : "no 85% alert.");
+  $("weeks").innerHTML = "<tr><th>Week</th><th>In</th><th>Out</th><th>CC drawn</th><th>Use</th></tr>" +
+    s.weeks.map(w => `<tr><td>W${w.week} <span class="muted">${w.end.slice(5)}</span></td><td>${esc(w.inflow)}</td><td>${esc(w.outflow)}</td>
+      <td>${esc(w.drawn)}</td><td class="${w.alert ? "bad" : ""}">${pct(w.util)}</td></tr>`).join("");
+}
+
+function chips() {
+  $("chips").innerHTML = data.scenarios.map((s, k) =>
+    `<button class="chip ${s.code === current ? "on" : ""}" data-s="${s.code}" style="border-left:4px solid ${COLORS[k]}">${esc(s.label)}</button>`).join("");
+  document.querySelectorAll("#chips .chip").forEach(b => b.onclick = () => { current = b.dataset.s; chips(); chart(); });
+}
+
+function comm() {
+  const c = data.commentary;
+  if (!c) return;
+  $("comm").innerHTML = `<b>${esc(c.headline)}</b><ul>${(c.actions || []).map(a => `<li>${esc(a)}</li>`).join("")}</ul>` +
+    (c.warning ? `<div class="bad">${esc(c.warning)}</div>` : "") + `<div class="muted">Model: ${esc(c.model)}</div>`;
+}
+
+function rest() {
+  $("recon").innerHTML = "<tr><th>Account</th><th>Bank balance</th><th>BRS</th></tr>" + data.accounts.map(a =>
+    `<tr><td>${esc(a.id)} <span class="muted">${esc(a.name)}</span></td><td>${esc(a.balance)}</td>
+     <td class="${a.status === "agreed" ? "ok" : "bad"}">${esc(a.status)}</td></tr>`).join("");
+  $("risks").innerHTML = data.risks.length ? data.risks.map(r =>
+    `<div class="risk"><span class="tag ${r.severity}">${esc(r.severity)}</span> <b>${esc(r.type)}</b>
+     <span class="muted">· ${esc(r.status)} · ${esc(r.amount)}</span><div class="muted">${esc(r.text)}</div></div>`).join("")
+    : '<div class="muted">No risk flags.</div>';
+}
+
+async function load() {
+  data = await (await api("/api/dash/data")).json();
+  $("asof").textContent = "as at " + data.as_of;
+  kpis(); chips(); chart(); comm(); rest();
+}
+
+// Speak amounts the Indian way: Rs 1,26,32,553.34 -> "1 crore 26 lakh 32 thousand 553 rupees"
+function indianWords(n) {
+  if (n === 0) return "0";
+  const crore = Math.floor(n / 1e7), lakh = Math.floor(n % 1e7 / 1e5), th = Math.floor(n % 1e5 / 1e3), u = n % 1e3;
+  const p = [];
+  if (crore) p.push((crore >= 1e5 ? indianWords(crore) : crore) + " crore");
+  if (lakh) p.push(lakh + " lakh");
+  if (th) p.push(th + " thousand");
+  if (u) p.push(String(u));
+  return p.join(" ");
+}
+function spokenAmounts(text) {
+  return text
+    .replace(/(-?)(?:Rs\.?|₹|INR)\s?(\d[\d,]*)(?:\.(\d{1,2}))?(?!\d)(?!\.\d)(?!\s*(?:lakhs?|crores?|cr)\b)/gi,
+      (m, neg, d, p) => (neg ? "minus " : "") + indianWords(parseInt(d.replace(/,/g, ""), 10) +
+        (p && parseInt(p.padEnd(2, "0"), 10) >= 50 ? 1 : 0)) + " rupees")
+    .replace(/(?:Rs\.?|₹|INR)\s?(\d+(?:\.\d+)?)\s*(lakhs?|crores?)\b/gi, (m, v, unit) => `${v} ${unit.toLowerCase()} rupees`)
+    .replace(/(?<![\d.])(\d{1,2}(?:,\d{2})+,\d{3})(?:\.\d{1,2})?(?![\d,])/g, (m, d) => indianWords(parseInt(d.replace(/,/g, ""), 10)));
+}
+
+function speakBrowser(text) {
+  if (!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(spokenAmounts(text));
+  u.lang = "en-IN"; speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+async function ask(question) {
+  $("answerCard").hidden = false; $("answer").textContent = "Thinking..."; $("answerMeta").textContent = "";
+  try {
+    const r = await (await api("/api/dash/ask", {question})).json();
+    lastAnswer = r.answer; $("answer").textContent = r.answer;
+    $("answerMeta").textContent = "Sources: " + [...new Set(r.tools.map(t => t.name.replace("get_", "")))].join(", ") + " · " + r.model;
+    speakBrowser(r.answer);
+  } catch (e) { $("answer").textContent = "Sorry - " + e.message; }
+}
+
+$("askForm").onsubmit = (e) => { e.preventDefault(); const q = $("q").value.trim(); if (q) ask(q); };
+$("gemVoice").onclick = async () => {
+  if (!lastAnswer) return;
+  const blob = await (await api("/api/dash/speak", {text: lastAnswer})).blob();
+  new Audio(URL.createObjectURL(blob)).play();
+};
+$("refreshComm").onclick = async () => {
+  $("comm").textContent = "Asking Gemini...";
+  const c = await (await api("/api/dash/commentary", {})).json();
+  if (c.ai_used) { data.commentary = c; comm(); } else $("comm").textContent = "Gemini unavailable: " + (c.error || "");
+};
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) $("mic").title = "Voice input needs Chrome or Edge";
+$("mic").onclick = () => {
+  if (!SR) { alert("Voice input needs Chrome or Edge. You can also send a voice note to the Telegram bot."); return; }
+  const rec = new SR(); rec.lang = "en-IN"; rec.interimResults = false;
+  $("mic").classList.add("rec");
+  rec.onresult = (e) => { const t = e.results[0][0].transcript; $("q").value = t; ask(t); };
+  rec.onend = () => $("mic").classList.remove("rec");
+  rec.onerror = () => $("mic").classList.remove("rec");
+  rec.start();
+};
+load().catch(e => { document.querySelector("main").insertAdjacentHTML("afterbegin", `<div class="card bad">${esc(e.message)}</div>`); });
+</script>
+</body>
+</html>

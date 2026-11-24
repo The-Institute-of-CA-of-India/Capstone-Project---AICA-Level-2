@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CashSense - how it works</title>
+<style>
+:root {
+  --bg:#f6f7f9; --card:#ffffff; --ink:#17202a; --muted:#5b6876; --line:#dfe4ea;
+  --brand:#0f3d5e; --brand-ink:#ffffff;
+  --in-fill:#f1efe8; --in-line:#888780; --in-ink:#2c2c2a;
+  --ai-fill:#eeedfe; --ai-line:#534ab7; --ai-ink:#3c3489; --ai-sub:#534ab7;
+  --out-fill:#e1f5ee; --out-line:#0f6e56; --out-ink:#085041; --out-sub:#0f6e56;
+  --arrow:#73726c; --tag:#c62828;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:#10161d; --card:#18212b; --ink:#e7edf3; --muted:#a3b0bd; --line:#2b3744; --brand:#163f5c;
+    --in-fill:#2c2c2a; --in-line:#b4b2a9; --in-ink:#f1efe8;
+    --ai-fill:#3c3489; --ai-line:#afa9ec; --ai-ink:#eeedfe; --ai-sub:#cecbf6;
+    --out-fill:#085041; --out-line:#5dcaa5; --out-ink:#e1f5ee; --out-sub:#9fe1cb;
+    --arrow:#9c9a92;
+  }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+.sample { background:var(--tag); color:#fff; text-align:center; font-size:13px; padding:4px 16px; }
+header { background:var(--brand); color:var(--brand-ink); padding:28px 16px 24px; }
+header .wrap { max-width:920px; margin:0 auto; }
+header h1 { margin:0 0 4px; font-size:28px; font-weight:600; }
+header p { margin:0; opacity:.9; max-width:720px; }
+main { max-width:920px; margin:0 auto; padding:8px 16px 48px; }
+section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 22px; margin-top:16px; }
+h2 { font-size:19px; margin:0 0 10px; font-weight:600; }
+h3 { font-size:16px; margin:16px 0 6px; font-weight:600; }
+p { margin:6px 0; }
+ul, ol { margin:6px 0; padding-left:22px; } li { margin:3px 0; }
+.muted { color:var(--muted); font-size:14px; }
+table { width:100%; border-collapse:collapse; font-size:14.5px; margin-top:6px; }
+th, td { text-align:left; vertical-align:top; padding:7px 8px; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-weight:600; font-size:13px; }
+code { font-family:Consolas, "Cascadia Mono", monospace; font-size:13.5px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:0 4px; }
+.grid2 { display:grid; grid-template-columns:repeat(2, 1fr); gap:6px 22px; }
+@media (max-width:640px) { .grid2 { grid-template-columns:1fr; } }
+.pill { display:inline-block; font-size:12px; padding:1px 8px; border-radius:10px; border:1px solid var(--ai-line); color:var(--ai-ink); background:var(--ai-fill); margin-right:4px; }
+.pill.out { border-color:var(--out-line); color:var(--out-ink); background:var(--out-fill); }
+.kpis { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:8px; }
+@media (max-width:560px) { .kpis { grid-template-columns:repeat(2, 1fr); } }
+.kpi { border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+.kpi b { display:block; font-size:20px; } .kpi span { color:var(--muted); font-size:13px; }
+svg text { font-family:"Segoe UI", system-ui, sans-serif; }
+.figure { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.figure svg { min-width:600px; display:block; }
+.phone-only { display:none; }
+@media (max-width:640px) { .phone-only { display:block; } }
+.n-in rect { fill:var(--in-fill); stroke:var(--in-line); } .n-in .t1 { fill:var(--in-ink); } .n-in .t2 { fill:var(--in-ink); opacity:.75; }
+.n-ai rect { fill:var(--ai-fill); stroke:var(--ai-line); } .n-ai .t1 { fill:var(--ai-ink); } .n-ai .t2 { fill:var(--ai-sub); }
+.n-out rect { fill:var(--out-fill); stroke:var(--out-line); } .n-out .t1 { fill:var(--out-ink); } .n-out .t2 { fill:var(--out-sub); }
+.t1 { font-size:14px; font-weight:600; } .t2 { font-size:12px; }
+.ar { stroke:var(--arrow); stroke-width:1.5; fill:none; }
+.legend { display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-top:6px; }
+.legend i { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-1px; margin-right:5px; border:1px solid; }
+footer { max-width:920px; margin:0 auto; padding:0 16px 40px; color:var(--muted); font-size:13px; }
+@media print {
+  body { background:#fff; font-size:12.5px; }
+  section { break-inside:avoid; border-color:#ccc; margin-top:10px; padding:12px 14px; }
+  header { padding:16px; } .sample { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  header, .n-in rect, .n-ai rect, .n-out rect, .pill, .legend i { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+</style>
+</head>
+<body>
+<div class="sample">SAMPLE DATA - fictitious company "Sample Precision Components Pvt Ltd" - AICA Level 2 capstone</div>
+<header><div class="wrap">
+  <h1>CashSense - how it works</h1>
+  <p>An AI bank and treasury agent for Indian businesses. It reads bank statements, reconciles bank with books,
+     flags fraud and control risks, forecasts cash for 13 weeks and answers questions by text and voice - with the
+     Chartered Accountant approving every change.</p>
+</div></header>
+
+<main>
+
+<section>
+  <h2>At a glance</h2>
+  <div class="kpis">
+    <div class="kpi"><b>953 / 953</b><span>automatic bank-to-book matches correct</span></div>
+    <div class="kpi"><b>4 / 4</b><span>bank reconciliations agree to the paisa</span></div>
+    <div class="kpi"><b>8 / 8</b><span>planted risks found, no false alarms</span></div>
+    <div class="kpi"><b>100%</b><span>statement lines read exactly (CSV, PDF, photo)</span></div>
+    <div class="kpi"><b>7 / 7</b><span>assistant questions answered correctly</span></div>
+    <div class="kpi"><b>74</b><span>automated tests passing</span></div>
+  </div>
+  <p class="muted">Measured against answer keys created with the sample data; the agents never see the answer keys.</p>
+</section>
+
+<section>
+  <h2>The whole flow on one page</h2>
+  <div class="figure"><svg width="100%" viewBox="0 0 680 520" role="img" aria-labelledby="flowTitle flowDesc">
+    <title id="flowTitle">CashSense end-to-end flow</title>
+    <desc id="flowDesc">Bank statements, ERP books and a daily trigger feed reading and storage, then the Reconciler,
+      Risk Sentinel and Forecaster, then Gemini explanations with Python guards and the CA's approval, then outputs to
+      Telegram, the phone dashboard, email and Google Sheet, and Excel / Power BI reports.</desc>
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g class="n-in"><rect x="40" y="40" width="186" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="133" y="61" text-anchor="middle" dominant-baseline="central">Bank statements</text>
+      <text class="t2" x="133" y="79" text-anchor="middle" dominant-baseline="central">CSV, PDF, phone photo</text></g>
+    <g class="n-in"><rect x="247" y="40" width="186" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="340" y="61" text-anchor="middle" dominant-baseline="central">ERP books</text>
+      <text class="t2" x="340" y="79" text-anchor="middle" dominant-baseline="central">Ledger, AR, AP, masters</text></g>
+    <g class="n-in"><rect x="454" y="40" width="186" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="547" y="61" text-anchor="middle" dominant-baseline="central">Daily trigger</text>
+      <text class="t2" x="547" y="79" text-anchor="middle" dominant-baseline="central">n8n at 08:00 IST</text></g>
+    <line x1="133" y1="96" x2="133" y2="133" class="ar" marker-end="url(#ah)"/>
+    <line x1="340" y1="96" x2="340" y2="133" class="ar" marker-end="url(#ah)"/>
+    <line x1="547" y1="96" x2="547" y2="133" class="ar" marker-end="url(#ah)"/>
+    <g class="n-ai"><rect x="40" y="136" width="600" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="340" y="157" text-anchor="middle" dominant-baseline="central">Read, verify, categorise, store</text>
+      <text class="t2" x="340" y="175" text-anchor="middle" dominant-baseline="central">Gemini reads, Python proves balances, Supabase stores</text></g>
+    <line x1="133" y1="192" x2="133" y2="229" class="ar" marker-end="url(#ah)"/>
+    <line x1="340" y1="192" x2="340" y2="229" class="ar" marker-end="url(#ah)"/>
+    <line x1="547" y1="192" x2="547" y2="229" class="ar" marker-end="url(#ah)"/>
+    <g class="n-ai"><rect x="40" y="232" width="186" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="133" y="253" text-anchor="middle" dominant-baseline="central">Reconciler</text>
+      <text class="t2" x="133" y="271" text-anchor="middle" dominant-baseline="central">Bank vs books, BRS</text></g>
+    <g class="n-ai"><rect x="247" y="232" width="186" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="340" y="253" text-anchor="middle" dominant-baseline="central">Risk Sentinel</text>
+      <text class="t2" x="340" y="271" text-anchor="middle" dominant-baseline="central">Rules + browser checks</text></g>
+    <g class="n-ai"><rect x="454" y="232" width="186" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="547" y="253" text-anchor="middle" dominant-baseline="central">Forecaster</text>
+      <text class="t2" x="547" y="271" text-anchor="middle" dominant-baseline="central">13 weeks, 4 scenarios</text></g>
+    <line x1="133" y1="288" x2="133" y2="325" class="ar" marker-end="url(#ah)"/>
+    <line x1="340" y1="288" x2="340" y2="325" class="ar" marker-end="url(#ah)"/>
+    <line x1="547" y1="288" x2="547" y2="325" class="ar" marker-end="url(#ah)"/>
+    <g class="n-ai"><rect x="40" y="328" width="600" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="340" y="349" text-anchor="middle" dominant-baseline="central">Gemini explains, Python guards, the CA approves</text>
+      <text class="t2" x="340" y="367" text-anchor="middle" dominant-baseline="central">Nothing posts to the books without the CA's tap</text></g>
+    <line x1="107" y1="384" x2="107" y2="421" class="ar" marker-end="url(#ah)"/>
+    <line x1="262" y1="384" x2="262" y2="421" class="ar" marker-end="url(#ah)"/>
+    <line x1="417" y1="384" x2="417" y2="421" class="ar" marker-end="url(#ah)"/>
+    <line x1="572" y1="384" x2="572" y2="421" class="ar" marker-end="url(#ah)"/>
+    <g class="n-out"><rect x="40" y="424" width="135" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="107" y="445" text-anchor="middle" dominant-baseline="central">Telegram</text>
+      <text class="t2" x="107" y="463" text-anchor="middle" dominant-baseline="central">Cards and voice</text></g>
+    <g class="n-out"><rect x="195" y="424" width="135" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="262" y="445" text-anchor="middle" dominant-baseline="central">Dashboard</text>
+      <text class="t2" x="262" y="463" text-anchor="middle" dominant-baseline="central">On the phone</text></g>
+    <g class="n-out"><rect x="350" y="424" width="135" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="417" y="445" text-anchor="middle" dominant-baseline="central">Email + Sheet</text>
+      <text class="t2" x="417" y="463" text-anchor="middle" dominant-baseline="central">Apps Script</text></g>
+    <g class="n-out"><rect x="505" y="424" width="135" height="56" rx="8" stroke-width="0.8"/>
+      <text class="t1" x="572" y="445" text-anchor="middle" dominant-baseline="central">Reports</text>
+      <text class="t2" x="572" y="463" text-anchor="middle" dominant-baseline="central">Excel, Power BI</text></g>
+  </svg></div>
+  <p class="muted phone-only">Swipe the diagram sideways to see all of it.</p>
+  <div class="legend">
+    <span><i style="background:var(--in-fill);border-color:var(--in-line)"></i>Inputs</span>
+    <span><i style="background:var(--ai-fill);border-color:var(--ai-line)"></i>AI agents with Python checks</span>
+    <span><i style="background:var(--out-fill);border-color:var(--out-line)"></i>Outputs</span>
+  </div>
+</section>
+
+<section>
+  <h2>1. How data comes in</h2>
+  <p>Two kinds of input are compared: <b>bank statements</b> (what the bank says happened) and <b>the books</b>
+     (what the accounts say happened).</p>
+  <table>
+    <tr><th>Statement route</th><th>What the CA does</th><th>What happens</th></tr>
+    <tr><td>Telegram</td><td>Sends the file or photos to the CashSense bot</td><td>n8n polls Telegram every 10 seconds and passes the file to CashSense</td></tr>
+    <tr><td>Drop folder</td><td>Copies the file into <code>data\inbox\drop</code></td><td>n8n checks every 30 seconds; files move to <code>processed</code> or <code>failed</code></td></tr>
+    <tr><td>Command</td><td><code>python -m cashsense.cli import &lt;file&gt;</code></td><td>Direct import (testing)</td></tr>
+  </table>
+  <p>Accepted formats: a bank's <b>CSV</b> export, a digital <b>PDF</b>, or <b>phone photos</b> of a printed statement.</p>
+  <p><b>Books and masters</b> come through an ERP adapter: bank ledgers, vendors and customers (IFSC, account number,
+     credit terms, MSME status), open receivables and payables, commitments (salary, GST, TDS, rent, EMI, capex,
+     FD maturity) and the bank-holiday calendar. The demo uses a mock ERP; Dynamics 365 or Tally can be plugged in
+     without changing the agents.</p>
+  <p><b>Questions</b> arrive as typed text or voice notes on Telegram, or through the dashboard's Ask box and microphone.</p>
+</section>
+
+<section>
+  <h2>2. Reading, verifying and categorising</h2>
+  <ol>
+    <li><b>Reading.</b> CSV and digital PDF are read by plain code (exact, no AI). Photos are read by
+        <span class="pill">Gemini Vision</span> twice; if the readings differ, a third read decides by majority.</li>
+    <li><b>Python proves the reading.</b> On every line, previous balance &plusmn; amount must equal the printed balance;
+        the closing balance, period dates, last month's closing, account number, currency and reference format are
+        checked. A statement that fails any check goes to review.</li>
+    <li><b>Categorising.</b> <span class="pill">Gemini</span> gives every line one of 19 categories, the counterparty
+        from the master, a confidence and a reason. A rule-based categoriser runs alongside; when they disagree the rule
+        is stored and the line goes to the CA with Gemini's view.</li>
+    <li><b>Storing.</b> Everything is saved in <b>Supabase</b> (Postgres) with an audit-log entry.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>3. The three agents</h2>
+  <div class="grid2">
+    <div>
+      <h3>Reconciler</h3>
+      <p>Matches by cheque number and amount, then amount + date + party. Exact matches are auto-accepted and logged;
+         near-misses (e.g. Rs 1,85,400 in books vs Rs 1,84,500 at the bank) need approval. Leftovers are classified -
+         cheques not presented, deposits in transit, unbooked charges, GST and interest, returned cheques, duplicates,
+         unidentified receipts. Output: a BRS per account that ties to the paisa, with a proposed entry per difference.</p>
+    </div>
+    <div>
+      <h3>Risk Sentinel</h3>
+      <p>Python rules flag vendor bank-detail changes, unknown payees (worse on bank holidays), payments split just
+         below the Rs 5 lakh approval limit, duplicates, unidentified receipts, returned cheques and MSME bills beyond
+         45 days (sec 43B(h)). For bank changes, an <span class="pill">offline browser agent</span> (Playwright + Edge)
+         opens the account-verification page, reads the registered holder and saves a screenshot as evidence.</p>
+    </div>
+    <div>
+      <h3>Forecaster</h3>
+      <p>13 weeks from the as-of date: known flows (uncleared cheques, receivables and payables by due date,
+         commitments) plus new sales and purchases from the same month last year. Four scenarios - base, customers
+         15 days late, largest customer pays nothing, capex brought forward - with an alert when cash-credit use
+         exceeds 85% of the Rs 2 crore limit.</p>
+    </div>
+    <div>
+      <h3>Assistant (text and voice)</h3>
+      <p><span class="pill">Gemini function calling</span> over eight read-only tools. Voice notes are transcribed by
+         Gemini and answered with a spoken reply (amounts read in crore and lakh). It cannot approve or change anything.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>4. Controls: Gemini explains, Python guards, the CA approves</h2>
+  <ul>
+    <li>Gemini writes explanations, treasury commentary and suggested actions.</li>
+    <li>The entry posted is always Python's template; a different ledger suggested by Gemini is shown, not posted.</li>
+    <li>Gemini may raise a risk's severity, never lower it.</li>
+    <li>Any amount in Gemini's text that is not in the data is flagged; "suspected", never "proven", for fraud.</li>
+    <li>Approval cards on Telegram: Approve / Reject (entries) and Reviewed / Escalate (risks). Only the CA's tap posts
+        an entry (voucher <code>JV/25-26/&lt;card&gt;</code>); every decision is audited with name and time. Only the
+        CA's own Telegram chat is obeyed.</li>
+    <li>Secrets live only in <code>.env</code>; the upload builder scans every file for them before release.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>5. Outputs</h2>
+  <table>
+    <tr><th>Output</th><th>What the CA gets</th></tr>
+    <tr><td><span class="pill out">Telegram</span></td><td>Daily summary, approval cards, URGENT alert for high risks, answers to typed or voice questions, /status /risks /pending</td></tr>
+    <tr><td><span class="pill out">Phone dashboard</span></td><td>Cash and CC cards, 13-week scenario chart with 85% / 100% lines, Gemini commentary, BRS status, risks, Ask box with microphone (read-only, password protected)</td></tr>
+    <tr><td><span class="pill out">Email + Google Sheet</span></td><td>Apps Script emails the daily briefing and logs it; 18:00 reminder, 10:00 "no briefing" alert, Monday digest</td></tr>
+    <tr><td><span class="pill out">Excel workbooks</span></td><td>One review workbook per phase with live check formulas (BRS "Agreed", roll-forwards)</td></tr>
+    <tr><td><span class="pill out">Power BI</span></td><td>Star-schema data files and DAX measures for the CA's own report</td></tr>
+    <tr><td><span class="pill out">Claude</span></td><td>Plugin commands such as <code>/cashsense:treasury-briefing</code> through a read-only MCP server</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>A day with CashSense</h2>
+  <table>
+    <tr><th>When</th><th>What happens</th></tr>
+    <tr><td>08:00</td><td>n8n starts the daily run: reconcile 4 accounts, risk scan with browser checks, Gemini explanations and forecast commentary, approvals proposed.</td></tr>
+    <tr><td>08:01</td><td>Telegram receives the summary, approval cards and any URGENT alert; Apps Script emails the briefing and logs it to the Sheet.</td></tr>
+    <tr><td>During the day</td><td>The CA taps Approve / Escalate (picked up within ~10 s), sends a statement photo (read, verified, categorised, reconciled, replied), asks "What if customers pay late?" by voice and hears the answer.</td></tr>
+    <tr><td>18:00</td><td>Apps Script reminds the CA if approvals or high risks are still waiting.</td></tr>
+    <tr><td>Monday 09:00</td><td>Weekly digest of the trend.</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Course topics used</h2>
+  <table>
+    <tr><th>Topic</th><th>Where in CashSense</th></tr>
+    <tr><td>Agentic AI / AI agents</td><td>Categoriser, Reconciler, Risk Sentinel, Forecaster, assistant with tool calling</td></tr>
+    <tr><td>Skills</td><td>Six skill files that instruct the agents (also shipped in the Claude plugin)</td></tr>
+    <tr><td>Plugins, MCP, extensions</td><td>Claude plugin with 4 commands and a hand-written MCP server (JSON-RPC over stdio)</td></tr>
+    <tr><td>Connectors</td><td>Supabase, Telegram, Gmail and Google Sheets (Apps Script), Gemini, Power BI export</td></tr>
+    <tr><td>Scheduler</td><td>n8n 08:00 daily run; Apps Script 18:00, 10:00 and Monday triggers</td></tr>
+    <tr><td>Computer vision</td><td>Photo statements read by Gemini Vision with consensus reading</td></tr>
+    <tr><td>Offline agent browser</td><td>Playwright + Edge on local verification pages, screenshot evidence</td></tr>
+    <tr><td>Voice agent</td><td>Telegram voice notes and dashboard microphone; spoken answers in Indian numbering</td></tr>
+    <tr><td>Google Apps Script</td><td>Briefing web app, Sheet log, email, time-driven triggers</td></tr>
+    <tr><td>Python and tool development</td><td>FastAPI app, agents, readers, 74 automated tests</td></tr>
+    <tr><td>n8n workflows</td><td>Telegram inbox, daily treasury run with IF branch, statement drop folder</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Where things live</h2>
+  <table>
+    <tr><th>What</th><th>Where</th></tr>
+    <tr><td>All data (bank lines, books, matches, risks, approvals, audit log)</td><td>Supabase with Row Level Security - only the secret key on the laptop can read it</td></tr>
+    <tr><td>Keys and passwords</td><td><code>.env</code> on the laptop only - never in the code or this upload</td></tr>
+    <tr><td>AI instructions</td><td><code>skills/</code> (six SKILL.md files)</td></tr>
+    <tr><td>Runs on the laptop</td><td>CashSense API, n8n, browser agent</td></tr>
+    <tr><td>Runs in the cloud</td><td>Gemini, Telegram, Supabase, Google Apps Script</td></tr>
+    <tr><td>Documentation</td><td><code>README.md</code>, <code>docs/BUILD_LOG.md</code> (every decision and result), <code>docs/Master_Prompt.md</code></td></tr>
+  </table>
+  <p class="muted">Sample data is fictitious and marked SAMPLE. Forecasts are estimates based on stated assumptions,
+     not professional advice. Shared with ICAI for evaluation only - see LICENSE.</p>
+</section>
+
+</main>
+<footer>CashSense - AICA Level 2 capstone - one-page explainer</footer>
+</body>
+</html>
