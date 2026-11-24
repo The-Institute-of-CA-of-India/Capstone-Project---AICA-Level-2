@@ -1,0 +1,11 @@
+# Colour scheme matched to Purchase_Plan_Dashboard.html
+[theme]
+base = "light"
+primaryColor = "#8a4f17"
+backgroundColor = "#f4efe6"
+secondaryBackgroundColor = "#fffdf8"
+textColor = "#1a1410"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
