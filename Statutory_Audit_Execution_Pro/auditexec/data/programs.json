@@ -1,0 +1,906 @@
+{
+ "assertion_legend": {
+  "C": "Completeness",
+  "A": "Accuracy",
+  "E": "Existence",
+  "RO": "Rights & Obligations",
+  "CO": "Cut-off",
+  "PD": "Presentation & Disclosure",
+  "Cl": "Classification",
+  "O": "Occurrence",
+  "V": "Valuation",
+  "Al": "Allocation"
+ },
+ "topics": [
+  {
+   "code": "3.1",
+   "title": "Property, Plant & Equipment",
+   "objective": "To obtain sufficient appropriate audit evidence over the existence, completeness, valuation, rights and presentation of PPE.",
+   "procedures": [
+    [
+     "Obtain/prepare lead schedule and reconcile it with the general ledger.",
+     "A,C"
+    ],
+    [
+     "Analyse additions, disposals and depreciation against prior year and budget.",
+     "A,C,CO"
+    ],
+    [
+     "Test selected additions to invoices, approvals, delivery/installation evidence and asset register.",
+     "A,E,RO"
+    ],
+    [
+     "Examine disposals and gains/losses, including cut-off around year end.",
+     "A,CO"
+    ],
+    [
+     "Review physical-verification process, discrepancies and condition/impairment indicators.",
+     "E,V"
+    ],
+    [
+     "Assess depreciation method, useful lives and disclosure.",
+     "A,V,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.2",
+   "title": "Capital Work-in-Progress",
+   "objective": "To assess completeness, valuation, classification and timely capitalisation of CWIP.",
+   "procedures": [
+    [
+     "Obtain CWIP schedule and reconcile with general ledger.",
+     "A,C"
+    ],
+    [
+     "Test material project costs to contracts, bills, engineer certificates and approvals.",
+     "A,E"
+    ],
+    [
+     "Review project status and identify completed projects requiring capitalisation.",
+     "C,Cl,CO"
+    ],
+    [
+     "Evaluate capitalisation of overheads and borrowing costs.",
+     "V,Cl"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.3",
+   "title": "Intangible Assets",
+   "objective": "To verify recognition, ownership, valuation and disclosure of intangible assets.",
+   "procedures": [
+    [
+     "Reconcile intangible asset schedule with general ledger.",
+     "A,C"
+    ],
+    [
+     "Inspect agreements, registrations and valuation evidence for material assets.",
+     "E,RO,V"
+    ],
+    [
+     "Review impairment indicators and amortisation methods/useful lives.",
+     "V,A"
+    ],
+    [
+     "Assess classification and financial-statement disclosures.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.4",
+   "title": "Right of Use Assets",
+   "objective": "To verify recognition, measurement and disclosure of right-of-use assets.",
+   "procedures": [
+    [
+     "Obtain lease register and reconcile ROU assets to general ledger.",
+     "A,C"
+    ],
+    [
+     "Inspect significant lease agreements and evaluate lease term.",
+     "E,RO"
+    ],
+    [
+     "Reperform selected ROU asset and depreciation computations.",
+     "A,V"
+    ],
+    [
+     "Review presentation and disclosure under applicable framework.",
+     "PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.5",
+   "title": "Depreciation & Amortization",
+   "objective": "To test the accuracy and appropriateness of depreciation and amortisation.",
+   "procedures": [
+    [
+     "Obtain depreciation/amortisation working and reconcile with trial balance.",
+     "A,C"
+    ],
+    [
+     "Reperform selected calculations, rates and useful lives.",
+     "A,V"
+    ],
+    [
+     "Review changes in methods, residual values and estimates.",
+     "V,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.6",
+   "title": "Investments",
+   "objective": "To verify existence, rights, valuation, income and disclosure of investments.",
+   "procedures": [
+    [
+     "Reconcile investment schedule with register and general ledger.",
+     "A,C"
+    ],
+    [
+     "Inspect approvals, acquisition/disposal documents and ownership evidence.",
+     "E,RO"
+    ],
+    [
+     "Obtain custodian/depository confirmations where applicable.",
+     "E,C"
+    ],
+    [
+     "Test valuation, impairment and classification/disclosures.",
+     "V,Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.7",
+   "title": "Trade Receivables",
+   "objective": "To verify existence, completeness, valuation and recoverability of trade receivables.",
+   "procedures": [
+    [
+     "Obtain customer-wise ageing and reconcile it to general ledger.",
+     "A,C"
+    ],
+    [
+     "Perform current/prior-year variance and ageing analysis.",
+     "V"
+    ],
+    [
+     "Select balances for external confirmation; track responses and differences.",
+     "E,A"
+    ],
+    [
+     "Perform alternative procedures for non-responses, including subsequent receipts.",
+     "E,V"
+    ],
+    [
+     "Assess expected credit loss/provision and related disclosure.",
+     "V,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.8",
+   "title": "Cash & Bank",
+   "objective": "To verify existence, completeness, rights and valuation of cash and bank balances.",
+   "procedures": [
+    [
+     "Obtain bank reconciliations and reconcile balances to general ledger.",
+     "A,C"
+    ],
+    [
+     "Obtain/directly control bank confirmations and FD evidence.",
+     "E,RO"
+    ],
+    [
+     "Test stale reconciliation items and subsequent clearance.",
+     "A,V"
+    ],
+    [
+     "Verify cash count/certificate and presentation.",
+     "E,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.9",
+   "title": "Other Financial Assets",
+   "objective": "To verify other financial assets, including deposits and accrued income.",
+   "procedures": [
+    [
+     "Obtain schedule and reconcile it with general ledger.",
+     "A,C"
+    ],
+    [
+     "Inspect agreements/confirmations and test valuation/classification.",
+     "E,V,Cl"
+    ],
+    [
+     "Review maturity, impairment and disclosures.",
+     "V,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.10",
+   "title": "Share Capital",
+   "objective": "To verify authorisation, issue, valuation and disclosure of share capital.",
+   "procedures": [
+    [
+     "Reconcile share capital lead schedule to general ledger and prior year.",
+     "A,C"
+    ],
+    [
+     "Inspect board/shareholder approvals and statutory filings.",
+     "RO,PD"
+    ],
+    [
+     "Verify issue/allotment evidence, valuation and shareholder register.",
+     "E,A,V"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.11",
+   "title": "Other Equity",
+   "objective": "To verify movements and presentation within other equity.",
+   "procedures": [
+    [
+     "Reconcile reserves and retained earnings with prior year and current profit.",
+     "A,C"
+    ],
+    [
+     "Review transactions affecting reserves and supporting approvals.",
+     "A,RO"
+    ],
+    [
+     "Assess classification and disclosures.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.12",
+   "title": "Loans & Borrowings",
+   "objective": "To verify completeness, valuation, terms and presentation of borrowings.",
+   "procedures": [
+    [
+     "Obtain loan schedule and reconcile with general ledger.",
+     "A,C"
+    ],
+    [
+     "Inspect sanction letters, agreements, security and covenant compliance.",
+     "RO,PD"
+    ],
+    [
+     "Confirm material balances and reperform interest/repayment calculations.",
+     "E,A"
+    ],
+    [
+     "Review current/non-current classification and utilisation.",
+     "Cl,V"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.13",
+   "title": "Finance Costs",
+   "objective": "To verify completeness, accuracy and classification of finance costs.",
+   "procedures": [
+    [
+     "Reconcile finance-cost schedule with general ledger.",
+     "A,C"
+    ],
+    [
+     "Recompute selected interest charges against agreements.",
+     "A"
+    ],
+    [
+     "Assess capitalisation and disclosure where relevant.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.14",
+   "title": "Lease Liabilities",
+   "objective": "To verify lease-liability recognition, measurement and disclosure.",
+   "procedures": [
+    [
+     "Obtain lease-liability working and lease register.",
+     "A,C"
+    ],
+    [
+     "Inspect significant agreements and reperform selected present-value calculations.",
+     "A,V"
+    ],
+    [
+     "Assess current/non-current split and disclosures.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.15",
+   "title": "Trade Payables",
+   "objective": "To verify completeness, existence, valuation and classification of trade payables.",
+   "procedures": [
+    [
+     "Obtain vendor ageing and reconcile to general ledger.",
+     "A,C"
+    ],
+    [
+     "Perform variance, ageing and debit-balance analysis.",
+     "V,Cl"
+    ],
+    [
+     "Send confirmations and perform subsequent-payment procedures as needed.",
+     "E,A"
+    ],
+    [
+     "Perform year-end unrecorded-liability and cut-off testing.",
+     "C,CO"
+    ],
+    [
+     "Review MSME classification and disclosure.",
+     "PD,Cl"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.16",
+   "title": "Other Financial Liabilities",
+   "objective": "To verify completeness, valuation and disclosure of other financial liabilities.",
+   "procedures": [
+    [
+     "Reconcile schedules with general ledger.",
+     "A,C"
+    ],
+    [
+     "Inspect supporting agreements and reperform material computations.",
+     "E,A,V"
+    ],
+    [
+     "Review current/non-current classification and disclosures.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.17",
+   "title": "Tax Liabilities",
+   "objective": "To verify tax liabilities and related reconciliations/disclosures.",
+   "procedures": [
+    [
+     "Reconcile statutory tax schedules/returns with books.",
+     "A,C"
+    ],
+    [
+     "Inspect assessment orders, demands, refunds and payments.",
+     "E,A"
+    ],
+    [
+     "Review classification, contingencies and disclosures.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.18",
+   "title": "Other Current Liabilities",
+   "objective": "To verify completeness and classification of other current liabilities.",
+   "procedures": [
+    [
+     "Obtain detailed schedule and reconcile to general ledger.",
+     "A,C"
+    ],
+    [
+     "Test statutory dues, customer advances and material provisions.",
+     "A,E"
+    ],
+    [
+     "Review cut-off and statutory compliance/disclosures.",
+     "CO,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.19",
+   "title": "Deferred Tax Liabilities",
+   "objective": "To verify deferred-tax balances and related disclosures.",
+   "procedures": [
+    [
+     "Obtain deferred-tax working and reconcile movements.",
+     "A,C"
+    ],
+    [
+     "Test temporary differences, tax rates and recognition basis.",
+     "A,V"
+    ],
+    [
+     "Review presentation in profit/loss, OCI/equity and notes.",
+     "PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.20",
+   "title": "Revenue from Operations",
+   "objective": "To verify occurrence, cut-off, accuracy and presentation of revenue.",
+   "procedures": [
+    [
+     "Obtain revenue ledger/dump and reconcile to financial statements and tax returns.",
+     "A,C"
+    ],
+    [
+     "Perform trend, product/customer and cut-off analysis.",
+     "O,CO"
+    ],
+    [
+     "Test selected invoices to contracts, orders, delivery evidence and receipts.",
+     "O,A"
+    ],
+    [
+     "Test invoice-number sequence, cancellations, returns and credit notes.",
+     "C,CO"
+    ],
+    [
+     "Assess applicable revenue-recognition requirements and disclosures.",
+     "A,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.21",
+   "title": "Other Income",
+   "objective": "To verify occurrence, accuracy, cut-off and disclosure of other income.",
+   "procedures": [
+    [
+     "Reconcile other-income schedule with general ledger.",
+     "A,C"
+    ],
+    [
+     "Test material interest, dividend, gain and rental income to evidence.",
+     "O,A"
+    ],
+    [
+     "Perform year-end cut-off and accrual testing.",
+     "CO,C"
+    ],
+    [
+     "Review classification and disclosures.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.22",
+   "title": "Inventories",
+   "objective": "To verify existence, completeness, valuation and cut-off of inventories.",
+   "procedures": [
+    [
+     "Reconcile inventory summary to general ledger.",
+     "A,C"
+    ],
+    [
+     "Attend/evaluate physical count and test records to floor/floor to records.",
+     "E,C"
+    ],
+    [
+     "Test valuation, costing and NRV for selected items.",
+     "V,A"
+    ],
+    [
+     "Perform roll-forward/back and cut-off testing.",
+     "CO"
+    ],
+    [
+     "Review slow-moving/obsolete stock provision and disclosures.",
+     "V,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.23",
+   "title": "Employee Benefits",
+   "objective": "To verify completeness, accuracy and valuation of employee-benefit balances and costs.",
+   "procedures": [
+    [
+     "Reconcile payroll and employee-benefit schedules to general ledger.",
+     "A,C"
+    ],
+    [
+     "Test selected employees to appointment, payroll and attendance records.",
+     "O,A"
+    ],
+    [
+     "Test statutory contributions, leave/bonus and actuarial valuation where relevant.",
+     "A,V"
+    ],
+    [
+     "Review classification and disclosures.",
+     "PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "3.24",
+   "title": "Expenses",
+   "objective": "To verify occurrence, accuracy, classification and cut-off of expenses.",
+   "procedures": [
+    [
+     "Perform analytical review and identify unusual movements.",
+     "A,Cl"
+    ],
+    [
+     "Test selected vouchers to approvals, invoices, agreements and payment evidence.",
+     "O,A"
+    ],
+    [
+     "Test TDS/GST and year-end accrual/prepayment cut-off.",
+     "CO,C"
+    ],
+    [
+     "Assess correct classification and disclosures.",
+     "Cl,PD"
+    ]
+   ],
+   "group": "Financial statement areas"
+  },
+  {
+   "code": "4.1",
+   "title": "Going Concern",
+   "objective": "To evaluate management's use of the going-concern basis in accordance with SA 570 (Revised).",
+   "procedures": [
+    [
+     "Assess financial, operating and other indicators of going-concern risk.",
+     "V"
+    ],
+    [
+     "Analyse net worth, liquidity, leverage, profitability and operating cash flows.",
+     "A,V"
+    ],
+    [
+     "Evaluate management forecasts, mitigation plans and evidence of feasibility.",
+     "V"
+    ],
+    [
+     "Assess adequacy of financial-statement disclosures and conclusion.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.2",
+   "title": "Laws & Regulations",
+   "objective": "To identify applicable laws and regulations and respond to identified or suspected non-compliance.",
+   "procedures": [
+    [
+     "Obtain management's list of significant applicable laws and regulations.",
+     "C"
+    ],
+    [
+     "Make enquiries and inspect correspondence/returns for non-compliance.",
+     "O,C"
+    ],
+    [
+     "Evaluate effect on financial statements and reporting obligations.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.3",
+   "title": "Subsequent Events",
+   "objective": "To identify events between the reporting date and audit-report date under SA 560.",
+   "procedures": [
+    [
+     "Read board/member minutes and make management enquiries.",
+     "C"
+    ],
+    [
+     "Review post-year-end financial information and material transactions.",
+     "CO"
+    ],
+    [
+     "Obtain representation and assess adjusting/non-adjusting treatment.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.4",
+   "title": "Related Party Transactions",
+   "objective": "To identify, evaluate and disclose related parties and related-party transactions.",
+   "procedures": [
+    [
+     "Obtain related-party list and reconcile with declarations, minutes and registers.",
+     "C"
+    ],
+    [
+     "Identify and test material/unusual related-party transactions.",
+     "O,A"
+    ],
+    [
+     "Evaluate approvals, arm's-length evidence and disclosures.",
+     "RO,PD"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.5",
+   "title": "Internal Control over Financial Reporting",
+   "objective": "To understand, evaluate and test relevant ICFR design and operating effectiveness.",
+   "procedures": [
+    [
+     "Document significant processes, risks and key controls.",
+     "C"
+    ],
+    [
+     "Test design and operating effectiveness of selected controls.",
+     "O"
+    ],
+    [
+     "Evaluate deficiencies and communication/reporting implications.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.6",
+   "title": "Journal Entry Testing",
+   "objective": "To respond to management-override risk through journal-entry testing under SA 240.",
+   "procedures": [
+    [
+     "Understand journal-entry process and relevant controls.",
+     "C"
+    ],
+    [
+     "Analyse and select unusual, period-end and manual entries for testing.",
+     "O,A"
+    ],
+    [
+     "Test selected entries to supporting evidence and business rationale.",
+     "O,A"
+    ],
+    [
+     "Document findings and impact on fraud-risk assessment.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.7",
+   "title": "Contingent Liabilities",
+   "objective": "To identify, evaluate and appropriately disclose contingencies and commitments.",
+   "procedures": [
+    [
+     "Enquire of management and review legal/tax correspondence and minutes.",
+     "C"
+    ],
+    [
+     "Assess likelihood/measurement with management and experts where necessary.",
+     "V"
+    ],
+    [
+     "Evaluate provision/contingent-liability disclosure.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.8",
+   "title": "Use of Work of Experts",
+   "objective": "To evaluate competence, capabilities, objectivity and adequacy of expert work.",
+   "procedures": [
+    [
+     "Document need for expert and scope of work.",
+     "C"
+    ],
+    [
+     "Evaluate competence, capability and objectivity.",
+     "V"
+    ],
+    [
+     "Assess adequacy and consistency of expert findings with other evidence.",
+     "A,V"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.9",
+   "title": "Work of Internal Auditors",
+   "objective": "To evaluate whether and how work of internal audit may be used under SA 610.",
+   "procedures": [
+    [
+     "Assess objectivity, competence and systematic approach of internal audit.",
+     "V"
+    ],
+    [
+     "Determine intended use and perform evaluation/reperformance of selected work.",
+     "A"
+    ],
+    [
+     "Document conclusion and impact on audit procedures.",
+     "C"
+    ]
+   ],
+   "group": "Overall audit procedures"
+  },
+  {
+   "code": "4.10",
+   "title": "Secretarial Compliances",
+   "objective": "To evaluate key secretarial records, approvals and filings relevant to the audit.",
+   "procedures": [
+    [
+     "Inspect statutory registers, minutes and key ROC filings.",
+     "RO,C"
+    ],
+    [
+     "Test relevant authorisations for significant corporate actions.",
+     "O"
+    ],
+    [
+     "Evaluate financial-statement and reporting implications.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures",
+   "entities": [
+    "Company"
+   ]
+  },
+  {
+   "code": "4.11",
+   "title": "ESOPs",
+   "objective": "To verify authorisation, measurement and disclosure of employee share-based payments.",
+   "procedures": [
+    [
+     "Inspect scheme, constitutional documents and board/shareholder approvals.",
+     "RO"
+    ],
+    [
+     "Test grants, vesting, valuation inputs and accounting computation.",
+     "A,V"
+    ],
+    [
+     "Assess disclosures and statutory filings.",
+     "PD"
+    ]
+   ],
+   "group": "Overall audit procedures",
+   "entities": [
+    "Company"
+   ]
+  },
+  {
+   "code": "5.1",
+   "title": "CARO Reporting (Companies Auditor's Report Order)",
+   "objective": "To obtain evidence for each reporting clause of the Order applicable to the company and conclude on reporting.",
+   "procedures": [
+    [
+     "Determine applicability of the Order for the year (thresholds, exemptions) and document the basis.",
+     "PD"
+    ],
+    [
+     "For each applicable clause, obtain management's response and map it to audit evidence (fixed assets and inventory records, loans and investments, statutory dues, borrowings, fraud, related parties, internal audit, etc.).",
+     "PD,A,C"
+    ],
+    [
+     "Evaluate matters requiring adverse or qualified comment and discuss with management.",
+     "PD"
+    ],
+    [
+     "Prepare the draft clause-wise report and link each clause to working paper references.",
+     "PD"
+    ]
+   ],
+   "group": "Statutory & tax compliance",
+   "entities": [
+    "Company"
+   ]
+  },
+  {
+   "code": "5.2",
+   "title": "Income-tax & TDS Compliance",
+   "objective": "To evaluate income-tax computation, tax provisions and TDS / TCS compliance.",
+   "procedures": [
+    [
+     "Review computation of total income, deductions claimed, MAT / tax provision and reconciliation of tax expense.",
+     "A,V,PD"
+    ],
+    [
+     "Review TDS / TCS deduction, deposit and returns; reconcile with books and Form 26AS / AIS.",
+     "A,CO,PD"
+    ],
+    [
+     "Review advance tax, interest, filing dates, pending assessments, demands and appeals; assess contingent liabilities.",
+     "C,PD"
+    ]
+   ],
+   "group": "Statutory & tax compliance"
+  },
+  {
+   "code": "5.3",
+   "title": "GST Compliance",
+   "objective": "To evaluate GST registration, returns, input tax credit and reconciliations.",
+   "procedures": [
+    [
+     "Reconcile turnover and output tax in returns with books and financial statements.",
+     "A,C"
+    ],
+    [
+     "Review input tax credit availed against GSTR-2B, eligibility, reversals and blocked credits.",
+     "A,V"
+    ],
+    [
+     "Review reverse charge, e-invoicing / e-way bill applicability, annual return and reconciliation statement.",
+     "PD,C"
+    ],
+    [
+     "Review notices, demands and disclosure of GST contingencies.",
+     "C,PD"
+    ]
+   ],
+   "group": "Statutory & tax compliance"
+  },
+  {
+   "code": "5.4",
+   "title": "Tax Audit (Form 3CD) Clauses",
+   "objective": "To obtain evidence for the clauses of the tax audit report applicable to the assessee.",
+   "procedures": [
+    [
+     "Determine applicability of tax audit and obtain the list of clauses applicable to the entity.",
+     "PD"
+    ],
+    [
+     "Test clause-wise information (e.g. depreciation, payments to specified persons, disallowances, TDS defaults, loans and deposits, etc.) with books and documents.",
+     "A,C,PD"
+    ],
+    [
+     "Document adverse remarks, qualifications and reconciliation with the financial statements.",
+     "PD,A"
+    ]
+   ],
+   "group": "Statutory & tax compliance"
+  }
+ ],
+ "groups": [
+  "Financial statement areas",
+  "Statutory & tax compliance",
+  "Overall audit procedures"
+ ]
+}
