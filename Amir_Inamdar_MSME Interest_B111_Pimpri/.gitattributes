@@ -1,0 +1,7 @@
+# Binary files - never change line endings
+*.pdf binary
+*.xlsx binary
+*.exe binary
+*.mp4 binary
+*.png binary
+*.ico binary

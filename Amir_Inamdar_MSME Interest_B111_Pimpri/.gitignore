@@ -1,0 +1,11 @@
+# Build output and virtual environment.
+# The ready-built MSME_Interest_Calculator.exe (~24 MB) and the presentation video are kept in this folder.
+venv/
+build/
+dist/
+*.zip
+__pycache__/
+*.pyc
+
+# Excel lock files
+~$*.xlsx
