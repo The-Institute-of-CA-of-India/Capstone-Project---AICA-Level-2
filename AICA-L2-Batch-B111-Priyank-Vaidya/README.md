@@ -37,7 +37,40 @@ python -m streamlit run app.py
 ```
 
 On Windows you can double-click `run_app.bat` instead. The app opens in the browser and loads
-`Purchase_Plan_Standard_Revised.xlsx` by default; use the sidebar to load another month's file.
+`Purchase_Plan_Standard_Revised.xlsx` (a blank template) by default; use the sidebar to load a month's file.
+
+## Try it with sample data
+
+`SampleData_Dec2026.xlsx` is a filled workbook for December 2026. Start the app, click **Upload** in the
+sidebar and choose this file to see all three tabs with figures.
+
+To plan your own month, fill a copy of `Purchase_Plan_Standard_Revised.xlsx`, keeping the sheet names and
+column headings unchanged, and upload it the same way.
+
+## Windows executable (no Python needed)
+
+The app can be packaged as a single file, `RM_FG_Planner.exe`, for users who do not have Python.
+The exe is not stored in this repository because of its size (about 90 MB); build it once and share it.
+
+Build it (64-bit Windows, Python 3.10 or later):
+
+```
+pip install -r requirements.txt pyinstaller
+build_exe.bat
+```
+
+The result is `dist\RM_FG_Planner.exe`. `launcher.py` is the start-up script packed inside it. Rebuild the
+exe after any change to `app.py` or `planner_engine.py`, since it carries its own copy of them.
+
+Using the exe:
+
+1. Double-click `RM_FG_Planner.exe`. A console window opens and the app opens in the browser; the first
+   start can take up to a minute while the file unpacks.
+2. Upload the month's Excel file from the sidebar.
+3. Close the console window to stop the application.
+
+The exe is not digitally signed, so Windows SmartScreen may warn on first run; choose
+**More info > Run anyway**. Everything runs on the local PC and nothing is uploaded anywhere.
 
 ## Files
 
@@ -45,6 +78,10 @@ On Windows you can double-click `run_app.bat` instead. The app opens in the brow
 |---|---|
 | `app.py` | Streamlit user interface |
 | `planner_engine.py` | Calculation logic (MRP and production scheduling), no UI |
-| `Purchase_Plan_Standard_Revised.xlsx` | Input template with sample data |
+| `Purchase_Plan_Standard_Revised.xlsx` | Blank input template |
+| `SampleData_Dec2026.xlsx` | Sample data for December 2026 |
+| `launcher.py` | Start-up script for the packaged exe |
+| `build_exe.bat` | Builds `dist\RM_FG_Planner.exe` with PyInstaller |
+| `run_app.bat` | Starts the app from source on Windows |
 | `Purchase_Plan_Dashboard.html` | Original offline dashboard the app is based on |
 | `.streamlit/config.toml` | Colour theme |
