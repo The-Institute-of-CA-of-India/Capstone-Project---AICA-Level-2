@@ -51,6 +51,18 @@ st.markdown("""
 .sec-h .rule{flex:1 1 20px;height:1px;background:var(--line)}
 .sec-h .tag{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;
             color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:3px 11px;white-space:nowrap}
+/* wider, easier-to-grab scrollbars everywhere (page, tables, data grid, sidebar) */
+*{scrollbar-width:auto!important;scrollbar-color:auto!important}
+*::-webkit-scrollbar{width:16px!important;height:16px!important;display:block!important}
+*::-webkit-scrollbar-track{background:#efe6d4!important;border-radius:8px}
+*::-webkit-scrollbar-thumb{background:#b8742a!important;border-radius:8px;border:3px solid #efe6d4}
+*::-webkit-scrollbar-thumb:hover{background:#8a4f17!important}
+*::-webkit-scrollbar-corner{background:#efe6d4}
+/* data-grid toolbar (download / search / full screen): always visible, sits just above the table */
+[data-testid="stElementContainer"]:has([data-testid="stDataFrame"]){margin-top:2.6rem}
+[data-testid="stDataFrame"] [data-testid="stElementToolbar"]{opacity:1!important;visibility:visible!important;
+    top:-2.75rem!important;right:0!important;pointer-events:auto!important;z-index:5}
+[data-testid="stDataFrame"] [data-testid="stElementToolbar"] *{opacity:1!important}
 .pp{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;
     box-shadow:0 2px 12px var(--shadow);margin-bottom:.3rem}
 .pp table{width:100%;border-collapse:collapse;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;
