@@ -1,0 +1,15 @@
+# Accounting Setu — tested with Python 3.15 on Windows 11 (versions below are the ones the test suite ran against)
+streamlit>=1.67,<2
+pandas>=3.1
+numpy>=2.5
+openpyxl>=3.1.5
+plotly>=7.2
+pymupdf>=1.28
+reportlab>=5.1
+pillow>=13.0
+pytesseract>=0.3.13      # needs the Tesseract binary installed separately (optional)
+python-dotenv>=1.2
+anthropic>=2.14          # optional: AI extraction / assistant (ANTHROPIC_API_KEY)
+supabase>=2.34           # Supabase Auth + Storage (DATA_BACKEND=supabase)
+pg8000>=1.31             # Supabase Postgres driver (pure Python)
+pytest>=9.2
