@@ -1,0 +1,8 @@
+Tesseract OCR for 64-bit Windows
+
+Download the Windows installer from the UB Mannheim Tesseract page:
+https://github.com/UB-Mannheim/tesseract/wiki
+
+Select the 64-bit Windows installer. Run it, keep English selected, and use
+the default install directory. Restart the app and enable OCR for scanned evidence.
+Skip installation if Tesseract is already installed.
