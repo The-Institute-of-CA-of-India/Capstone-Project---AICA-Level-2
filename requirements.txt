@@ -1,9 +1,5 @@
-# Vendor Name Matching: third party libraries
-# Everything else comes with Python 3.8 or newer.
-# The tool installs these by itself on first run, so this file is only needed
-# for a manual install:   pip install -r requirements.txt
-#
-# Tested with Python 3.13, PyQt5 5.15.11, openpyxl 3.1.5 and reportlab 5.0.1
-PyQt5>=5.15
+streamlit>=1.40
+pandas>=2.0
 openpyxl>=3.1
-reportlab>=3.6
+requests>=2.31
+pytest>=8.0
