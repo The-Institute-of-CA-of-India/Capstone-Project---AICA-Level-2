@@ -1,130 +1,191 @@
-# Vendor Name Matching
+# KM Trading: Fruits & Vegetables Branch Receiving & Variance Control
 
-A desktop tool that checks the bank details in a payment file against an approved vendor master before the payment is released. It answers one question for every payment line: **does this account number and IFSC code really belong to the vendor named on the payment?**
+A mobile-friendly full-stack web app (installable PWA) that records fruits and vegetables transferred from the Central Warehouse to KM Trading's 10 Oman branches, compares what was sent with what was actually received, and gives management a same-day view of shortages, wastage and weight loss.
 
-Built by **Ritesh Dedhia**, Chartered Accountant, as a capstone project for the AICA Level 2 programme.
+> **Symbol of Confidence**: KM Trading, Oman
 
-![Main window showing results](docs/images/main_window_results.png)
+---
 
-## The problem
+## Table of Contents
 
-Payment files prepared for RTGS or NEFT are checked by eye against vendor records. This is slow, and it misses the most dangerous error: a payment where the bank account is valid but belongs to a different party. Typical causes are a typing mistake, a changed bank account that was never verified, or a fraudulent instruction.
+1. [Problem Statement](#problem-statement)
+2. [Key Features](#key-features)
+3. [Tech Stack](#tech-stack)
+4. [Roles & Access](#roles--access)
+5. [Inputs](#inputs)
+6. [How It Works (Process)](#how-it-works-process)
+7. [Outputs & Reports](#outputs--reports)
+8. [Security](#security)
+9. [Database Schema](#database-schema)
+10. [Scope Constraints](#scope-constraints)
+11. [Getting Started](#getting-started)
+12. [Project at a Glance](#project-at-a-glance)
 
-## What the tool does
+---
 
-1. Loads a payment file (.xlsx) chosen by the user.
-2. Looks up each row in the **Unique Vendor Master** using **Beneficiary Account Number + IFSC Code**.
-3. Confirms that the **Beneficiary Account Name** agrees with the vendor registered against that account.
-4. Writes **Status** (`Matched` or `Not Matched`) and **Remarks** (the reason) into a copy of the payment file, shaded green or red.
-5. Never changes the original file. Every run saves a new time stamped file.
-6. **Print Verified PDF:** creates a PDF of the payment file with all its original columns on landscape pages, but only if every line is Matched. If any line is Not Matched, printing is refused.
+## Problem Statement
 
-## Features
+Fresh produce moving from the Central Warehouse to 10 retail branches (Al Amerat, Ruwi, Salalah and others) suffers physical shortages, bruising, spoilage and moisture weight loss in transit. Before this system:
 
-| Area | Feature |
+| # | Gap | Impact |
+|---|-----|--------|
+| 1 | **Unmonitored shrinkage** | Transit loss hid inside branch inventory adjustments. |
+| 2 | **Delayed paper and spreadsheet reconciliation** | Head Office could not catch repeated receiving mistakes on the same day. |
+| 3 | **No variance accountability** | No root-cause classification or financial value for each unit lost. |
+| 4 | **Mutable history and price drift** | Daily price changes or reopened sheets could alter past variance figures. |
+| 5 | **Weak branch isolation and device security** | Branches needed fast mobile access to their own outlet only; managers needed cross-branch analytics. |
+
+## Key Features
+
+- **Daily receiving ledger** with live calculation of difference quantity, transferred value, received value and difference value.
+- **Mandatory reason** for every non-zero difference; save is blocked without one.
+- **Color-coded rows:** Shortage (red), Excess (orange), Exact Match (green).
+- **Mandatory unit price** per row, highlighted in light red for manual verification.
+- **Immutable snapshots** of barcode, product name, unit, category and price on every saved row.
+- **Day-end locking:** past dates lock automatically; only Admin can reopen, with an audited reason.
+- **Variance monitoring dashboard** with configurable alert threshold (default 5%).
+- **Daily, consolidated and monthly reports** with date, branch, product and reason filters.
+- **Export to PDF, Excel (.xlsx), CSV and Print**, plus a branded landscape A4 print preview with three signature blocks.
+- **Master data upload** (Excel or CSV) with row-by-row validation and a failed-rows report.
+- **Full audit log** of data and authentication events with old/new JSON diffs.
+- **Installable PWA** with service-worker caching.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, TypeScript, Tailwind CSS v4, Lucide Icons |
+| Exports | SheetJS (xlsx), jsPDF + jspdf-autotable |
+| PWA | VitePWA service worker |
+| Backend | Node.js, Express |
+| Database | SQLite via better-sqlite3 (WAL mode) |
+| Testing | Automated branch-isolation and authentication security tests |
+
+## Roles & Access
+
+The seeded data contains **3 role tiers and 12 accounts** (Admin, Manager and one login per branch).
+
+| Role | Can do |
+|------|--------|
+| **Admin** | Manage master data, branches, reasons and users; upload master data; select any branch; close a day; **reopen a locked day**; configure the alert threshold; view the audit log. |
+| **Manager** | View cross-branch reports and the dashboard; close a day; print and sign off. |
+| **Branch user** | Enter and edit receiving rows for **their own branch only**, while the day is Open. |
+
+Branch isolation is enforced **server-side** on every receiving and report API, not just in the UI.
+
+## Inputs
+
+All transaction data is typed manually. There is no scanner.
+
+| Stage | Actor | Format | Captured fields |
+|-------|-------|--------|-----------------|
+| **1. Master data and catalog** | Admin | Excel (.xlsx), CSV or form | `barcode`, `product_name`, `unit` (kg / pcs / pack), `default_price`, `category` (Fruit / Vegetable), `active`, plus branches, reasons and staff accounts |
+| **2. Authentication** | Admin / Manager / Branch user | Credentials or 30-minute reset token | username or email, password (8+ chars with a letter and a number), `rememberMe`, server-bound `branch_id` |
+| **3. Daily receiving row** | Branch receiver / Admin | Keyboard entry | `entry_date`, `branch_id`, `document_number` (GRN), `barcode`, `product_id`, `unit`, `transferred_qty`, `received_qty`, mandatory `unit_price`, optional value override, `reason_id`, remarks |
+| **4. Day lock and governance** | Manager / Admin | Workflow action plus audit note | Close Day, Admin Reopen reason (min 3 chars), `alert_threshold_pct` (default 5%) |
+
+Default variance reasons: *Shortage*, *Wastage or damage*, *Weight loss or drying*, *Quality rejection*, *Wrong item sent*, *Other*.
+
+## How It Works (Process)
+
+The Express API and SQLite database run every transfer row through a five-stage pipeline:
+
+1. **Catalog resolution and snapshotting.** Typing a barcode resolves the active product, unit and default price (or lets staff quick-create a new SKU inline). On save, barcode, name, unit and category are written as immutable snapshots onto `receiving_items`.
+2. **Deterministic variance and value calculation.** Quantities round to 3 decimals and currency to 2.
+3. **Server-side validation and branch isolation.** Rejects missing unit prices, non-zero differences without an active reason, access to another branch's `branch_id`, and edits on locked dates.
+4. **Day-end locking and audit trail.** Closing a date records `locked` in `daily_lock`. Every CREATE, UPDATE, DELETE, LOCK_DAY, REOPEN_DAY, MASTER_UPLOAD and auth action stores old/new JSON diffs in `audit_log`.
+5. **Multi-branch aggregation and threshold alerting.** SQL rollups per branch, product, reason and day, flagging any entry or branch whose absolute Loss % exceeds the Admin threshold.
+
+### Formulas
+
+```
+Difference Qty      = Transferred Qty - Received Qty
+Transferred Value   = Transferred Qty x Unit Price
+Received Value      = Received Qty x Unit Price
+Difference Value    = Difference Qty x Unit Price      (or manual override)
+Loss %              = (Difference Qty / Transferred Qty) x 100
+Alert               = |Loss %| > alert_threshold_pct
+```
+
+### Worked example
+
+Onion, 10 kg transferred, 8 kg received, unit price 2.50, threshold 5%:
+
+| Result | Value |
+|--------|-------|
+| Classification | Shortage |
+| Difference Qty | 2 |
+| Transferred / Received Value | 25.00 / 20.00 |
+| Difference Value (loss) | 5.00 |
+| Loss % | 20.00% (alert triggered) |
+| Reason | Mandatory; save blocked without it |
+
+## Outputs & Reports
+
+| Output | Audience | Description |
+|--------|----------|-------------|
+| **Color-coded daily receiving ledger** | Branch staff, Admin | Live entry table with inline edit/delete while the day is Open. |
+| **Branded print preview** | Branch Incharge, Management | Landscape A4 sheet with KM Trading logo, document totals, variance breakdown, and Prepared / Branch Incharge / Management signature lines. |
+| **Variance monitoring dashboard** | Head Office | Today's total loss value, branches ranked by loss %, threshold breaches, top repeated shortage products (30 days) and top reasons. |
+| **Daily, consolidated and monthly reports** | Finance, Operations | Per branch, per product, per reason and per day, filterable, exported to PDF, XLSX, CSV or print. |
+| **Audit log and upload validation report** | Admin | Searchable compliance log, bulk-upload counts (added / updated / failed) and a downloadable failed-rows sheet. |
+
+## Security
+
+- Passwords hashed with **PBKDF2-SHA512**; policy of 8+ characters with at least one letter and one number.
+- **HttpOnly cookies** and Bearer tokens for sessions.
+- **5-attempt, 15-minute lockout** after failed sign-ins.
+- **Forced password change** when a temporary password is issued.
+- **Forgot Password** request workflow with **30-minute, one-time reset links**.
+- **Remember Me** vs. **30-minute idle timeout** for shared devices.
+- Strict **server-side RBAC and branch isolation**, covered by an automated test suite.
+
+## Database Schema
+
+SQLite in WAL mode, 13 relational tables:
+
+`branches` · `users` · `products` · `reasons` · `receiving_documents` · `receiving_items` · `daily_lock` · `settings` · `master_upload_log` · `audit_log` · `password_reset_requests` · `password_reset_tokens` · `sessions`
+
+Seeded data: **10 branches**, **762 produce SKUs** (kg, pcs and pack), the default reasons, and the 12 starter accounts.
+
+## Scope Constraints
+
+- **No barcode scanning** (no camera scanner or scanner integration).
+- **No document, PDF or image attachments** on transactions.
+- All transaction data is typed by hand.
+- The **only file upload** is Master Data Upload (Excel .xlsx or CSV).
+- Master price edits apply to **new entries only**; locked reports keep their saved snapshot prices.
+- Products can be deleted **only if they have zero transactions**.
+
+## Getting Started
+
+> Adjust the commands below to match the scripts in this repository's `package.json`.
+
+```bash
+# 1. Clone
+git clone https://github.com/anzansar0-coder/miniature-goggles.git
+cd miniature-goggles
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the app (API + frontend)
+npm run dev
+```
+
+On first run the database is created and seeded with the branches, product catalog, reasons and starter accounts. Change all seeded passwords on first sign-in; temporary passwords force a rotation.
+
+## Project at a Glance
+
+| | |
 |---|---|
-| Matching | Bank details are searched first, then the name is verified, so a valid account under the wrong name is caught |
-| Matching | Tolerates spacing, hyphens, upper or lower case, "&" and "and", "Private Limited" and "Pvt Ltd" |
-| Matching | Account numbers are read as text, so leading zeros are never lost |
-| Results | Summary cards, colour coded table and a reason for every failure |
-| Printing | **Print Verified PDF** is allowed only when every line is Matched, re-checks the master at click time and includes all original columns |
-| Vendor master | Edit inside the tool: add, change, delete, search, paste from Excel |
-| Vendor master | **Bulk upload** from Excel (add to existing, or replace) and **download** to Excel |
-| Vendor master | **Duplicate entries are not allowed**: the same account and IFSC cannot be saved twice |
-| Security | Editing the master needs an **admin passkey** (stored only as a salted hash) with lockout after three wrong attempts |
-| Safety | Automatic backup of the master before every save |
-| Setup | Installs its own libraries on first run, no manual setup needed |
+| **Branches** | 10, strictly isolated per login |
+| **Seeded SKUs** | 762 |
+| **Database tables** | 13 (WAL mode, with audit log) |
+| **Role tiers / accounts** | 3 / 12 |
+| **Default alert threshold** | 5% (Admin-configurable) |
+| **Export formats** | PDF, XLSX, CSV, Print |
 
-Printing is allowed only for a fully matched file. This is the PDF made from `Payment_Demo_AllMatched.xlsx`:
+---
 
-![Verified PDF page](docs/images/verified_pdf_page.png)
-
-![Vendor master editor with a duplicate flagged](docs/images/master_editor_duplicate.png)
-
-## Quick start
-
-**Requirements:** Python 3.8 or newer (IDLE is enough) and an internet connection for the first run only.
-
-### Option 1: run the guided demo (recommended for review)
-
-```
-python prepare_demo.py --launch
-```
-
-This creates a separate `demo_workspace` folder, copies in the fictional demo data and opens the tool on it. Your real working folder is not touched. When the editor asks for a passkey for the first time, you can use `Demo@1234`.
-
-### Option 2: run the tool directly
-
-Open `Vendor_Name_Matching.py` in IDLE and press **F5**, or run:
-
-```
-python Vendor_Name_Matching.py
-```
-
-By default the tool uses the folder `C:\Day 5` on Windows (and `~/Day 5` on other systems) for the vendor master and the output files. To use another folder, set the environment variable `VENDOR_MATCH_FOLDER` before starting.
-
-### If a library is missing
-
-The tool installs PyQt5, openpyxl and reportlab by itself. If that fails, run this single line:
-
-```
-pip install PyQt5 openpyxl reportlab
-```
-
-## Demo and test data
-
-All data is **fictional**. See [`sample_data/EXPECTED_RESULTS.md`](sample_data/EXPECTED_RESULTS.md) for the correct answer to every row.
-
-| File | Expected result |
-|---|---|
-| `Payment_Demo_Mixed.xlsx` | 12 rows: 5 Matched, 7 Not Matched (covers every scenario) |
-| `Payment_Demo_AllMatched.xlsx` | 5 rows: 5 Matched |
-| `Payment_Demo_NewVendors.xlsx` | 3 Not Matched before the bulk upload, 3 Matched after it |
-| `Sample_Verified_Output.pdf` | What the Print Verified PDF button produces for `Payment_Demo_AllMatched.xlsx` |
-| `Bulk_Upload_Demo.xlsx` | 3 added, 2 duplicates, 1 name conflict and 1 incomplete row skipped |
-
-## Automated tests
-
-43 tests cover the cleaning rules, header handling, matching, backups, passkey, duplicate prevention, bulk upload, download, the editor window and the Print Verified PDF rules. They run without a screen and work only inside a temporary folder. A built-in safety check stops them if the tool ever points anywhere else, so real vendor masters, passkeys and backups (for example in `C:\Day 5`) are never touched.
-
-```
-python tests/test_vendor_name_matching.py
-```
-
-In IDLE, open the test file and press **F5**. The test file finds the tool automatically, whether it is saved in the `tests` folder or next to `Vendor_Name_Matching.py`, and it builds the demo data itself if the `sample_data` folder is missing.
-
-## Project structure
-
-```
-Ritesh-Dedhia-Vendor-Name-Matching/
-  README.md                       this file
-  Vendor_Name_Matching.py         the application (single file)
-  requirements.txt                libraries (PyQt5, openpyxl)
-  prepare_demo.py                 builds a clean demo folder, optional launch
-  sample_data/                    fictional master, payment files, bulk upload file, expected results
-  tests/                          automated test suite
-  docs/
-    TOOL_OVERVIEW.md              how the tool works (for the reviewer)
-    USER_GUIDE.md                 step by step usage
-    DEMO_SCRIPT.md                timed script for presenting and recording the demo
-    Capstone_Presentation.pptx    5 slide presentation
-    images/                       screenshots
-```
-
-## Documentation
-
-- [Tool overview](docs/TOOL_OVERVIEW.md)
-- [User guide](docs/USER_GUIDE.md)
-- [Demo script](docs/DEMO_SCRIPT.md)
-- [Presentation](docs/Capstone_Presentation.pptx)
-
-## Limitations
-
-- Excel `.xlsx` files only, with headers in row 1 and data from row 2. Only the first sheet is read.
-- Name matching is strict after normalisation. A near match such as "Sharma Traders" and "Sharma Trading Co" is deliberately reported as Not Matched, because payments should not pass on a guess.
-- The admin passkey protects the editor inside the tool. It does not encrypt the Excel file, so folder permissions should also restrict who can change the master file.
-- The tool supports one vendor master at a time.
-
-## Author
-
-Ritesh Dedhia, Chartered Accountant. Capstone project for AICA Level 2.
+© KM Trading, Oman. Internal operations software.
